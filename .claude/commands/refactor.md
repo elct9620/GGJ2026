@@ -10,7 +10,7 @@ The `<execute>ARGUMENTS</execute>` will execute the main procedure.
 
 # Principles
 
-The principles is ordered by priority
+The principles is ordered by priority, ensure follow project's convention not force applying these principles.
 
 ## 1. Clear and Consistent Naming
 
@@ -35,7 +35,8 @@ Identity and utilize appropriate design patterns where applicable.
     <parameter name="focus areas" type="string" optional="true">Specific areas of the codebase to focus on</parameter>
     <step>1. read through the codebase or {focus_areas} if provided</step>
     <step>2. identify naming, structural, and design issues</step>
-    <step>3. document areas needing refactoring</step>
+    <step>3. use `git log` and `git diff` to ensure refactoring directions not revert recent refactoring</step>
+    <step>4. document areas needing refactoring</step>
     <return>List of areas needing refactoring</return>
 </function>
 

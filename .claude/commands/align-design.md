@@ -10,6 +10,8 @@ The `<execute>ARGUMENTS</execute>` will execute the main procedure.
 
 # Principles
 
+The project's convention is higher priority than these principles. Ensure to follow the project's convention and do not force applying these principles.
+
 ## Refactoring First
 
 Review any duplicated, outdated, coupled, or redundant code which blocks alignment with the specification. Refactor such code before implementing new changes.
@@ -82,14 +84,15 @@ If any renaming is needed to align with the specification, ensure that all refer
     <step>2. enter plan mode to prepare for alignment</step>
     <step>3. <execute name="explore">$scope of alignment</execute></step>
     <loop over="areas where codebase does not align with specification">
-        <step>4. <execute name="refactor">area to refactor</execute></step>
-        <step>5. <execute name="testing">refactoring changes</execute></step>
-        <step>6. implement changes to align code with specification</step>
-        <step>7. if renaming is needed, ensure all references in codebase and documentation are updated accordingly</step>
-        <step>8. <execute name="testing">changes made</execute></step>
-        <step>9. self-review changes to ensure clarity, correctness, and completeness</step>
+        <step>4. ensure follow conventions of the project for any changes made</step>
+        <step>5. <execute name="refactor">area to refactor</execute></step>
+        <step>6. <execute name="testing">refactoring changes</execute></step>
+        <step>7. implement changes to align code with specification</step>
+        <step>8. if renaming is needed, ensure all references in codebase and documentation are updated accordingly</step>
+        <step>9. <execute name="testing">changes made</execute></step>
+        <step>10. self-review changes to ensure clarity, correctness, and completeness</step>
     </loop>
-    <step>9. confirm and execute all changes</step>
+    <step>11. confirm and execute all changes</step>
     <return>Summary of alignment changes made</return>
 </procedure>
 
