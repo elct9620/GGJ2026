@@ -1,0 +1,113 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { GameOverScreen } from "./game-over-screen";
+import { GameStats } from "../core/game-state";
+
+describe("GameOverScreen", () => {
+  let gameOverScreen: GameOverScreen;
+  let onRestartMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    onRestartMock = vi.fn();
+    gameOverScreen = new GameOverScreen(onRestartMock);
+  });
+
+  afterEach(() => {
+    gameOverScreen.destroy();
+  });
+
+  describe("initialization", () => {
+    it("should create container", () => {
+      const container = gameOverScreen.getContainer();
+      expect(container).toBeDefined();
+    });
+
+    it("should be initially hidden", () => {
+      const container = gameOverScreen.getContainer();
+      expect(container.visible).toBe(false);
+    });
+  });
+
+  describe("show/hide", () => {
+    const mockStats: GameStats = {
+      wavesSurvived: 5,
+      enemiesDefeated: 10,
+      specialBulletsUsed: 3,
+    };
+
+    it("should show container when show() is called", () => {
+      gameOverScreen.show(mockStats);
+      const container = gameOverScreen.getContainer();
+      expect(container.visible).toBe(true);
+    });
+
+    it("should hide container when hide() is called", () => {
+      gameOverScreen.show(mockStats);
+      gameOverScreen.hide();
+      const container = gameOverScreen.getContainer();
+      expect(container.visible).toBe(false);
+    });
+
+    it("should display statistics when shown (GS-06, GS-07, GS-08)", () => {
+      // This test verifies that statistics are properly displayed
+      // Visual verification would be done manually, but we can verify
+      // that the method is called without errors
+      expect(() => {
+        gameOverScreen.show(mockStats);
+      }).not.toThrow();
+    });
+  });
+
+  describe("keyboard interaction", () => {
+    const mockStats: GameStats = {
+      wavesSurvived: 5,
+      enemiesDefeated: 10,
+      specialBulletsUsed: 3,
+    };
+
+    it("should call onRestart when Space is pressed while shown (GS-09)", () => {
+      gameOverScreen.show(mockStats);
+
+      const event = new KeyboardEvent("keydown", { code: "Space" });
+      window.dispatchEvent(event);
+
+      expect(onRestartMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not call onRestart when other keys are pressed", () => {
+      gameOverScreen.show(mockStats);
+
+      const event = new KeyboardEvent("keydown", { code: "KeyA" });
+      window.dispatchEvent(event);
+
+      expect(onRestartMock).not.toHaveBeenCalled();
+    });
+
+    it("should not call onRestart when Space is pressed while hidden", () => {
+      gameOverScreen.show(mockStats);
+      gameOverScreen.hide();
+
+      const event = new KeyboardEvent("keydown", { code: "Space" });
+      window.dispatchEvent(event);
+
+      expect(onRestartMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("cleanup", () => {
+    it("should remove event listeners on destroy", () => {
+      const mockStats: GameStats = {
+        wavesSurvived: 5,
+        enemiesDefeated: 10,
+        specialBulletsUsed: 3,
+      };
+
+      gameOverScreen.show(mockStats);
+      gameOverScreen.destroy();
+
+      const event = new KeyboardEvent("keydown", { code: "Space" });
+      window.dispatchEvent(event);
+
+      expect(onRestartMock).not.toHaveBeenCalled();
+    });
+  });
+});

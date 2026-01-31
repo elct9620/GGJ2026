@@ -372,59 +372,37 @@
 | ET-20   | Food 繼承 Entity   | Food.id 存在且唯一   | 繼承 Entity 屬性 |
 | ET-21   | 不同類型的 Entity  | 所有 id 必定不同     | 全域 ID 唯一性   |
 
-## 2.10 EventQueue Tests
+## 2.10 Game State Tests
 
-### 2.10.1 Publish and Subscribe
+### 2.10.1 Start Screen
 
-| Test ID | Input                              | Expected Output                  | Accept Criteria        |
-| ------- | ---------------------------------- | -------------------------------- | ---------------------- |
-| EQ-01   | 發佈事件 + 1 個訂閱者              | 訂閱者 Handler 被調用 1 次       | 事件正確傳遞           |
-| EQ-02   | 發佈事件 + 3 個訂閱者              | 所有訂閱者 Handler 各被調用 1 次 | 多個訂閱者同時接收     |
-| EQ-03   | 發佈事件 + 無訂閱者                | 無效果（事件被丟棄）             | 不拋出錯誤             |
-| EQ-04   | 訂閱後發佈事件                     | 訂閱者接收事件                   | 訂閱機制正常           |
-| EQ-05   | 取消訂閱後發佈事件                 | 訂閱者不接收事件                 | 取消訂閱機制正常       |
-| EQ-06   | 重複訂閱同一處理函式               | 僅保留 1 個訂閱                  | 自動去重               |
-| EQ-07   | 發佈事件附帶資料                   | 訂閱者接收正確資料               | 資料正確傳遞           |
-| EQ-08   | 發佈不同事件類型                   | 各訂閱者僅接收對應事件           | 事件類型隔離           |
+| Test ID | Input | Expected Output | Accept Criteria |
+| ------- | ----- | --------------- | --------------- |
+| GS-01 | 遊戲啟動 | 顯示開始畫面 | 畫面顯示遊戲標題和說明 |
+| GS-02 | 開始畫面 + 按 Space | 進入遊戲 | 開始畫面隱藏，遊戲開始 |
+| GS-03 | 開始畫面 + 按其他鍵 | 無效果 | 開始畫面仍顯示 |
+| GS-04 | 開始畫面顯示 | 遊戲未更新 | 遊戲邏輯暫停 |
 
-### 2.10.2 Delayed Execution
+### 2.10.2 Game Over Screen
 
-| Test ID | Input                              | Expected Output                  | Accept Criteria        |
-| ------- | ---------------------------------- | -------------------------------- | ---------------------- |
-| EQ-09   | 發佈延遲事件（delay=1000ms）       | 1 秒後 Handler 被調用            | 延遲執行正常           |
-| EQ-10   | 發佈立即事件（delay=0）            | 立即調用 Handler                 | 立即執行正常           |
-| EQ-11   | 發佈負數延遲事件（delay=-100）     | 視為立即執行                     | 負數延遲處理正確       |
-| EQ-12   | 連續發佈 3 個延遲事件              | 按延遲時間順序執行               | 佇列排序正確           |
-| EQ-13   | 延遲 500ms 和 1000ms 的事件        | 500ms 的先執行，1000ms 的後執行  | 執行順序正確           |
-| EQ-14   | 同時發佈多個相同延遲時間的事件     | 按發佈順序執行                   | FIFO 順序正確          |
+| Test ID | Input | Expected Output | Accept Criteria |
+| ------- | ----- | --------------- | --------------- |
+| GS-05 | 玩家生命值 = 0 | 顯示結束畫面 | 畫面顯示統計資料 |
+| GS-06 | 結束畫面 | 顯示存活回合數 | 統計數據正確 |
+| GS-07 | 結束畫面 | 顯示擊敗敵人總數 | 統計數據正確 |
+| GS-08 | 結束畫面 | 顯示使用特殊子彈次數 | 統計數據正確（現階段為 0） |
+| GS-09 | 結束畫面 + 按 Space | 返回開始畫面 | 結束畫面隱藏，開始畫面顯示 |
+| GS-10 | 結束畫面 + 按 Space + 再按 Space | 遊戲重新開始 | 玩家生命值恢復，回合數重置為 1 |
+| GS-11 | 結束畫面顯示 | 遊戲未更新 | 遊戲邏輯暫停 |
 
-### 2.10.3 Error Handling
+### 2.10.3 Game Statistics Tracking
 
-| Test ID | Input                              | Expected Output                  | Accept Criteria        |
-| ------- | ---------------------------------- | -------------------------------- | ---------------------- |
-| EQ-15   | Handler 拋出錯誤                   | 記錄錯誤，繼續執行其他訂閱者     | 錯誤隔離               |
-| EQ-16   | 取消不存在的訂閱                   | 無效果（不拋出錯誤）             | 容錯處理               |
-| EQ-17   | 發佈未定義的事件類型               | 事件正常發佈（無訂閱者）         | 不驗證事件類型         |
-| EQ-18   | 訂閱時 Handler 為 null             | 拋出 TypeError                   | 參數驗證               |
-
-### 2.10.4 Game Loop Integration
-
-| Test ID | Input                              | Expected Output                  | Accept Criteria        |
-| ------- | ---------------------------------- | -------------------------------- | ---------------------- |
-| EQ-19   | 每幀處理延遲佇列                   | 到期事件被執行                   | 與 Game Loop 整合正常  |
-| EQ-20   | 延遲事件跨越多幀                   | 在正確的幀執行                   | 時間計算正確           |
-| EQ-21   | 遊戲暫停時的延遲事件               | 暫停期間延遲時間不增加           | 暫停機制正確           |
-| EQ-22   | 遊戲恢復後的延遲事件               | 繼續計時並執行                   | 恢復機制正確           |
-
-### 2.10.5 Event Types Validation
-
-| Test ID | Input                              | Expected Output                  | Accept Criteria        |
-| ------- | ---------------------------------- | -------------------------------- | ---------------------- |
-| EQ-23   | 發佈 `WaveComplete` 事件           | 資料包含 `waveNumber`            | 事件資料結構正確       |
-| EQ-24   | 發佈 `EnemyDeath` 事件             | 資料包含 `enemyId` 和 `position` | 事件資料結構正確       |
-| EQ-25   | 發佈 `ReloadComplete` 事件         | 資料為空物件 `{}`                | 無資料事件正常         |
-| EQ-26   | Combat System 訂閱 `SynthesisTriggered` | 接收 `recipeId`             | 系統間事件傳遞正確     |
-| EQ-27   | Booth System 訂閱 `EnemyDeath`     | 接收 `enemyId` 和 `position`     | 系統間事件傳遞正確     |
+| Test ID | Input | Expected Output | Accept Criteria |
+| ------- | ----- | --------------- | --------------- |
+| GS-12 | 完成第 1 回合 | wavesSurvived = 1 | 統計正確記錄 |
+| GS-13 | 擊敗 1 隻餓鬼 | enemiesDefeated = 1 | 統計正確記錄 |
+| GS-14 | 擊敗 3 隻餓鬼 | enemiesDefeated = 3 | 統計累加正確 |
+| GS-15 | 遊戲重新開始 | 所有統計歸零 | 統計重置 |
 
 # 3. Integration Tests
 
@@ -448,11 +426,6 @@
 | IT-09   | 子彈系統 | Vector   | 追蹤子彈計算方向   | 子彈正確朝向敵人移動     | Vector 運算正確 |
 | IT-10   | 碰撞系統 | Vector   | 碰撞距離檢測       | 正確判斷碰撞範圍         | 距離計算正確    |
 | IT-11   | 散射系統 | Vector   | 散射子彈方向生成   | 生成多個不同方向的子彈   | 向量運算正確    |
-| IT-12   | 戰鬥系統 | EventQueue | 發佈 `EnemyDeath` 事件 | Booth System 自動儲存食材 | 事件驅動整合正常 |
-| IT-13   | 合成系統 | EventQueue | 發佈 `SynthesisTriggered` 事件 | Combat System 啟動 Buff | 事件驅動整合正常 |
-| IT-14   | 回合系統 | EventQueue | 發佈 `WaveComplete` 事件（延遲） | 延遲後觸發升級選項 | 延遲執行機制正常 |
-| IT-15   | 戰鬥系統 | EventQueue | 發佈 `ReloadComplete` 事件（延遲 3000ms） | 3 秒後彈夾恢復 | 重裝延遲正確 |
-| IT-16   | 戰鬥系統 | EventQueue | 發佈 `BuffExpired` 事件（延遲 2000ms） | 2 秒後 Buff 消失 | Buff 延遲正確 |
 
 # 4. Acceptance Tests
 
