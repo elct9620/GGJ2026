@@ -71,11 +71,25 @@ export class InputSystem implements ISystem {
   /**
    * Check if booth key is pressed (1, 2, or 3)
    * Spec: § 2.4.1 - 1/2/3 for retrieving food
+   * NOTE: Deprecated - will be removed in Phase 2 (new synthesis mechanism)
    */
   public getBoothKeyPressed(): number | null {
     if (this.keysPressed.has("1")) return 1;
     if (this.keysPressed.has("2")) return 2;
     if (this.keysPressed.has("3")) return 3;
+    return null;
+  }
+
+  /**
+   * Check if synthesis key is pressed (1-5)
+   * SPEC § 2.3.3: 數字鍵 1-5 直接觸發合成
+   */
+  public getSynthesisKeyPressed(): number | null {
+    if (this.keysPressed.has("1")) return 1;
+    if (this.keysPressed.has("2")) return 2;
+    if (this.keysPressed.has("3")) return 3;
+    if (this.keysPressed.has("4")) return 4;
+    if (this.keysPressed.has("5")) return 5;
     return null;
   }
 

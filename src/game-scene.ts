@@ -7,6 +7,7 @@ import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { CombatSystem } from "./systems/combat";
+import { SynthesisSystem } from "./systems/synthesis";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -36,7 +37,6 @@ export class GameScene {
 
   // Game state
   private currentWave: number = 1;
-  private synthesisSlot: FoodType[] = []; // TODO: Remove in Phase 2 (new synthesis mechanism)
   private isWaveTransitioning: boolean = false; // Prevent multiple wave spawns
 
   // Game statistics (Spec: § 2.8.2)
@@ -69,13 +69,17 @@ export class GameScene {
     // Initialize SystemManager and register all systems
     this.systemManager = new SystemManager();
     const eventQueue = new EventQueue();
+    const inputSystem = new InputSystem();
+    const boothSystem = new BoothSystem();
     const combatSystem = new CombatSystem();
+    const synthesisSystem = new SynthesisSystem();
 
     this.systemManager.register(eventQueue);
-    this.systemManager.register(new InputSystem());
+    this.systemManager.register(inputSystem);
     this.systemManager.register(combatSystem);
+    this.systemManager.register(synthesisSystem);
     this.systemManager.register(new HUDSystem());
-    this.systemManager.register(new BoothSystem());
+    this.systemManager.register(boothSystem);
     this.systemManager.initialize();
 
     // Subscribe to WaveComplete event
@@ -97,8 +101,12 @@ export class GameScene {
     combatSystem.setEnemies(this.enemies);
     combatSystem.setEventQueue(eventQueue);
 
+    // Connect Synthesis System with dependencies (SPEC § 2.3.3)
+    synthesisSystem.setInputSystem(inputSystem);
+    synthesisSystem.setBoothSystem(boothSystem);
+    synthesisSystem.setEventQueue(eventQueue);
+
     // Setup booth visualization
-    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
     this.boothContainer.addChild(boothSystem.getContainer());
 
     // Setup HUD
@@ -164,7 +172,6 @@ export class GameScene {
 
   private handleInput(deltaTime: number): void {
     const inputSystem = this.systemManager.get<InputSystem>("InputSystem");
-    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
     const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
 
     // Handle movement
@@ -180,20 +187,8 @@ export class GameScene {
       }
     }
 
-    // Handle booth interactions
-    // TODO: Remove in Phase 2 (new synthesis mechanism)
-    const boothKey = inputSystem.getBoothKeyPressed();
-    if (boothKey !== null && this.synthesisSlot.length < 3) {
-      const food = boothSystem.retrieveFood(boothKey);
-      if (food !== null) {
-        this.synthesisSlot.push(food);
-
-        // Auto-synthesis when slot is full (SPEC § 2.3.3)
-        if (this.synthesisSlot.length === 3) {
-          this.performSynthesis();
-        }
-      }
-    }
+    // Synthesis is now handled by SynthesisSystem (SPEC § 2.3.3)
+    // No manual booth interactions needed
   }
 
   private spawnBullet(): void {
@@ -293,19 +288,12 @@ export class GameScene {
     this.foodsContainer.addChild(food.sprite);
   }
 
-  private performSynthesis(): void {
-    // In prototype, just clear the synthesis slot
-    // Full synthesis system will be implemented later
-    console.log("Synthesis performed:", this.synthesisSlot);
-    this.synthesisSlot = [];
-  }
-
   private updateHUD(): void {
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
     hudSystem.updateEnemyCount(this.enemies.length);
     hudSystem.updateHealthDisplay(this.player.health);
     hudSystem.updateAmmo(this.player.ammo, this.player.maxAmmo);
-    hudSystem.updateSynthesis(this.synthesisSlot.length);
+    // Synthesis slot removed - Buff display handled by Combat/HUD systems
     hudSystem.updateReload(this.player.isReloading, this.player.reloadTimer);
   }
 
@@ -379,7 +367,6 @@ export class GameScene {
 
     // Reset game state
     this.currentWave = 1;
-    this.synthesisSlot = []; // TODO: Remove in Phase 2
     this.isWaveTransitioning = false;
 
     // Reset statistics
