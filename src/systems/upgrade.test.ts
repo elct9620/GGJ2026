@@ -135,15 +135,16 @@ describe("UpgradeSystem", () => {
       expect(true).toBe(true);
     });
 
-    it("UP-08: 食材不足無法選擇升級", () => {
-      // No food in booth
+    it("UP-08: 升級無需消耗食材 (SPEC § 2.3.4)", () => {
+      // SPEC § 2.3.4: 無消耗，直接選擇
+      // No food in booth - should still work because upgrades are free
       eventQueue.publish(EventType.WaveComplete, { waveNumber: 1 });
       const options = upgradeSystem.getCurrentOptions();
 
       const success = upgradeSystem.selectUpgrade(options[0].id);
 
-      expect(success).toBe(false);
-      expect(upgradeSystem.isPending()).toBe(true); // Still pending
+      expect(success).toBe(true); // Free upgrade, always succeeds
+      expect(upgradeSystem.isPending()).toBe(false); // Upgrade applied
     });
 
     it.skip("UP-09: 重複選擇普通升級效果堆疊", () => {

@@ -90,13 +90,13 @@ export class UpgradeSystem extends InjectableSystem {
     return this.getDependency<BoothSystem>(DependencyKeys.BoothSystem);
   }
 
-  // Upgrade pools (SPEC § 2.3.4)
+  // Upgrade pools (SPEC § 2.3.4 - 無消耗，直接選擇)
   private readonly normalUpgrades: UpgradeOption[] = [
     {
       id: "spicy",
       name: "加辣",
-      description: `臭豆腐傷害倍率 +${UPGRADE_CONFIG.normal.spicy.damageBonus}`,
-      cost: UPGRADE_CONFIG.normal.spicy.cost,
+      description: `臭豆腐傷害 +${UPGRADE_CONFIG.normal.spicy.damageBonus}`,
+      cost: null, // SPEC § 2.3.4: 無消耗
       effect: (state) => {
         state.stinkyTofuDamageBonus += UPGRADE_CONFIG.normal.spicy.damageBonus;
       },
@@ -104,8 +104,8 @@ export class UpgradeSystem extends InjectableSystem {
     {
       id: "coconut",
       name: "加椰果",
-      description: `珍珠奶茶子彈數 +${UPGRADE_CONFIG.normal.coconut.bulletBonus}`,
-      cost: UPGRADE_CONFIG.normal.coconut.cost,
+      description: `珍珠奶茶子彈 +${UPGRADE_CONFIG.normal.coconut.bulletBonus}`,
+      cost: null, // SPEC § 2.3.4: 無消耗
       effect: (state) => {
         state.bubbleTeaBulletBonus += UPGRADE_CONFIG.normal.coconut.bulletBonus;
       },
@@ -113,8 +113,8 @@ export class UpgradeSystem extends InjectableSystem {
     {
       id: "cilantro",
       name: "加香菜",
-      description: `豬血糕傷害範圍倍率 +${UPGRADE_CONFIG.normal.cilantro.rangeBonus}`,
-      cost: UPGRADE_CONFIG.normal.cilantro.cost,
+      description: `豬血糕範圍 +${UPGRADE_CONFIG.normal.cilantro.rangeBonus}`,
+      cost: null, // SPEC § 2.3.4: 無消耗
       effect: (state) => {
         state.bloodCakeRangeBonus += UPGRADE_CONFIG.normal.cilantro.rangeBonus;
       },

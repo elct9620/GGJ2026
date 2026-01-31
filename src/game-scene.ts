@@ -18,6 +18,7 @@ import { Vector } from "./values/vector";
 import { RECIPES } from "./values/recipes";
 import { RECIPE_CONFIG } from "./config";
 import type { GameStats } from "./core/game-state";
+import { UpgradeScreen } from "./screens/upgrade-screen";
 
 /**
  * Main game scene managing all game entities and systems
@@ -52,6 +53,11 @@ export class GameScene {
 
   // Game over callback
   private onGameOver: ((stats: GameStats) => void) | null = null;
+
+  // Upgrade screen (SPEC § 2.3.4)
+  private upgradeScreen: UpgradeScreen;
+  private isPaused: boolean = false;
+  private pendingWaveNumber: number = 0;
 
   constructor(
     playerContainer: Container,
@@ -110,11 +116,16 @@ export class GameScene {
     // Subscribe to WaveStart for HUD updates
     eventQueue.subscribe(EventType.WaveStart, this.onWaveStart.bind(this));
 
-    // Subscribe to WaveComplete for next wave (SPEC § 2.3.5)
-    // TODO: Add upgrade UI before enabling upgrade system
+    // Subscribe to WaveComplete for upgrade selection (SPEC § 2.3.4)
     eventQueue.subscribe(
       EventType.WaveComplete,
       this.onWaveComplete.bind(this),
+    );
+
+    // Subscribe to UpgradeSelected to continue to next wave
+    eventQueue.subscribe(
+      EventType.UpgradeSelected,
+      this.onUpgradeSelected.bind(this),
     );
 
     // Initialize player at center of playable area
@@ -140,6 +151,10 @@ export class GameScene {
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
     this.uiLayer.addChild(hudSystem.getTopHUD());
     this.uiLayer.addChild(hudSystem.getBottomHUD());
+
+    // Setup Upgrade Screen (SPEC § 2.3.4)
+    this.upgradeScreen = new UpgradeScreen(this.onUpgradeSelect.bind(this));
+    this.uiLayer.addChild(this.upgradeScreen.getContainer());
 
     // Connect Wave System spawn callback (SPEC § 2.3.5)
     waveSystem.setSpawnCallback(this.spawnEnemy.bind(this));
@@ -179,6 +194,11 @@ export class GameScene {
    * Main update loop
    */
   public update(deltaTime: number): void {
+    // Skip game updates when paused (upgrade screen visible)
+    if (this.isPaused) {
+      return;
+    }
+
     // Update all systems (EventQueue will process first due to priority)
     // Combat System handles: shooting, collisions, buff management
     // Wave System handles: enemy spawning, wave progression
@@ -487,17 +507,60 @@ export class GameScene {
   }
 
   /**
-   * Handle wave completion event (SPEC § 2.3.6)
-   * Start next wave directly (upgrade system disabled until UI implemented)
+   * Handle wave completion event (SPEC § 2.3.4, § 2.3.6)
+   * Show upgrade selection screen before starting next wave
    */
   private onWaveComplete(data: { waveNumber: number }): void {
     // Update statistics - track waves survived (Spec: § 2.8.2)
     this.stats.wavesSurvived = data.waveNumber;
 
-    // Start next wave directly (SPEC § 2.3.5)
-    // TODO: Enable upgrade selection when UI is ready
-    const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
-    waveSystem.startWave(data.waveNumber + 1);
+    // Store pending wave for after upgrade selection
+    this.pendingWaveNumber = data.waveNumber + 1;
+
+    // Pause game and show upgrade screen (SPEC § 2.3.4)
+    const upgradeSystem =
+      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
+    const options = upgradeSystem.getCurrentOptions();
+
+    if (options.length > 0) {
+      this.isPaused = true;
+      this.upgradeScreen.show([...options]);
+    } else {
+      // No options available, continue to next wave
+      const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
+      waveSystem.startWave(this.pendingWaveNumber);
+    }
+  }
+
+  /**
+   * Handle upgrade selection from UpgradeScreen
+   */
+  private onUpgradeSelect(upgradeId: string): void {
+    const upgradeSystem =
+      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
+
+    // Apply the selected upgrade
+    const success = upgradeSystem.selectUpgrade(upgradeId);
+
+    if (success) {
+      // Hide upgrade screen and resume game
+      this.upgradeScreen.hide();
+      this.isPaused = false;
+
+      // Start next wave (SPEC § 2.3.5)
+      const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
+      waveSystem.startWave(this.pendingWaveNumber);
+    }
+    // If upgrade failed (insufficient resources), keep screen visible
+  }
+
+  /**
+   * Handle UpgradeSelected event from UpgradeSystem (SPEC § 2.3.6)
+   * This is published after upgrade is successfully applied
+   */
+  private onUpgradeSelected(_data: { upgradeId: string }): void {
+    // Track special bullet usage for statistics
+    // (upgrade selection is already handled in onUpgradeSelect)
   }
 
   /**
@@ -532,6 +595,16 @@ export class GameScene {
     // Reset wave system and start wave 1
     const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
     waveSystem.reset();
+
+    // Reset upgrade system (SPEC § 2.3.4)
+    const upgradeSystem =
+      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
+    upgradeSystem.reset();
+
+    // Hide upgrade screen if visible
+    this.upgradeScreen.hide();
+    this.isPaused = false;
+    this.pendingWaveNumber = 0;
 
     // Reset statistics
     this.stats = {
