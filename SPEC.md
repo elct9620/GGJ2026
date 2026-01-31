@@ -1,14 +1,5 @@
 # Game Specification: Night Market Defense
 
-> 版本：0.3.0
-> 最後更新：2026-01-31
->
-> **變更記錄**:
->
-> - v0.3.0 (2026-01-31): 新增 System 架構（§ 2.9）與 GameState 管理機制
-> - v0.2.0 (2026-01-31): 新增 Entity 架構（§ 2.5）與相關設計決策
-> - v0.1.0 (2026-01-31): 初始版本
-
 # 1. Intent Layer
 
 ## 1.1 Purpose
@@ -75,21 +66,21 @@
 
 ## 2.2 Terminology
 
-| 術語                  | 定義                                                 |
-| --------------------- | ---------------------------------------------------- |
-| **Entity（實體）**    | 遊戲中所有物件的基礎類別，提供唯一 ID 和生命週期管理 |
-| **Player（玩家）**    | 可操作的角色，能在遊戲畫面中自由移動                 |
-| **Booth（攤位）**     | 用來儲存食材的固定區域，每種食材有專屬攤位           |
-| **Food（食材）**      | 合成技能的素材，擊敗敵人掉落，敵人也會奪取           |
-| **Ghost（餓鬼）**     | 一般敵人，生命值 1 點                                |
-| **Boss（餓死鬼）**    | 強化敵人，生命值 3 點，每 5 回合出現                 |
-| **Wave（回合）**      | 每回合生成固定數量敵人，回合數越高敵人越多           |
-| **Bullet（子彈）**    | 玩家攻擊單位，包含普通子彈和特殊子彈                 |
-| **Synthesis（合成）** | 消耗 3 個食材產生特殊子彈效果                        |
-| **Upgrade（升級）**   | 回合間強化能力的永久效果                             |
-| **System（系統）**    | 負責處理特定遊戲邏輯的模組，透過 GameState 更新狀態  |
-| **GameState（遊戲狀態）** | 集中管理所有遊戲實體和系統狀態的中央資料結構        |
-| **Vector（向量）**    | 不可變的 2D 座標值物件，用於位置和方向計算           |
+| 術語                      | 定義                                                 |
+| ------------------------- | ---------------------------------------------------- |
+| **Entity（實體）**        | 遊戲中所有物件的基礎類別，提供唯一 ID 和生命週期管理 |
+| **Player（玩家）**        | 可操作的角色，能在遊戲畫面中自由移動                 |
+| **Booth（攤位）**         | 用來儲存食材的固定區域，每種食材有專屬攤位           |
+| **Food（食材）**          | 合成技能的素材，擊敗敵人掉落，敵人也會奪取           |
+| **Ghost（餓鬼）**         | 一般敵人，生命值 1 點                                |
+| **Boss（餓死鬼）**        | 強化敵人，生命值 3 點，每 5 回合出現                 |
+| **Wave（回合）**          | 每回合生成固定數量敵人，回合數越高敵人越多           |
+| **Bullet（子彈）**        | 玩家攻擊單位，包含普通子彈和特殊子彈                 |
+| **Synthesis（合成）**     | 消耗 3 個食材產生特殊子彈效果                        |
+| **Upgrade（升級）**       | 回合間強化能力的永久效果                             |
+| **System（系統）**        | 負責處理特定遊戲邏輯的模組，透過 GameState 更新狀態  |
+| **GameState（遊戲狀態）** | 集中管理所有遊戲實體和系統狀態的中央資料結構         |
+| **Vector（向量）**        | 不可變的 2D 座標值物件，用於位置和方向計算           |
 
 ## 2.3 Core Systems
 
@@ -568,7 +559,7 @@ abstract class Entity {
 
 ```typescript
 interface System {
-  process(gameState: GameState): void
+  process(gameState: GameState): void;
 }
 ```
 
@@ -586,10 +577,10 @@ interface System {
 
 **Error Scenarios**:
 
-| 操作           | 當前狀態          | 結果                   |
-| -------------- | ----------------- | ---------------------- |
-| Process 執行   | GameState 為 null | 拋出錯誤               |
-| 存取未初始化系統 | 系統狀態未初始化   | 拋出錯誤或優雅降級     |
+| 操作             | 當前狀態          | 結果               |
+| ---------------- | ----------------- | ------------------ |
+| Process 執行     | GameState 為 null | 拋出錯誤           |
+| 存取未初始化系統 | 系統狀態未初始化  | 拋出錯誤或優雅降級 |
 
 ### 2.9.2 GameState Structure
 
@@ -597,50 +588,50 @@ interface System {
 
 **Properties**:
 
-| 屬性          | 類型                      | 說明                     |
-| ------------- | ------------------------- | ------------------------ |
-| `player`      | `Player`                  | 玩家實體                 |
-| `enemies`     | `Entity[]`                | 所有敵人（Ghost + Boss） |
-| `bullets`     | `Entity[]`                | 所有子彈                 |
-| `foods`       | `Entity[]`                | 所有掉落食材             |
-| `booths`      | `BoothState[]`            | 三個攤位的狀態           |
-| `synthesis`   | `SynthesisState`          | 合成槽狀態               |
-| `wave`        | `WaveState`               | 回合狀態                 |
-| `deltaTime`   | `number`                  | 上一幀到本幀的時間差（秒）|
-| `totalTime`   | `number`                  | 遊戲開始至今的總時間（秒）|
-| `input`       | `InputState`              | 當前幀的輸入狀態         |
+| 屬性        | 類型             | 說明                       |
+| ----------- | ---------------- | -------------------------- |
+| `player`    | `Player`         | 玩家實體                   |
+| `enemies`   | `Entity[]`       | 所有敵人（Ghost + Boss）   |
+| `bullets`   | `Entity[]`       | 所有子彈                   |
+| `foods`     | `Entity[]`       | 所有掉落食材               |
+| `booths`    | `BoothState[]`   | 三個攤位的狀態             |
+| `synthesis` | `SynthesisState` | 合成槽狀態                 |
+| `wave`      | `WaveState`      | 回合狀態                   |
+| `deltaTime` | `number`         | 上一幀到本幀的時間差（秒） |
+| `totalTime` | `number`         | 遊戲開始至今的總時間（秒） |
+| `input`     | `InputState`     | 當前幀的輸入狀態           |
 
 **State Definitions**:
 
 ```typescript
 interface BoothState {
-  type: 'pearl' | 'tofu' | 'blood-cake'
-  count: number  // 0-6
+  type: "pearl" | "tofu" | "blood-cake";
+  count: number; // 0-6
 }
 
 interface SynthesisState {
-  slots: ('pearl' | 'tofu' | 'blood-cake' | null)[]  // length: 3
-  activeBuff: SpecialBulletType | null
-  buffTimeRemaining: number  // seconds
+  slots: ("pearl" | "tofu" | "blood-cake" | null)[]; // length: 3
+  activeBuff: SpecialBulletType | null;
+  buffTimeRemaining: number; // seconds
 }
 
 interface WaveState {
-  currentWave: number
-  remainingEnemies: number
-  isUpgrading: boolean
+  currentWave: number;
+  remainingEnemies: number;
+  isUpgrading: boolean;
 }
 
 interface InputState {
   keys: {
-    w: boolean
-    a: boolean
-    s: boolean
-    d: boolean
-    space: boolean
-    digit1: boolean
-    digit2: boolean
-    digit3: boolean
-  }
+    w: boolean;
+    a: boolean;
+    s: boolean;
+    d: boolean;
+    space: boolean;
+    digit1: boolean;
+    digit2: boolean;
+    digit3: boolean;
+  };
 }
 ```
 
@@ -654,18 +645,18 @@ interface InputState {
 
 系統按固定順序執行，確保邏輯正確性：
 
-| 順序 | 系統名稱         | 職責                               |
-| ---- | ---------------- | ---------------------------------- |
-| 1    | Input System     | 讀取鍵盤輸入，更新 `InputState`    |
-| 2    | Player System    | 處理玩家移動和邊界限制             |
-| 3    | Combat System    | 處理射擊、重裝、子彈生成           |
-| 4    | Enemy System     | 處理敵人移動和行為                 |
-| 5    | Bullet System    | 處理子彈移動和特殊效果             |
-| 6    | Collision System | 檢測碰撞並觸發對應事件             |
-| 7    | Booth System     | 處理食材儲存和提取                 |
-| 8    | Synthesis System | 處理合成槽和 Buff 計時             |
-| 9    | Wave System      | 處理敵人生成和回合進程             |
-| 10   | Cleanup System   | 清理停用實體，返回物件池           |
+| 順序 | 系統名稱         | 職責                            |
+| ---- | ---------------- | ------------------------------- |
+| 1    | Input System     | 讀取鍵盤輸入，更新 `InputState` |
+| 2    | Player System    | 處理玩家移動和邊界限制          |
+| 3    | Combat System    | 處理射擊、重裝、子彈生成        |
+| 4    | Enemy System     | 處理敵人移動和行為              |
+| 5    | Bullet System    | 處理子彈移動和特殊效果          |
+| 6    | Collision System | 檢測碰撞並觸發對應事件          |
+| 7    | Booth System     | 處理食材儲存和提取              |
+| 8    | Synthesis System | 處理合成槽和 Buff 計時          |
+| 9    | Wave System      | 處理敵人生成和回合進程          |
+| 10   | Cleanup System   | 清理停用實體，返回物件池        |
 
 **執行順序理由**:
 
@@ -676,10 +667,10 @@ interface InputState {
 
 **Error Scenarios**:
 
-| 情況               | 結果                           |
-| ------------------ | ------------------------------ |
-| 系統執行順序錯誤   | 可能導致邏輯錯誤（例：碰撞未檢測） |
-| 系統執行時間過長   | 幀率下降，遊戲卡頓             |
+| 情況             | 結果                               |
+| ---------------- | ---------------------------------- |
+| 系統執行順序錯誤 | 可能導致邏輯錯誤（例：碰撞未檢測） |
+| 系統執行時間過長 | 幀率下降，遊戲卡頓                 |
 
 ### 2.9.4 System Communication
 
@@ -1034,40 +1025,7 @@ Application.stage
 
 # 5. Appendix
 
-## 5.1 Design Decisions
-
-**已確認的設計決策**:
-
-1. 使用 Entity 基礎類別管理所有遊戲物件
-2. Entity ID 使用自增整數（轉字串格式）
-3. Entity 生命週期透過 `active` 狀態管理
-4. 攤位位置固定（非可移動）
-5. 敵人偷取食材數量：1 個/次
-6. 普通子彈傷害：1 點
-7. 重裝期間可移動、不可射擊
-8. 特殊子彈為臨時 Buff（不替換彈夾）
-9. 總回合數：無限（直到死亡）
-10. 敵人數量公式：回合數 × 2
-11. Boss 出現頻率：每 5 回合
-12. 合成觸發：自動（放入第 3 個食材）
-13. 玩家生命系統：5 條生命（無獨立血條）
-14. 玩家移動速度：200 px/s
-15. 玩家碰撞箱：24×24 px
-16. 食材掉落率：100%
-17. 食材類型：隨機
-18. 升級效果：永久持續
-19. 升級可重複：可以（效果堆疊）
-20. 目標解析度：1920×1080
-21. 攤位區寬度：384 px
-22. 夜市總匯連鎖：無限連鎖
-23. 使用 Pixi.js v8 作為渲染引擎
-24. 使用物件池管理子彈和敵人
-25. 使用 System 介面統一管理遊戲邏輯
-26. 使用 GameState 集中管理遊戲狀態
-27. 系統按固定順序執行（Input → Player → Combat → ... → Cleanup）
-28. 系統透過 GameState 間接通訊（不直接相互呼叫）
-
-## 5.2 Open Questions
+## 5.1 Open Questions
 
 **待澄清的設計細節**:
 

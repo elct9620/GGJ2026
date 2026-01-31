@@ -1,8 +1,5 @@
 # Game Systems Implementation Guide
 
-> 版本：0.1.0
-> 最後更新：2026-01-31
-
 本文件提供每個遊戲系統的詳細實作指南，補充 [SPEC.md](../SPEC.md) § 2.9 System Architecture 的規格定義。
 
 ## 目錄
@@ -34,14 +31,14 @@
 class InputSystem implements System {
   process(gameState: GameState): void {
     // 讀取鍵盤狀態並更新 gameState.input.keys
-    gameState.input.keys.w = isKeyPressed('KeyW')
-    gameState.input.keys.a = isKeyPressed('KeyA')
-    gameState.input.keys.s = isKeyPressed('KeyS')
-    gameState.input.keys.d = isKeyPressed('KeyD')
-    gameState.input.keys.space = isKeyPressed('Space')
-    gameState.input.keys.digit1 = isKeyPressed('Digit1')
-    gameState.input.keys.digit2 = isKeyPressed('Digit2')
-    gameState.input.keys.digit3 = isKeyPressed('Digit3')
+    gameState.input.keys.w = isKeyPressed("KeyW");
+    gameState.input.keys.a = isKeyPressed("KeyA");
+    gameState.input.keys.s = isKeyPressed("KeyS");
+    gameState.input.keys.d = isKeyPressed("KeyD");
+    gameState.input.keys.space = isKeyPressed("Space");
+    gameState.input.keys.digit1 = isKeyPressed("Digit1");
+    gameState.input.keys.digit2 = isKeyPressed("Digit2");
+    gameState.input.keys.digit3 = isKeyPressed("Digit3");
   }
 }
 ```
@@ -71,27 +68,27 @@ class InputSystem implements System {
 ```typescript
 class PlayerSystem implements System {
   process(gameState: GameState): void {
-    const player = gameState.player
-    const input = gameState.input.keys
-    const speed = 200 // px/s
-    const deltaTime = gameState.deltaTime
+    const player = gameState.player;
+    const input = gameState.input.keys;
+    const speed = 200; // px/s
+    const deltaTime = gameState.deltaTime;
 
     // 計算移動向量
-    let dx = 0
-    let dy = 0
-    if (input.w) dy -= speed * deltaTime
-    if (input.s) dy += speed * deltaTime
-    if (input.a) dx -= speed * deltaTime
-    if (input.d) dx += speed * deltaTime
+    let dx = 0;
+    let dy = 0;
+    if (input.w) dy -= speed * deltaTime;
+    if (input.s) dy += speed * deltaTime;
+    if (input.a) dx -= speed * deltaTime;
+    if (input.d) dx += speed * deltaTime;
 
     // 更新玩家位置
-    player.position = player.position.add(new Vector(dx, dy))
+    player.position = player.position.add(new Vector(dx, dy));
 
     // 邊界限制（遊戲活動區：x ∈ [384, 1920], y ∈ [0, 1080]）
     player.position = new Vector(
       Math.max(384, Math.min(1920, player.position.x)),
-      Math.max(0, Math.min(1080, player.position.y))
-    )
+      Math.max(0, Math.min(1080, player.position.y)),
+    );
   }
 }
 ```
@@ -120,51 +117,51 @@ class PlayerSystem implements System {
 
 ```typescript
 class CombatSystem implements System {
-  private reloadTimer = 0
-  private magazineSize = 6
-  private currentAmmo = 6
+  private reloadTimer = 0;
+  private magazineSize = 6;
+  private currentAmmo = 6;
 
   process(gameState: GameState): void {
-    const player = gameState.player
-    const input = gameState.input.keys
-    const deltaTime = gameState.deltaTime
-    const activeBuff = gameState.synthesis.activeBuff
+    const player = gameState.player;
+    const input = gameState.input.keys;
+    const deltaTime = gameState.deltaTime;
+    const activeBuff = gameState.synthesis.activeBuff;
 
     // 重裝計時
     if (this.currentAmmo === 0) {
-      this.reloadTimer += deltaTime
+      this.reloadTimer += deltaTime;
       if (this.reloadTimer >= 3) {
-        this.currentAmmo = this.magazineSize
-        this.reloadTimer = 0
+        this.currentAmmo = this.magazineSize;
+        this.reloadTimer = 0;
       }
-      return // 重裝期間無法射擊
+      return; // 重裝期間無法射擊
     }
 
     // 射擊
     if (input.space && this.currentAmmo > 0) {
-      this.currentAmmo--
+      this.currentAmmo--;
 
       // 根據 Buff 產生對應子彈
       if (activeBuff) {
-        this.createSpecialBullet(gameState, player.position, activeBuff)
+        this.createSpecialBullet(gameState, player.position, activeBuff);
       } else {
-        this.createNormalBullet(gameState, player.position)
+        this.createNormalBullet(gameState, player.position);
       }
     }
   }
 
   private createNormalBullet(gameState: GameState, position: Vector): void {
-    const bullet = this.getBulletFromPool(gameState)
-    bullet.position = position
-    bullet.velocity = new Vector(400, 0) // 向右飛行
-    bullet.damage = 1
-    gameState.bullets.push(bullet)
+    const bullet = this.getBulletFromPool(gameState);
+    bullet.position = position;
+    bullet.velocity = new Vector(400, 0); // 向右飛行
+    bullet.damage = 1;
+    gameState.bullets.push(bullet);
   }
 
   private createSpecialBullet(
     gameState: GameState,
     position: Vector,
-    type: SpecialBulletType
+    type: SpecialBulletType,
   ): void {
     // 根據 type 產生不同特殊子彈（參見 SPEC.md § 2.3.3）
     // 例：珍珠奶茶散射 10 個小子彈
@@ -197,19 +194,19 @@ class CombatSystem implements System {
 ```typescript
 class EnemySystem implements System {
   process(gameState: GameState): void {
-    const deltaTime = gameState.deltaTime
+    const deltaTime = gameState.deltaTime;
 
     for (const enemy of gameState.enemies) {
-      if (!enemy.active) continue
+      if (!enemy.active) continue;
 
       // 向左移動
-      const speed = enemy.type === 'ghost' ? 50 : 30 // Ghost: 50 px/s, Boss: 30 px/s
-      enemy.position = enemy.position.add(new Vector(-speed * deltaTime, 0))
+      const speed = enemy.type === "ghost" ? 50 : 30; // Ghost: 50 px/s, Boss: 30 px/s
+      enemy.position = enemy.position.add(new Vector(-speed * deltaTime, 0));
 
       // 到達底線（x = 384）
       if (enemy.position.x <= 384) {
-        gameState.player.health--
-        enemy.active = false
+        gameState.player.health--;
+        enemy.active = false;
       }
     }
   }
@@ -241,33 +238,38 @@ class EnemySystem implements System {
 ```typescript
 class BulletSystem implements System {
   process(gameState: GameState): void {
-    const deltaTime = gameState.deltaTime
+    const deltaTime = gameState.deltaTime;
 
     for (const bullet of gameState.bullets) {
-      if (!bullet.active) continue
+      if (!bullet.active) continue;
 
       // 基本移動
       bullet.position = bullet.position.add(
-        bullet.velocity.multiply(deltaTime)
-      )
+        bullet.velocity.multiply(deltaTime),
+      );
 
       // 追蹤邏輯（豬血糕系列）
       if (bullet.hasTracking) {
-        const target = this.findNearestEnemy(gameState, bullet.position)
+        const target = this.findNearestEnemy(gameState, bullet.position);
         if (target) {
-          const direction = target.position.subtract(bullet.position).normalize()
-          bullet.velocity = direction.multiply(400) // 追蹤速度
+          const direction = target.position
+            .subtract(bullet.position)
+            .normalize();
+          bullet.velocity = direction.multiply(400); // 追蹤速度
         }
       }
 
       // 離開畫面
       if (bullet.position.x > 1920 || bullet.position.x < 0) {
-        bullet.active = false
+        bullet.active = false;
       }
     }
   }
 
-  private findNearestEnemy(gameState: GameState, position: Vector): Entity | null {
+  private findNearestEnemy(
+    gameState: GameState,
+    position: Vector,
+  ): Entity | null {
     // 找到最近的敵人
   }
 }
@@ -300,16 +302,16 @@ class CollisionSystem implements System {
   process(gameState: GameState): void {
     // 子彈 vs 敵人
     for (const bullet of gameState.bullets) {
-      if (!bullet.active) continue
+      if (!bullet.active) continue;
       for (const enemy of gameState.enemies) {
-        if (!enemy.active) continue
+        if (!enemy.active) continue;
         if (this.checkAABB(bullet, enemy)) {
-          enemy.health -= bullet.damage
-          if (!bullet.isPenetrating) bullet.active = false
+          enemy.health -= bullet.damage;
+          if (!bullet.isPenetrating) bullet.active = false;
 
           if (enemy.health <= 0) {
-            this.dropFood(gameState, enemy.position)
-            enemy.active = false
+            this.dropFood(gameState, enemy.position);
+            enemy.active = false;
           }
         }
       }
@@ -317,19 +319,19 @@ class CollisionSystem implements System {
 
     // 玩家 vs 食材
     for (const food of gameState.foods) {
-      if (!food.active) continue
+      if (!food.active) continue;
       if (this.checkAABB(gameState.player, food)) {
-        food.active = false
+        food.active = false;
         // Booth System 會處理食材儲存
       }
     }
 
     // 敵人 vs 攤位
     for (const enemy of gameState.enemies) {
-      if (!enemy.active) continue
+      if (!enemy.active) continue;
       for (const booth of gameState.booths) {
         if (this.checkBoothCollision(enemy, booth) && booth.count > 0) {
-          booth.count--
+          booth.count--;
         }
       }
     }
@@ -340,10 +342,10 @@ class CollisionSystem implements System {
   }
 
   private dropFood(gameState: GameState, position: Vector): void {
-    const food = this.getFoodFromPool(gameState)
-    food.position = position
-    food.type = this.randomFoodType() // 'pearl' | 'tofu' | 'blood-cake'
-    gameState.foods.push(food)
+    const food = this.getFoodFromPool(gameState);
+    food.position = position;
+    food.type = this.randomFoodType(); // 'pearl' | 'tofu' | 'blood-cake'
+    gameState.foods.push(food);
   }
 }
 ```
@@ -373,38 +375,44 @@ class CollisionSystem implements System {
 ```typescript
 class BoothSystem implements System {
   process(gameState: GameState): void {
-    const input = gameState.input.keys
+    const input = gameState.input.keys;
 
     // 儲存食材（由 Collision System 設定 food.active = false）
     for (const food of gameState.foods) {
       if (!food.active) {
-        const booth = this.findBoothByType(gameState, food.type)
+        const booth = this.findBoothByType(gameState, food.type);
         if (booth && booth.count < 6) {
-          booth.count++
+          booth.count++;
         }
       }
     }
 
     // 提取食材
-    if (input.digit1) this.retrieveFood(gameState, 0) // 攤位 1（珍珠）
-    if (input.digit2) this.retrieveFood(gameState, 1) // 攤位 2（豆腐）
-    if (input.digit3) this.retrieveFood(gameState, 2) // 攤位 3（米血）
+    if (input.digit1) this.retrieveFood(gameState, 0); // 攤位 1（珍珠）
+    if (input.digit2) this.retrieveFood(gameState, 1); // 攤位 2（豆腐）
+    if (input.digit3) this.retrieveFood(gameState, 2); // 攤位 3（米血）
   }
 
   private retrieveFood(gameState: GameState, boothIndex: number): void {
-    const booth = gameState.booths[boothIndex]
-    const synthesis = gameState.synthesis
+    const booth = gameState.booths[boothIndex];
+    const synthesis = gameState.synthesis;
 
     // 檢查攤位是否有食材、合成槽是否已滿
-    if (booth.count > 0 && synthesis.slots.filter(s => s !== null).length < 3) {
-      booth.count--
-      const emptySlot = synthesis.slots.findIndex(s => s === null)
-      synthesis.slots[emptySlot] = booth.type
+    if (
+      booth.count > 0 &&
+      synthesis.slots.filter((s) => s !== null).length < 3
+    ) {
+      booth.count--;
+      const emptySlot = synthesis.slots.findIndex((s) => s === null);
+      synthesis.slots[emptySlot] = booth.type;
     }
   }
 
-  private findBoothByType(gameState: GameState, type: string): BoothState | null {
-    return gameState.booths.find(b => b.type === type) || null
+  private findBoothByType(
+    gameState: GameState,
+    type: string,
+  ): BoothState | null {
+    return gameState.booths.find((b) => b.type === type) || null;
   }
 }
 ```
@@ -434,28 +442,28 @@ class BoothSystem implements System {
 ```typescript
 class SynthesisSystem implements System {
   process(gameState: GameState): void {
-    const synthesis = gameState.synthesis
-    const deltaTime = gameState.deltaTime
+    const synthesis = gameState.synthesis;
+    const deltaTime = gameState.deltaTime;
 
     // Buff 計時
     if (synthesis.activeBuff) {
-      synthesis.buffTimeRemaining -= deltaTime
+      synthesis.buffTimeRemaining -= deltaTime;
       if (synthesis.buffTimeRemaining <= 0) {
-        synthesis.activeBuff = null
-        synthesis.buffTimeRemaining = 0
+        synthesis.activeBuff = null;
+        synthesis.buffTimeRemaining = 0;
       }
     }
 
     // 自動合成（放入第 3 個食材時觸發）
-    const filledSlots = synthesis.slots.filter(s => s !== null).length
+    const filledSlots = synthesis.slots.filter((s) => s !== null).length;
     if (filledSlots === 3) {
-      const recipe = this.findRecipe(synthesis.slots)
+      const recipe = this.findRecipe(synthesis.slots);
       if (recipe) {
-        synthesis.activeBuff = recipe.bulletType
-        synthesis.buffTimeRemaining = recipe.duration // 2 秒（夜市總匯除外）
+        synthesis.activeBuff = recipe.bulletType;
+        synthesis.buffTimeRemaining = recipe.duration; // 2 秒（夜市總匯除外）
       }
       // 清空合成槽
-      synthesis.slots = [null, null, null]
+      synthesis.slots = [null, null, null];
     }
   }
 
@@ -490,43 +498,43 @@ class SynthesisSystem implements System {
 ```typescript
 class WaveSystem implements System {
   process(gameState: GameState): void {
-    const wave = gameState.wave
+    const wave = gameState.wave;
 
     // 更新剩餘敵人數量
-    wave.remainingEnemies = gameState.enemies.filter(e => e.active).length
+    wave.remainingEnemies = gameState.enemies.filter((e) => e.active).length;
 
     // 回合結束條件
     if (wave.remainingEnemies === 0 && !wave.isUpgrading) {
-      wave.isUpgrading = true
-      this.showUpgradeOptions(gameState)
-      return
+      wave.isUpgrading = true;
+      this.showUpgradeOptions(gameState);
+      return;
     }
 
     // 升級完成，進入下一回合
     if (wave.isUpgrading && this.isUpgradeComplete(gameState)) {
-      wave.isUpgrading = false
-      wave.currentWave++
-      this.spawnEnemies(gameState)
+      wave.isUpgrading = false;
+      wave.currentWave++;
+      this.spawnEnemies(gameState);
     }
   }
 
   private spawnEnemies(gameState: GameState): void {
-    const wave = gameState.wave.currentWave
-    const ghostCount = wave * 2
-    const hasBoss = wave % 5 === 0
+    const wave = gameState.wave.currentWave;
+    const ghostCount = wave * 2;
+    const hasBoss = wave % 5 === 0;
 
     // 生成一般敵人
     for (let i = 0; i < ghostCount; i++) {
-      const ghost = this.getEnemyFromPool(gameState, 'ghost')
-      ghost.position = new Vector(1920 + i * 50, Math.random() * 1080)
-      gameState.enemies.push(ghost)
+      const ghost = this.getEnemyFromPool(gameState, "ghost");
+      ghost.position = new Vector(1920 + i * 50, Math.random() * 1080);
+      gameState.enemies.push(ghost);
     }
 
     // 生成 Boss
     if (hasBoss) {
-      const boss = this.getEnemyFromPool(gameState, 'boss')
-      boss.position = new Vector(1920, 540)
-      gameState.enemies.push(boss)
+      const boss = this.getEnemyFromPool(gameState, "boss");
+      boss.position = new Vector(1920, 540);
+      gameState.enemies.push(boss);
     }
   }
 
@@ -536,7 +544,7 @@ class WaveSystem implements System {
 
   private isUpgradeComplete(gameState: GameState): boolean {
     // 檢查玩家是否已選擇升級（此處省略）
-    return true
+    return true;
   }
 }
 ```
@@ -568,13 +576,13 @@ class WaveSystem implements System {
 class CleanupSystem implements System {
   process(gameState: GameState): void {
     // 清理子彈
-    gameState.bullets = gameState.bullets.filter(b => b.active)
+    gameState.bullets = gameState.bullets.filter((b) => b.active);
 
     // 清理敵人
-    gameState.enemies = gameState.enemies.filter(e => e.active)
+    gameState.enemies = gameState.enemies.filter((e) => e.active);
 
     // 清理食材
-    gameState.foods = gameState.foods.filter(f => f.active)
+    gameState.foods = gameState.foods.filter((f) => f.active);
   }
 }
 ```
@@ -668,8 +676,8 @@ class ScoreSystem implements System {
     // 計算分數：擊敗敵人 +10 分，合成特殊子彈 +5 分
     for (const enemy of gameState.enemies) {
       if (!enemy.active && enemy.justKilled) {
-        gameState.score += 10
-        enemy.justKilled = false
+        gameState.score += 10;
+        enemy.justKilled = false;
       }
     }
   }
@@ -693,16 +701,16 @@ class ScoreSystem implements System {
 **範例**:
 
 ```typescript
-test('PlayerSystem: moves player based on input', () => {
-  const gameState = createTestGameState()
-  gameState.input.keys.d = true
-  gameState.deltaTime = 0.1 // 100ms
+test("PlayerSystem: moves player based on input", () => {
+  const gameState = createTestGameState();
+  gameState.input.keys.d = true;
+  gameState.deltaTime = 0.1; // 100ms
 
-  const playerSystem = new PlayerSystem()
-  playerSystem.process(gameState)
+  const playerSystem = new PlayerSystem();
+  playerSystem.process(gameState);
 
-  expect(gameState.player.position.x).toBe(384 + 200 * 0.1) // 384 + 20 = 404
-})
+  expect(gameState.player.position.x).toBe(384 + 200 * 0.1); // 384 + 20 = 404
+});
 ```
 
 ---
