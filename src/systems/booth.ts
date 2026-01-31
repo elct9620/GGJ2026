@@ -1,17 +1,46 @@
 import { Container, Graphics, Text } from "pixi.js";
 import { FoodType } from "../entities/enemy";
+import { SystemPriority } from "../core/systems/system.interface";
+import type { ISystem } from "../core/systems/system.interface";
 
 /**
  * Booth system for storing food ingredients
  * Spec: § 2.3.1 Booth System
  */
-export class BoothSystem {
+export class BoothSystem implements ISystem {
+  public readonly name = "BoothSystem";
+  public readonly priority = SystemPriority.BOOTH;
+
   private booths: Map<number, Booth> = new Map();
   private container: Container;
 
   constructor() {
     this.container = new Container();
     this.initializeBooths();
+  }
+
+  /**
+   * Initialize booth system (ISystem lifecycle)
+   */
+  public initialize(): void {
+    // Booths are already initialized in constructor
+  }
+
+  /**
+   * Update method (ISystem lifecycle)
+   * Booth state updates are triggered by external events
+   */
+  public update(_deltaTime: number): void {
+    // Booth updates are event-driven
+    // No per-frame update needed
+  }
+
+  /**
+   * Clean up booth resources (ISystem lifecycle)
+   */
+  public destroy(): void {
+    this.container.destroy({ children: true });
+    this.booths.clear();
   }
 
   private initializeBooths(): void {

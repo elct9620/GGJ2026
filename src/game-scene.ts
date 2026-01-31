@@ -7,6 +7,7 @@ import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { EventQueue, EventType } from "./systems/event-queue";
+import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import type { GameStats } from "./core/game-state";
 
@@ -22,10 +23,7 @@ export class GameScene {
   private foods: Food[] = [];
 
   // Systems
-  private inputSystem: InputSystem;
-  private hudSystem: HUDSystem;
-  private boothSystem: BoothSystem;
-  private eventQueue: EventQueue;
+  private systemManager: SystemManager;
 
   // Containers for rendering
   private playerContainer: Container;
@@ -69,25 +67,33 @@ export class GameScene {
     this.uiLayer = uiLayer;
     this.onGameOver = onGameOver || null;
 
-    // Initialize systems
-    this.inputSystem = new InputSystem();
-    this.hudSystem = new HUDSystem();
-    this.boothSystem = new BoothSystem();
-    this.eventQueue = EventQueue.getInstance();
+    // Initialize SystemManager and register all systems
+    this.systemManager = new SystemManager();
+    this.systemManager.register(new EventQueue());
+    this.systemManager.register(new InputSystem());
+    this.systemManager.register(new HUDSystem());
+    this.systemManager.register(new BoothSystem());
+    this.systemManager.initialize();
 
     // Subscribe to WaveComplete event
-    this.eventQueue.subscribe(EventType.WaveComplete, this.onWaveComplete.bind(this));
+    const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
+    eventQueue.subscribe(
+      EventType.WaveComplete,
+      this.onWaveComplete.bind(this),
+    );
 
     // Initialize player at center of playable area
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
     this.playerContainer.addChild(this.player.sprite);
 
     // Setup booth visualization
-    this.boothContainer.addChild(this.boothSystem.getContainer());
+    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+    this.boothContainer.addChild(boothSystem.getContainer());
 
     // Setup HUD
-    this.uiLayer.addChild(this.hudSystem.getTopHUD());
-    this.uiLayer.addChild(this.hudSystem.getBottomHUD());
+    const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
+    this.uiLayer.addChild(hudSystem.getTopHUD());
+    this.uiLayer.addChild(hudSystem.getBottomHUD());
 
     // Spawn initial enemies for wave 1
     this.spawnWave(1);
@@ -123,16 +129,17 @@ export class GameScene {
       this.enemiesContainer.addChild(boss.sprite);
     }
 
-    this.hudSystem.updateWave(waveNumber);
-    this.hudSystem.updateEnemyCount(this.enemies.length);
+    const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
+    hudSystem.updateWave(waveNumber);
+    hudSystem.updateEnemyCount(this.enemies.length);
   }
 
   /**
    * Main update loop
    */
   public update(deltaTime: number): void {
-    // Process event queue (SPEC § 2.3.6)
-    this.eventQueue.processQueue();
+    // Update all systems (EventQueue will process first due to priority)
+    this.systemManager.update(deltaTime);
 
     this.handleInput(deltaTime);
     this.updatePlayer(deltaTime);
@@ -144,8 +151,11 @@ export class GameScene {
   }
 
   private handleInput(deltaTime: number): void {
+    const inputSystem = this.systemManager.get<InputSystem>("InputSystem");
+    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+
     // Handle movement
-    const moveDirection = this.inputSystem.getMovementDirection();
+    const moveDirection = inputSystem.getMovementDirection();
     if (moveDirection.magnitude() > 0) {
       this.player.move(moveDirection, deltaTime);
     }
@@ -153,7 +163,7 @@ export class GameScene {
     // Handle shooting
     this.shootCooldown = Math.max(0, this.shootCooldown - deltaTime);
 
-    if (this.inputSystem.isShootPressed() && this.shootCooldown <= 0) {
+    if (inputSystem.isShootPressed() && this.shootCooldown <= 0) {
       if (this.player.shoot()) {
         this.spawnBullet();
         this.shootCooldown = this.shootCooldownTime;
@@ -161,9 +171,9 @@ export class GameScene {
     }
 
     // Handle booth interactions
-    const boothKey = this.inputSystem.getBoothKeyPressed();
+    const boothKey = inputSystem.getBoothKeyPressed();
     if (boothKey !== null && this.synthesisSlot.length < 3) {
-      const food = this.boothSystem.retrieveFood(boothKey);
+      const food = boothSystem.retrieveFood(boothKey);
       if (food !== null) {
         this.synthesisSlot.push(food);
 
@@ -264,7 +274,8 @@ export class GameScene {
       }
 
       // Auto-store food in booth (SPEC § 2.3.1)
-      this.boothSystem.storeFood(food.type);
+      const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+      boothSystem.storeFood(food.type);
       food.active = false;
       this.foodsContainer.removeChild(food.sprite);
       this.foods.splice(i, 1);
@@ -285,14 +296,12 @@ export class GameScene {
   }
 
   private updateHUD(): void {
-    this.hudSystem.updateEnemyCount(this.enemies.length);
-    this.hudSystem.updateHealthDisplay(this.player.health);
-    this.hudSystem.updateAmmo(this.player.ammo, this.player.maxAmmo);
-    this.hudSystem.updateSynthesis(this.synthesisSlot.length);
-    this.hudSystem.updateReload(
-      this.player.isReloading,
-      this.player.reloadTimer,
-    );
+    const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
+    hudSystem.updateEnemyCount(this.enemies.length);
+    hudSystem.updateHealthDisplay(this.player.health);
+    hudSystem.updateAmmo(this.player.ammo, this.player.maxAmmo);
+    hudSystem.updateSynthesis(this.synthesisSlot.length);
+    hudSystem.updateReload(this.player.isReloading, this.player.reloadTimer);
   }
 
   private checkWaveCompletion(): void {
@@ -311,7 +320,8 @@ export class GameScene {
 
       // Publish WaveComplete event with delay (SPEC § 2.3.6)
       // TODO: Replace with upgrade system (SPEC § 2.3.4)
-      this.eventQueue.publish(
+      const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
+      eventQueue.publish(
         EventType.WaveComplete,
         { waveNumber: this.currentWave },
         2000,
@@ -359,7 +369,8 @@ export class GameScene {
     this.playerContainer.addChild(this.player.sprite);
 
     // Reset booth system
-    this.boothSystem.reset();
+    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+    boothSystem.reset();
 
     // Reset game state
     this.currentWave = 1;

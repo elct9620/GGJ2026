@@ -1,10 +1,14 @@
 import { Container, Graphics, Text } from "pixi.js";
+import { SystemPriority } from "../core/systems/system.interface";
+import type { ISystem } from "../core/systems/system.interface";
 
 /**
  * HUD (Heads-Up Display) system for game UI
  * Spec: § 2.7.3 HUD Layout
  */
-export class HUDSystem {
+export class HUDSystem implements ISystem {
+  public readonly name = "HUDSystem";
+  public readonly priority = SystemPriority.HUD;
   private topHUD: Container;
   private bottomHUD: Container;
 
@@ -31,6 +35,31 @@ export class HUDSystem {
     this.reloadText = this.createText("", 400, 1020);
 
     this.setupHUD();
+  }
+
+  /**
+   * Initialize HUD system (ISystem lifecycle)
+   */
+  public initialize(): void {
+    // HUD is already set up in constructor
+    // This method is here for ISystem interface compliance
+  }
+
+  /**
+   * Update method (ISystem lifecycle)
+   * HUD updates are triggered by explicit calls to update* methods
+   */
+  public update(_deltaTime: number): void {
+    // HUD updates are event-driven via update* methods
+    // No per-frame update needed
+  }
+
+  /**
+   * Clean up HUD resources (ISystem lifecycle)
+   */
+  public destroy(): void {
+    this.topHUD.destroy({ children: true });
+    this.bottomHUD.destroy({ children: true });
   }
 
   private createText(content: string, x: number, y: number): Text {

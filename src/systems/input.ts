@@ -1,24 +1,47 @@
+import { SystemPriority } from "../core/systems/system.interface";
+import type { ISystem } from "../core/systems/system.interface";
 import { Vector } from "../values/vector";
 
 /**
  * Input system for keyboard controls
  * Spec: § 2.4.1 Input Controls
  */
-export class InputSystem {
-  private keysPressed: Set<string> = new Set();
+export class InputSystem implements ISystem {
+  public readonly name = "InputSystem";
+  public readonly priority = SystemPriority.INPUT;
 
-  constructor() {
-    this.setupEventListeners();
+  private keysPressed: Set<string> = new Set();
+  private handleKeyDown = (event: KeyboardEvent): void => {
+    this.keysPressed.add(event.key.toLowerCase());
+  };
+
+  private handleKeyUp = (event: KeyboardEvent): void => {
+    this.keysPressed.delete(event.key.toLowerCase());
+  };
+
+  /**
+   * Initialize event listeners (ISystem lifecycle)
+   */
+  public initialize(): void {
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
   }
 
-  private setupEventListeners(): void {
-    window.addEventListener("keydown", (event) => {
-      this.keysPressed.add(event.key.toLowerCase());
-    });
+  /**
+   * Update method (ISystem lifecycle)
+   * InputSystem is event-driven, no update needed
+   */
+  public update(_deltaTime: number): void {
+    // Input is event-driven, no per-frame update needed
+  }
 
-    window.addEventListener("keyup", (event) => {
-      this.keysPressed.delete(event.key.toLowerCase());
-    });
+  /**
+   * Clean up event listeners (ISystem lifecycle)
+   */
+  public destroy(): void {
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
+    this.keysPressed.clear();
   }
 
   /**
@@ -64,9 +87,16 @@ export class InputSystem {
   }
 
   /**
-   * Clear all pressed keys (useful for cleanup)
+   * Clear all pressed keys (useful for testing or manual cleanup)
    */
   public clear(): void {
     this.keysPressed.clear();
+  }
+
+  /**
+   * Get all currently pressed keys (useful for testing)
+   */
+  public getPressedKeys(): ReadonlySet<string> {
+    return this.keysPressed;
   }
 }

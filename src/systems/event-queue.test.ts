@@ -5,34 +5,64 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { EventQueue, EventType } from "./event-queue";
+import { SystemPriority } from "../core/systems/system.interface";
 
 describe("EventQueue System", () => {
   let eventQueue: EventQueue;
 
   beforeEach(() => {
-    // Reset singleton before each test
-    EventQueue.resetInstance();
-    eventQueue = EventQueue.getInstance();
+    eventQueue = new EventQueue();
+    eventQueue.initialize();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe("Singleton Pattern", () => {
-    it("should return the same instance", () => {
-      const instance1 = EventQueue.getInstance();
-      const instance2 = EventQueue.getInstance();
-
-      expect(instance1).toBe(instance2);
+  describe("ISystem Interface", () => {
+    it("should have correct name", () => {
+      expect(eventQueue.name).toBe("EventQueue");
     });
 
-    it("should create new instance after reset", () => {
-      const instance1 = EventQueue.getInstance();
-      EventQueue.resetInstance();
-      const instance2 = EventQueue.getInstance();
+    it("should have correct priority", () => {
+      expect(eventQueue.priority).toBe(SystemPriority.EVENT_QUEUE);
+    });
 
-      expect(instance1).not.toBe(instance2);
+    it("initialize should reset state", () => {
+      const handler = vi.fn();
+      eventQueue.subscribe(EventType.WaveStart, handler);
+
+      eventQueue.initialize();
+
+      // Should still have subscribers (only time is reset)
+      eventQueue.publish(EventType.WaveStart, { waveNumber: 1 });
+      expect(handler).toHaveBeenCalled();
+    });
+
+    it("update should process delayed events", () => {
+      const handler = vi.fn();
+      eventQueue.subscribe(EventType.WaveStart, handler);
+
+      // Publish with 100ms delay
+      eventQueue.publish(EventType.WaveStart, { waveNumber: 1 }, 100);
+
+      // Update by 50ms (not enough)
+      eventQueue.update(0.05);
+      expect(handler).not.toHaveBeenCalled();
+
+      // Update by 60ms more (total 110ms)
+      eventQueue.update(0.06);
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it("destroy should clear all data", () => {
+      const handler = vi.fn();
+      eventQueue.subscribe(EventType.WaveStart, handler);
+
+      eventQueue.destroy();
+      eventQueue.publish(EventType.WaveStart, { waveNumber: 1 });
+
+      expect(handler).not.toHaveBeenCalled();
     });
   });
 
@@ -85,14 +115,6 @@ describe("EventQueue System", () => {
   });
 
   describe("Publish Event (Delayed)", () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it("should execute event after delay", () => {
       const handler = vi.fn();
       eventQueue.subscribe(EventType.ReloadComplete, handler);
@@ -101,12 +123,10 @@ describe("EventQueue System", () => {
       eventQueue.publish(EventType.ReloadComplete, {}, 3000);
 
       // Should not execute immediately
-      eventQueue.processQueue();
       expect(handler).not.toHaveBeenCalled();
 
-      // Advance time by 3000ms
-      vi.advanceTimersByTime(3000);
-      eventQueue.processQueue();
+      // Advance time by 3000ms (3 seconds)
+      eventQueue.update(3.0);
 
       expect(handler).toHaveBeenCalledTimes(1);
     });
@@ -121,20 +141,17 @@ describe("EventQueue System", () => {
       eventQueue.publish(EventType.WaveStart, { waveNumber: 2 }, 2000);
 
       // Process after 1000ms
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      eventQueue.update(1.0);
       expect(handler).toHaveBeenCalledTimes(1);
       expect(handler).toHaveBeenNthCalledWith(1, { waveNumber: 1 });
 
       // Process after 2000ms total
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      eventQueue.update(1.0);
       expect(handler).toHaveBeenCalledTimes(2);
       expect(handler).toHaveBeenNthCalledWith(2, { waveNumber: 2 });
 
       // Process after 3000ms total
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      eventQueue.update(1.0);
       expect(handler).toHaveBeenCalledTimes(3);
       expect(handler).toHaveBeenNthCalledWith(3, { waveNumber: 3 });
     });
@@ -152,16 +169,18 @@ describe("EventQueue System", () => {
       const handler = vi.fn();
       eventQueue.subscribe(EventType.BuffExpired, handler);
 
-      eventQueue.publish(EventType.BuffExpired, { buffType: "stinky-tofu" }, 2000);
+      eventQueue.publish(
+        EventType.BuffExpired,
+        { buffType: "stinky-tofu" },
+        2000,
+      );
 
       // Process after 1000ms (before event time)
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      eventQueue.update(1.0);
       expect(handler).not.toHaveBeenCalled();
 
-      // Process after 2000ms (at event time)
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      // Process after 2000ms total (at event time)
+      eventQueue.update(1.0);
       expect(handler).toHaveBeenCalledTimes(1);
     });
   });
@@ -237,7 +256,9 @@ describe("EventQueue System", () => {
       const normalHandler = vi.fn();
 
       // Spy on console.error to verify error logging
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       eventQueue.subscribe(EventType.WaveStart, errorHandler);
       eventQueue.subscribe(EventType.WaveStart, normalHandler);
@@ -255,16 +276,8 @@ describe("EventQueue System", () => {
     });
   });
 
-  describe("Process Queue", () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it("should process multiple events in single tick", () => {
+  describe("Process Queue via Update", () => {
+    it("should process multiple events in single update", () => {
       const handler = vi.fn();
       eventQueue.subscribe(EventType.WaveStart, handler);
 
@@ -273,8 +286,7 @@ describe("EventQueue System", () => {
       eventQueue.publish(EventType.WaveStart, { waveNumber: 2 }, 1000);
       eventQueue.publish(EventType.WaveStart, { waveNumber: 3 }, 1000);
 
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      eventQueue.update(1.0);
 
       expect(handler).toHaveBeenCalledTimes(3);
     });
@@ -286,8 +298,7 @@ describe("EventQueue System", () => {
       eventQueue.publish(EventType.WaveStart, { waveNumber: 1 }, 1000);
       eventQueue.publish(EventType.WaveStart, { waveNumber: 2 }, 2000);
 
-      vi.advanceTimersByTime(1500);
-      eventQueue.processQueue();
+      eventQueue.update(1.5);
 
       expect(handler).toHaveBeenCalledTimes(1);
       expect(handler).toHaveBeenCalledWith({ waveNumber: 1 });
@@ -306,32 +317,19 @@ describe("EventQueue System", () => {
     });
 
     it("should clear all delayed events", () => {
-      vi.useFakeTimers();
-
       const handler = vi.fn();
       eventQueue.subscribe(EventType.ReloadComplete, handler);
 
       eventQueue.publish(EventType.ReloadComplete, {}, 3000);
       eventQueue.clear();
 
-      vi.advanceTimersByTime(3000);
-      eventQueue.processQueue();
+      eventQueue.update(3.0);
 
       expect(handler).not.toHaveBeenCalled();
-
-      vi.useRealTimers();
     });
   });
 
   describe("Integration: Game Events", () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it("should handle wave completion flow", () => {
       const waveCompleteHandler = vi.fn();
       const upgradeHandler = vi.fn();
@@ -346,7 +344,9 @@ describe("EventQueue System", () => {
       expect(waveCompleteHandler).toHaveBeenCalledWith({ waveNumber: 1 });
 
       // Player selects upgrade
-      eventQueue.publish(EventType.UpgradeSelected, { upgradeId: "extra-chili" });
+      eventQueue.publish(EventType.UpgradeSelected, {
+        upgradeId: "extra-chili",
+      });
       expect(upgradeHandler).toHaveBeenCalledWith({ upgradeId: "extra-chili" });
 
       // Wave 2 starts
@@ -362,13 +362,11 @@ describe("EventQueue System", () => {
       eventQueue.publish(EventType.ReloadComplete, {}, 3000);
 
       // Not complete yet
-      vi.advanceTimersByTime(2000);
-      eventQueue.processQueue();
+      eventQueue.update(2.0);
       expect(reloadHandler).not.toHaveBeenCalled();
 
       // Complete after 3 seconds
-      vi.advanceTimersByTime(1000);
-      eventQueue.processQueue();
+      eventQueue.update(1.0);
       expect(reloadHandler).toHaveBeenCalledTimes(1);
     });
 
@@ -380,15 +378,24 @@ describe("EventQueue System", () => {
       eventQueue.subscribe(EventType.BuffExpired, buffExpiredHandler);
 
       // Synthesis triggered
-      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "stinky-tofu" });
-      expect(synthesisHandler).toHaveBeenCalledWith({ recipeId: "stinky-tofu" });
+      eventQueue.publish(EventType.SynthesisTriggered, {
+        recipeId: "stinky-tofu",
+      });
+      expect(synthesisHandler).toHaveBeenCalledWith({
+        recipeId: "stinky-tofu",
+      });
 
       // Buff expires after 2 seconds
-      eventQueue.publish(EventType.BuffExpired, { buffType: "stinky-tofu" }, 2000);
+      eventQueue.publish(
+        EventType.BuffExpired,
+        { buffType: "stinky-tofu" },
+        2000,
+      );
 
-      vi.advanceTimersByTime(2000);
-      eventQueue.processQueue();
-      expect(buffExpiredHandler).toHaveBeenCalledWith({ buffType: "stinky-tofu" });
+      eventQueue.update(2.0);
+      expect(buffExpiredHandler).toHaveBeenCalledWith({
+        buffType: "stinky-tofu",
+      });
     });
 
     it("should handle enemy death flow", () => {
