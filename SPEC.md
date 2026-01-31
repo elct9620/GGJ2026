@@ -52,6 +52,8 @@
    - 在現代瀏覽器流暢運行（60 FPS）
    - 無重大錯誤和崩潰
 
+**驗證方式**：參見 [Testing Specification](docs/testing.md) 的驗收測試（4.1 User Stories）和效能測試（5. Performance Tests）。
+
 # 2. Design Layer
 
 ## 2.1 Game Overview
@@ -115,6 +117,8 @@
 | 豆腐     | 2        | 6          |
 | 米血     | 3        | 6          |
 
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.1 Booth System Tests。
+
 ### 2.3.2 Combat System
 
 **Purpose**: 玩家透過射擊擊敗敵人
@@ -152,6 +156,8 @@
 | 按 Space   | 重裝期間          | 無反應       |
 | 按 Space   | 彈夾為空（0/6）   | 無反應       |
 | 按數字鍵   | 特殊 Buff 期間    | 無法再次合成 |
+
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.2 Combat System Tests。
 
 ### 2.3.3 Synthesis System
 
@@ -199,6 +205,8 @@
 | 豬血糕豆腐 | 豆腐 ×1、米血 ×2          | 1.2 倍穿透追蹤巨大子彈，基礎傷害 ×2               | 2s       |
 | 夜市總匯   | 豆腐 ×1、珍珠 ×1、米血 ×1 | 閃電連鎖追蹤，傷害 ×3，擊中敵人後連鎖至下一個敵人 | 2s       |
 
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.3 Synthesis System Tests。
+
 ### 2.3.4 Upgrade System
 
 **Purpose**: 回合間永久強化玩家能力
@@ -236,6 +244,8 @@
 | 加辣     | 臭豆腐傷害倍率 +0.5     | 豆腐 ×3 |
 | 加椰果   | 珍珠奶茶子彈數 +5       | 珍珠 ×3 |
 | 加香菜   | 豬血糕傷害範圍倍率 +0.5 | 米血 ×3 |
+
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.4 Upgrade System Tests。
 
 ### 2.3.5 Wave System
 
@@ -276,6 +286,8 @@
 | 5      | 10         | 1       | 11       |
 | 10     | 20         | 1       | 21       |
 | 15     | 30         | 1       | 31       |
+
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.5 Wave System Tests。
 
 ## 2.4 Player Interactions
 
@@ -356,6 +368,8 @@
 - 拾取掉落食材（碰撞檢測）
 - 死亡條件：生命值歸零
 
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.6 Player Tests。
+
 ### 2.5.2 Enemies
 
 **餓鬼（Ghost）**:
@@ -380,6 +394,8 @@
 - 到達底線（左側邊界）扣玩家生命並消失
 - 被子彈擊中扣除生命值
 - 生命值歸零時死亡並掉落食材
+
+**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.7 Enemy Tests。
 
 ### 2.5.3 Bullets
 
@@ -677,6 +693,8 @@ Application.stage
 - 50 隻敵人 + 100 發子彈同時存在
 - 記憶體使用 < 200 MB
 
+**測試驗證**：參見 [Testing Specification](docs/testing.md) § 5 Performance Tests。
+
 ## 4.3 Browser Compatibility
 
 **目標瀏覽器**：
@@ -695,6 +713,8 @@ Application.stage
 - WebGL 2.0 支援
 - ES2020+ 語法支援
 - Keyboard API
+
+**測試驗證**：參見 [Testing Specification](docs/testing.md) § 6 Browser Compatibility Tests。
 
 ## 4.4 Asset Requirements
 
@@ -778,3 +798,30 @@ Application.stage
 10. 合成失敗提示（食材不足時的 UI 反饋）
 11. Sprite Sheet 規格（每個精靈的尺寸和佈局）
 12. 粒子特效細節（爆炸、拾取、合成特效）
+
+## 5.3 Testing Strategy
+
+完整的測試策略、測試案例和覆蓋率目標定義於 [Testing Specification](docs/testing.md)。
+
+**測試層級**：
+
+- **單元測試**：驗證個別系統和元件行為（目標覆蓋率 90%）
+- **整合測試**：驗證系統間互動和資料流動（目標覆蓋率 80%）
+- **驗收測試**：驗證完整遊戲流程和使用者旅程
+
+**測試框架**：Vitest + @vitest/ui + @vitest/coverage-v8
+
+**執行方式**：
+```bash
+pnpm test           # 執行測試（watch mode）
+pnpm test:ui        # 測試 UI 介面
+pnpm test:coverage  # 測試覆蓋率報告
+```
+
+關鍵測試面向包括：
+- 所有核心系統行為（2.3 節定義的五大系統）
+- 所有錯誤情境處理（Error Scenarios 表格）
+- 效能指標驗證（4.2.6 節目標）
+- 瀏覽器相容性（4.3 節目標瀏覽器）
+
+詳細測試案例對照表參見 [Testing Specification](docs/testing.md)。
