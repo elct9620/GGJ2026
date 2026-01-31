@@ -167,7 +167,7 @@
 **Constraints**:
 
 - 按鍵 1-5 分別對應 5 種特殊子彈
-- 直接從攤位消耗食材（無中間合成槽）
+- 直接從攤位消耗食材
 - 特殊子彈不能堆疊：Buff 期間無法再次觸發
 - Buff 持續時間：2 秒（所有特殊子彈統一）
 
@@ -417,7 +417,7 @@
   - 發佈 `BuffExpired` 事件（延遲 2000ms）
 
 - **Synthesis System**:
-  - 發佈 `SynthesisTriggered` 事件（放入第 3 個食材時）
+  - 發佈 `SynthesisTriggered` 事件（按鍵 1-5 觸發時）
 
 - **Booth System**:
   - 訂閱 `EnemyDeath` 事件（自動儲存掉落食材）
@@ -843,7 +843,7 @@ abstract class Entity {
 **資源流動模式**:
 
 ```
-敵人死亡 → 掉落食材 → 自動進入攤位 → 提取到合成槽 → 消耗合成 → 特殊子彈
+敵人死亡 → 掉落食材 → 自動進入攤位 → 按鍵觸發 → 消耗食材 → 特殊子彈
 ```
 
 **事件驅動模式**:
@@ -874,7 +874,7 @@ abstract class Entity {
 透過事件訂閱實現自動化行為：
 
 - 食材儲存：Booth System 訂閱 `EnemyDeath` 事件，自動儲存掉落食材
-- 合成：Synthesis System 檢測到合成槽 3/3 時發佈 `SynthesisTriggered` 事件
+- 合成：Synthesis System 按鍵觸發時發佈 `SynthesisTriggered` 事件
 - 重裝：Combat System 檢測到彈夾歸零時發佈 `ReloadComplete` 事件（延遲 3000ms）
 - 回合進程：Wave System 檢測到敵人清空時發佈 `WaveComplete` 事件
 
@@ -893,7 +893,6 @@ abstract class Entity {
 - Entity ID：字串格式的整數（`"1"`, `"2"`, `"3"`...）
 - Entity 狀態：`active: boolean`（true = 啟用，false = 停用）
 - 彈夾：當前數/最大數（3/6）
-- 合成槽：已放入數/容量（2/3）
 - 攤位：食材數/容量（4/6）
 - 生命值：當前數/最大數（3/5）
 
@@ -967,7 +966,7 @@ abstract class Entity {
   - Combat System 發佈 `ReloadComplete`（延遲 3000ms）→ Combat System 自身訂閱並恢復彈夾
 
 - **直接調用（非事件）**：
-  - 合成系統 → 攤位系統：`booth.retrieveFood()` 提取食材（同步操作）
+  - 合成系統 → 攤位系統：`booth.consumeFood()` 消耗食材（同步操作）
   - 升級系統 → 戰鬥系統：`combat.applyUpgrade()` 永久修改參數（同步操作）
 
 **值物件契約**:
@@ -1044,7 +1043,6 @@ Application.stage
     │   ├── Enemy Counter Text
     │   └── Health Display
     └── Bottom HUD Container
-        ├── Synthesis Slot Container
         ├── Buff Display
         └── Ammo Counter Text
 ```
