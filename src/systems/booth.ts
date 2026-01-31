@@ -2,6 +2,8 @@ import { Container, Graphics, Text } from "pixi.js";
 import { FoodType } from "../entities/enemy";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
+import type { EventQueue } from "./event-queue";
+import { EventType } from "./event-queue";
 
 /**
  * Booth system for storing food ingredients
@@ -13,6 +15,7 @@ export class BoothSystem implements ISystem {
 
   private booths: Map<number, Booth> = new Map();
   private container: Container;
+  private eventQueue: EventQueue | null = null;
 
   constructor() {
     this.container = new Container();
@@ -41,6 +44,14 @@ export class BoothSystem implements ISystem {
   public destroy(): void {
     this.container.destroy({ children: true });
     this.booths.clear();
+    this.eventQueue = null;
+  }
+
+  /**
+   * Set EventQueue reference
+   */
+  public setEventQueue(eventQueue: EventQueue): void {
+    this.eventQueue = eventQueue;
   }
 
   private initializeBooths(): void {
@@ -84,9 +95,17 @@ export class BoothSystem implements ISystem {
    * Returns true if successful, false if booth is full
    */
   public storeFood(foodType: FoodType): boolean {
-    for (const [_id, booth] of this.booths) {
+    for (const [id, booth] of this.booths) {
       if (booth.foodType === foodType) {
-        return booth.addFood();
+        const success = booth.addFood();
+        if (success && this.eventQueue) {
+          // Publish FoodStored event (SPEC § 2.3.7)
+          this.eventQueue.publish(EventType.FoodStored, {
+            boothId: String(id),
+            foodType,
+          });
+        }
+        return success;
       }
     }
     return false;
@@ -99,6 +118,13 @@ export class BoothSystem implements ISystem {
   public retrieveFood(boothNumber: number): FoodType | null {
     const booth = this.booths.get(boothNumber);
     if (booth && booth.removeFood()) {
+      // Publish FoodConsumed event (SPEC § 2.3.7)
+      if (this.eventQueue) {
+        this.eventQueue.publish(EventType.FoodConsumed, {
+          boothId: String(boothNumber),
+          amount: 1,
+        });
+      }
       return booth.foodType;
     }
     return null;
@@ -109,7 +135,15 @@ export class BoothSystem implements ISystem {
    */
   public stealFood(boothNumber: number): boolean {
     const booth = this.booths.get(boothNumber);
-    return booth ? booth.removeFood() : false;
+    const success = booth ? booth.removeFood() : false;
+    if (success && this.eventQueue) {
+      // Publish FoodConsumed event (SPEC § 2.3.7)
+      this.eventQueue.publish(EventType.FoodConsumed, {
+        boothId: String(boothNumber),
+        amount: 1,
+      });
+    }
+    return success;
   }
 
   /**

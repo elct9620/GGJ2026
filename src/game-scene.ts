@@ -6,6 +6,7 @@ import { Food } from "./entities/food";
 import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
+import { BoxSystem } from "./systems/box";
 import { CombatSystem } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
@@ -71,6 +72,7 @@ export class GameScene {
     const eventQueue = new EventQueue();
     const inputSystem = new InputSystem();
     const boothSystem = new BoothSystem();
+    const boxSystem = new BoxSystem();
     const combatSystem = new CombatSystem();
     const synthesisSystem = new SynthesisSystem();
     const killCounterSystem = new KillCounterSystem();
@@ -84,6 +86,7 @@ export class GameScene {
     this.systemManager.register(waveSystem);
     this.systemManager.register(new HUDSystem());
     this.systemManager.register(boothSystem);
+    this.systemManager.register(boxSystem);
     this.systemManager.initialize();
 
     // Subscribe to EnemyDeath event for food drops
@@ -113,16 +116,29 @@ export class GameScene {
     synthesisSystem.setBoothSystem(boothSystem);
     synthesisSystem.setEventQueue(eventQueue);
 
+    // Connect Booth System with EventQueue (SPEC § 2.3.7)
+    boothSystem.setEventQueue(eventQueue);
+
+    // Connect Box System with dependencies (SPEC § 2.3.7)
+    boxSystem.setEventQueue(eventQueue);
+    boxSystem.setEnemies(this.enemies);
+
     // Connect Kill Counter System (SPEC § 2.3.8)
     killCounterSystem.setEventQueue(eventQueue);
 
     // Setup booth visualization
     this.boothContainer.addChild(boothSystem.getContainer());
 
+    // Setup box visualization (SPEC § 2.3.7)
+    this.boothContainer.addChild(boxSystem.getContainer());
+
     // Setup HUD
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
     this.uiLayer.addChild(hudSystem.getTopHUD());
     this.uiLayer.addChild(hudSystem.getBottomHUD());
+
+    // Connect Wave System spawn callback (SPEC § 2.3.5)
+    waveSystem.setSpawnCallback(this.spawnEnemy.bind(this));
 
     // Start wave 1 (SPEC § 2.3.5)
     waveSystem.startWave(1);
