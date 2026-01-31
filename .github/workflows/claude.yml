@@ -62,6 +62,9 @@ jobs:
 
             **ENSURE ONLY WORK RELATED SCOPE BASED ON THE SKILL INSTRUCTION.**
 
+            Commits:
+            Use `git:commit` skill to follow the commit message conventions when making changes.
+
             Progress Tracking:
             Follow the progress tracking instructions strictly.
 
