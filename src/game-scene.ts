@@ -150,9 +150,14 @@ export class GameScene {
   /**
    * Spawn enemy (callback from Wave System)
    * SPEC § 2.3.5: Wave System calls this to create enemies
+   * SPEC § 2.6.2: Supports Ghost, RedGhost, GreenGhost, BlueGhost, Boss
    */
-  private spawnEnemy(type: "Ghost" | "Boss", x: number, y: number): void {
-    const enemyType = type === "Boss" ? EnemyType.Boss : EnemyType.Ghost;
+  private spawnEnemy(
+    type: "Ghost" | "RedGhost" | "GreenGhost" | "BlueGhost" | "Boss",
+    x: number,
+    y: number,
+  ): void {
+    const enemyType = EnemyType[type];
     const enemy = new Enemy(enemyType, new Vector(x, y));
     this.enemies.push(enemy);
     this.enemiesContainer.addChild(enemy.sprite);
@@ -295,9 +300,11 @@ export class GameScene {
     const enemy = this.enemies.find((e) => e.id === data.enemyId);
     if (!enemy) return;
 
-    // Drop food at enemy position
+    // Drop food at enemy position (only Elite enemies drop food per SPEC § 2.6.2)
     const foodType = enemy.dropFood();
-    this.spawnFood(foodType, new Vector(data.position.x, data.position.y));
+    if (foodType !== null) {
+      this.spawnFood(foodType, new Vector(data.position.x, data.position.y));
+    }
 
     // Track statistics (Spec: § 2.8.2)
     this.stats.enemiesDefeated++;

@@ -53,12 +53,17 @@ describe("WaveSystem", () => {
   });
 
   describe("Enemy Spawning", () => {
+    // Helper to check if enemy type is regular (non-boss)
+    const isRegularEnemy = (type: string) =>
+      ["Ghost", "RedGhost", "GreenGhost", "BlueGhost"].includes(type);
+
     it("WS-01: Wave 1 生成 2 隻敵人", () => {
       waveSystem.startWave(1);
       simulateFullWaveSpawn(waveSystem, 1);
 
       expect(spawnedEnemies.length).toBe(2);
-      expect(spawnedEnemies.every((e) => e.type === "Ghost")).toBe(true);
+      // SPEC § 2.3.5: Regular enemies can be Ghost or Elite types
+      expect(spawnedEnemies.every((e) => isRegularEnemy(e.type))).toBe(true);
     });
 
     it("WS-02: Wave 2 生成 4 隻敵人", () => {
@@ -72,10 +77,13 @@ describe("WaveSystem", () => {
       waveSystem.startWave(5);
       simulateFullWaveSpawn(waveSystem, 5);
 
-      const ghosts = spawnedEnemies.filter((e) => e.type === "Ghost");
+      // SPEC § 2.3.5: 10 regular enemies (Ghost/Elite) + 1 Boss
+      const regularEnemies = spawnedEnemies.filter((e) =>
+        isRegularEnemy(e.type),
+      );
       const bosses = spawnedEnemies.filter((e) => e.type === "Boss");
 
-      expect(ghosts.length).toBe(10);
+      expect(regularEnemies.length).toBe(10);
       expect(bosses.length).toBe(1);
       expect(spawnedEnemies.length).toBe(11);
     });
@@ -84,10 +92,13 @@ describe("WaveSystem", () => {
       waveSystem.startWave(10);
       simulateFullWaveSpawn(waveSystem, 10);
 
-      const ghosts = spawnedEnemies.filter((e) => e.type === "Ghost");
+      // SPEC § 2.3.5: 20 regular enemies (Ghost/Elite) + 1 Boss
+      const regularEnemies = spawnedEnemies.filter((e) =>
+        isRegularEnemy(e.type),
+      );
       const bosses = spawnedEnemies.filter((e) => e.type === "Boss");
 
-      expect(ghosts.length).toBe(20);
+      expect(regularEnemies.length).toBe(20);
       expect(bosses.length).toBe(1);
     });
 
@@ -108,12 +119,17 @@ describe("WaveSystem", () => {
   });
 
   describe("Progressive Spawning", () => {
+    // Helper to check if enemy type is regular (non-boss)
+    const isRegularEnemy = (type: string) =>
+      ["Ghost", "RedGhost", "GreenGhost", "BlueGhost"].includes(type);
+
     it("WS-16: 首隻敵人立即生成", () => {
       waveSystem.startWave(1);
       waveSystem.update(0); // Immediate update with 0 delta
 
       expect(spawnedEnemies.length).toBe(1);
-      expect(spawnedEnemies[0].type).toBe("Ghost");
+      // SPEC § 2.3.5: First enemy can be any regular type (Ghost or Elite)
+      expect(isRegularEnemy(spawnedEnemies[0].type)).toBe(true);
     });
 
     it("WS-17: 後續敵人需等待 2-3 秒", () => {
@@ -143,14 +159,17 @@ describe("WaveSystem", () => {
         waveSystem.update(WAVE_CONFIG.spawnIntervalMax);
       }
 
-      // At this point we should have 9 ghosts, and still 1 to spawn
+      // At this point we should have 9 regular enemies, and still 1 to spawn
       expect(spawnedEnemies.length).toBe(9);
       expect(waveSystem.getEnemiesToSpawn()).toBe(1);
       expect(waveSystem.isBossSpawnPending()).toBe(true);
 
-      // Spawn the 10th ghost
+      // Spawn the 10th regular enemy
       waveSystem.update(WAVE_CONFIG.spawnIntervalMax);
-      expect(spawnedEnemies.filter((e) => e.type === "Ghost").length).toBe(10);
+      const regularEnemies = spawnedEnemies.filter((e) =>
+        isRegularEnemy(e.type),
+      );
+      expect(regularEnemies.length).toBe(10);
       expect(waveSystem.getEnemiesToSpawn()).toBe(0);
 
       // Boss should spawn now (in the same update where enemiesToSpawn becomes 0)

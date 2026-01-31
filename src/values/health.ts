@@ -52,6 +52,14 @@ export class Health {
   }
 
   /**
+   * 建立菁英敵人預設血量
+   * SPEC § 2.6.2: 紅/綠/藍餓鬼血量 = 2
+   */
+  static elite(): Health {
+    return new Health(ENEMY_CONFIG.elite.health, ENEMY_CONFIG.elite.health);
+  }
+
+  /**
    * 建立滿血狀態
    * @param maxHealth 最大血量
    */

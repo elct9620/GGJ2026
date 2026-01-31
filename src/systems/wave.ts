@@ -13,9 +13,17 @@ import { CANVAS_HEIGHT } from "../utils/constants";
 
 /**
  * Enemy spawn callback type
+ * SPEC § 2.6.2: Ghost, RedGhost, GreenGhost, BlueGhost, Boss
  */
+export type SpawnableEnemyType =
+  | "Ghost"
+  | "RedGhost"
+  | "GreenGhost"
+  | "BlueGhost"
+  | "Boss";
+
 export type EnemySpawnCallback = (
-  enemyType: "Ghost" | "Boss",
+  enemyType: SpawnableEnemyType,
   x: number,
   y: number,
 ) => void;
@@ -183,12 +191,13 @@ export class WaveSystem extends InjectableSystem {
 
   /**
    * Spawn next enemy in progressive spawning
-   * SPEC § 2.3.5: Spawn every 2-3 seconds
+   * SPEC § 2.3.5: Spawn every 2-3 seconds with type probability
    */
   private spawnNextEnemy(): void {
     if (this.enemiesToSpawn <= 0) return;
 
-    this.spawnEnemy("Ghost");
+    const enemyType = this.selectEnemyType();
+    this.spawnEnemy(enemyType);
     this.enemiesToSpawn--;
 
     // Set next spawn interval (2-3 seconds random)
@@ -196,10 +205,34 @@ export class WaveSystem extends InjectableSystem {
   }
 
   /**
+   * Select enemy type based on spawn probability
+   * SPEC § 2.3.5: Ghost 40%, RedGhost 20%, GreenGhost 20%, BlueGhost 20%
+   */
+  private selectEnemyType(): SpawnableEnemyType {
+    const { spawnProbability } = WAVE_CONFIG;
+    const roll = Math.random();
+
+    // Cumulative probability check
+    let cumulative = 0;
+
+    cumulative += spawnProbability.ghost;
+    if (roll < cumulative) return "Ghost";
+
+    cumulative += spawnProbability.redGhost;
+    if (roll < cumulative) return "RedGhost";
+
+    cumulative += spawnProbability.greenGhost;
+    if (roll < cumulative) return "GreenGhost";
+
+    // Remaining probability is Blue Ghost
+    return "BlueGhost";
+  }
+
+  /**
    * Spawn an enemy
    * SPEC § 2.3.5: Spawn position x=1950, y=random 0~1080
    */
-  private spawnEnemy(type: "Ghost" | "Boss"): void {
+  private spawnEnemy(type: SpawnableEnemyType): void {
     if (!this.onSpawnEnemy) return;
 
     // SPEC § 2.3.5: X = spawn position (off-screen right)

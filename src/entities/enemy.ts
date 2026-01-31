@@ -10,11 +10,26 @@ import { FoodType } from "./booth";
 import { ENEMY_CONFIG } from "../config";
 
 export const EnemyType = {
-  Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2)
+  Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2) - 小怪，不掉落食材
+  RedGhost: "RedGhost", // 紅餓鬼 (SPEC § 2.6.2) - 菁英，掉落豆腐
+  GreenGhost: "GreenGhost", // 綠餓鬼 (SPEC § 2.6.2) - 菁英，掉落珍珠
+  BlueGhost: "BlueGhost", // 藍餓鬼 (SPEC § 2.6.2) - 菁英，掉落米血
   Boss: "Boss", // 餓死鬼 (SPEC § 2.6.2)
 } as const;
 
 export type EnemyType = (typeof EnemyType)[keyof typeof EnemyType];
+
+/**
+ * Check if enemy type is Elite (colored ghost)
+ * SPEC § 2.6.2: 菁英敵人有 2 HP，固定掉落對應食材
+ */
+export function isEliteType(type: EnemyType): boolean {
+  return (
+    type === EnemyType.RedGhost ||
+    type === EnemyType.GreenGhost ||
+    type === EnemyType.BlueGhost
+  );
+}
 
 /**
  * Enemy entity (Ghost or Boss)
@@ -59,6 +74,10 @@ export class Enemy extends Entity {
     if (type === EnemyType.Ghost) {
       this._health = Health.ghost();
       this.speed = ENEMY_CONFIG.ghost.speed;
+    } else if (isEliteType(type)) {
+      // Elite enemies: Red/Green/Blue Ghost
+      this._health = Health.elite();
+      this.speed = ENEMY_CONFIG.elite.speed;
     } else {
       // Boss
       this._health = Health.boss();
@@ -69,8 +88,8 @@ export class Enemy extends Entity {
     this.enemySprite = this.createSprite();
     this.sprite.addChild(this.enemySprite);
 
-    // Add health bar for Boss
-    if (type === EnemyType.Boss) {
+    // Add health bar for Boss or Elite
+    if (type === EnemyType.Boss || isEliteType(type)) {
       this.healthBarContainer = new Graphics();
       this.sprite.addChild(this.healthBarContainer);
       this.updateHealthBar();
@@ -83,19 +102,36 @@ export class Enemy extends Entity {
     const sprite = new Sprite(getTexture(AssetKeys.monster));
 
     // Asset size is 256×256, use full size per SPEC § 2.7.2
-    // Both Ghost and Boss use 256×256, Boss has purple tint
+    // Both Ghost and Boss use 256×256
     sprite.width = LAYOUT.ENEMY_SIZE;
     sprite.height = LAYOUT.ENEMY_SIZE;
 
     // Set anchor to center
     sprite.anchor.set(0.5, 0.5);
 
-    // Tint Boss to differentiate
-    if (this.type === EnemyType.Boss) {
-      sprite.tint = 0x9b59b6; // Purple tint for Boss
-    }
+    // Apply tint based on enemy type (SPEC § 2.6.2)
+    sprite.tint = this.getEnemyTint();
 
     return sprite;
+  }
+
+  /**
+   * Get tint color based on enemy type
+   * SPEC § 2.6.2: Visual differentiation for enemy types
+   */
+  private getEnemyTint(): number {
+    switch (this.type) {
+      case EnemyType.RedGhost:
+        return 0xe74c3c; // Red tint for Red Ghost (drops Tofu)
+      case EnemyType.GreenGhost:
+        return 0x2ecc71; // Green tint for Green Ghost (drops Pearl)
+      case EnemyType.BlueGhost:
+        return 0x3498db; // Blue tint for Blue Ghost (drops BloodCake)
+      case EnemyType.Boss:
+        return 0x9b59b6; // Purple tint for Boss
+      default:
+        return 0xffffff; // No tint for regular Ghost
+    }
   }
 
   /**
@@ -123,8 +159,8 @@ export class Enemy extends Entity {
     const damage = typeof amount === "number" ? new Damage(amount) : amount;
     this._health = this._health.takeDamage(damage);
 
-    // Update health bar for Boss
-    if (this.type === EnemyType.Boss) {
+    // Update health bar for Boss and Elite enemies
+    if (this.type === EnemyType.Boss || isEliteType(this.type)) {
       this.updateHealthBar();
     }
 
@@ -153,20 +189,37 @@ export class Enemy extends Entity {
   }
 
   /**
-   * Drop random food item when defeated
-   * Spec: § 2.6.2 - 100% drop rate, random type
+   * Drop food item when defeated (or null if no drop)
+   * SPEC § 2.6.2:
+   * - Ghost (餓鬼): 不掉落食材
+   * - RedGhost (紅餓鬼): 100% 掉落豆腐
+   * - GreenGhost (綠餓鬼): 100% 掉落珍珠
+   * - BlueGhost (藍餓鬼): 100% 掉落米血
+   * - Boss: 不掉落食材（掉落特殊升級，由 UpgradeSystem 處理）
    */
-  public dropFood(): FoodType {
-    const foodTypes = [FoodType.Pearl, FoodType.Tofu, FoodType.BloodCake];
-    const randomIndex = Math.floor(Math.random() * foodTypes.length);
-    return foodTypes[randomIndex];
+  public dropFood(): FoodType | null {
+    switch (this.type) {
+      case EnemyType.RedGhost:
+        return FoodType.Tofu;
+      case EnemyType.GreenGhost:
+        return FoodType.Pearl;
+      case EnemyType.BlueGhost:
+        return FoodType.BloodCake;
+      default:
+        // Ghost and Boss don't drop food
+        return null;
+    }
   }
 
   /**
-   * Update health bar visualization for Boss
+   * Update health bar visualization for Boss and Elite enemies
    */
   private updateHealthBar(): void {
-    if (this.type !== EnemyType.Boss || !this.healthBarContainer) return;
+    if (
+      (this.type !== EnemyType.Boss && !isEliteType(this.type)) ||
+      !this.healthBarContainer
+    )
+      return;
 
     this.healthBarContainer.clear();
 
@@ -204,6 +257,9 @@ export class Enemy extends Entity {
 
     if (type === EnemyType.Ghost) {
       this._health = Health.ghost();
+    } else if (isEliteType(type)) {
+      this._health = Health.elite();
+      this.updateHealthBar();
     } else {
       this._health = Health.boss();
       this.updateHealthBar();

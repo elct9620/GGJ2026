@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { Enemy, EnemyType } from "./enemy";
+import { Enemy, EnemyType, isEliteType } from "./enemy";
 import { Vector } from "../values/vector";
 import { LAYOUT } from "../utils/constants";
 import { FoodType } from "./booth";
@@ -34,24 +34,19 @@ describe("Enemy", () => {
       expect(ghost.active).toBe(false);
     });
 
-    it("EN-03: 餓鬼死亡 → 可呼叫 dropFood", () => {
+    it("EN-03: 餓鬼死亡 → dropFood 回傳 null（不掉落食材）", () => {
       ghost.takeDamage(1);
 
-      // Ghost can drop food when killed
+      // SPEC § 2.6.2: Ghost (餓鬼) does NOT drop food
       const foodType = ghost.dropFood();
-      expect(Object.values(FoodType)).toContain(foodType);
+      expect(foodType).toBeNull();
     });
 
-    it("EN-04: dropFood 回傳隨機食材類型", () => {
-      const foodTypes = new Set<FoodType>();
-
-      // Call dropFood multiple times to verify randomness
-      for (let i = 0; i < 100; i++) {
-        foodTypes.add(ghost.dropFood());
+    it("EN-04: 餓鬼 dropFood 始終回傳 null", () => {
+      // SPEC § 2.6.2: Ghost consistently returns null
+      for (let i = 0; i < 10; i++) {
+        expect(ghost.dropFood()).toBeNull();
       }
-
-      // Should have at least 2 different food types after 100 calls
-      expect(foodTypes.size).toBeGreaterThanOrEqual(2);
     });
 
     it("EN-05: 餓鬼到達 x = 340 → hasReachedBaseline = true", () => {
@@ -71,34 +66,57 @@ describe("Enemy", () => {
   });
 
   describe("2.7.2 Elite (菁英敵人) - 彩色餓鬼", () => {
-    // Note: Current implementation only has Ghost and Boss types
-    // Elite enemies would be a subtype of Ghost with higher HP
-    // Testing with Boss as closest equivalent for now
-
-    it("EN-06: Boss 10 HP + 1 發普通子彈 → Boss 9 HP", () => {
-      // SPEC § 2.6.2: Boss 基礎血量 = 10
-      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
-      expect(boss.health).toBe(10);
-
-      boss.takeDamage(1);
-
-      expect(boss.health).toBe(9);
-      expect(boss.active).toBe(true); // Not dead yet
+    it("isEliteType helper 正確識別菁英敵人", () => {
+      expect(isEliteType(EnemyType.Ghost)).toBe(false);
+      expect(isEliteType(EnemyType.Boss)).toBe(false);
+      expect(isEliteType(EnemyType.RedGhost)).toBe(true);
+      expect(isEliteType(EnemyType.GreenGhost)).toBe(true);
+      expect(isEliteType(EnemyType.BlueGhost)).toBe(true);
     });
 
-    it("EN-07 ~ EN-09: 死亡掉落食材（隨機）", () => {
-      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+    it("EN-06: 紅餓鬼 2 HP + 1 發普通子彈 → 紅餓鬼 1 HP", () => {
+      // SPEC § 2.6.2: Elite 基礎血量 = 2
+      const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
+      expect(redGhost.health).toBe(2);
 
-      const foodType = boss.dropFood();
-      expect(Object.values(FoodType)).toContain(foodType);
+      redGhost.takeDamage(1);
+
+      expect(redGhost.health).toBe(1);
+      expect(redGhost.active).toBe(true); // Not dead yet
     });
 
-    it("EN-10: Boss (1000, 500) + 1s → Boss (970, 500) 向左移動 30 px", () => {
-      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
-      boss.update(1);
+    it("EN-07: 紅餓鬼死亡 → 掉落豆腐", () => {
+      const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
+      expect(redGhost.dropFood()).toBe(FoodType.Tofu);
+    });
 
-      expect(boss.position.x).toBe(970);
-      expect(boss.position.y).toBe(500);
+    it("EN-08: 綠餓鬼死亡 → 掉落珍珠", () => {
+      const greenGhost = new Enemy(EnemyType.GreenGhost, new Vector(1000, 500));
+      expect(greenGhost.dropFood()).toBe(FoodType.Pearl);
+    });
+
+    it("EN-09: 藍餓鬼死亡 → 掉落米血", () => {
+      const blueGhost = new Enemy(EnemyType.BlueGhost, new Vector(1000, 500));
+      expect(blueGhost.dropFood()).toBe(FoodType.BloodCake);
+    });
+
+    it("EN-10: 菁英敵人速度為 40 px/s", () => {
+      const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
+      expect(redGhost.speed).toBe(40);
+
+      redGhost.update(1);
+      expect(redGhost.position.x).toBe(960); // 1000 - 40 = 960
+    });
+
+    it("菁英敵人 2 HP + 2 發子彈 → 死亡", () => {
+      const greenGhost = new Enemy(EnemyType.GreenGhost, new Vector(1000, 500));
+
+      greenGhost.takeDamage(1);
+      expect(greenGhost.active).toBe(true);
+
+      const died = greenGhost.takeDamage(1);
+      expect(died).toBe(true);
+      expect(greenGhost.active).toBe(false);
     });
   });
 
@@ -153,6 +171,11 @@ describe("Enemy", () => {
 
     it("Boss 速度為 30 px/s", () => {
       expect(boss.speed).toBe(30);
+    });
+
+    it("Boss dropFood 回傳 null（不掉落食材）", () => {
+      // SPEC § 2.6.2: Boss 不掉落食材，擊敗後由 UpgradeSystem 處理特殊升級
+      expect(boss.dropFood()).toBeNull();
     });
   });
 
@@ -271,6 +294,17 @@ describe("Enemy", () => {
       boss.reset(EnemyType.Boss, new Vector(1500, 300));
 
       expect(boss.health).toBe(10);
+    });
+
+    it("reset Elite 恢復 2 HP", () => {
+      const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
+      redGhost.takeDamage(1);
+
+      expect(redGhost.health).toBe(1);
+
+      redGhost.reset(EnemyType.RedGhost, new Vector(1500, 300));
+
+      expect(redGhost.health).toBe(2);
     });
   });
 
