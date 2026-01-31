@@ -54,7 +54,12 @@ If SPEC.md is growing large, follow the spec knowledge guidelines to split it in
     <description>Use spec knowledge to convert game design into formal specifications.</description>
     <parameter name="description" type="string">Description of design or reference to design document</parameter>
     <step>1. activate the spec-knowledge skill</step>
-    <step>2. enter plan mode to prepare for specification update</step>
+    <condition if="headless mode is active">
+        <step>2. skip plan mode activation</step>
+    </condition>
+    <condition if="headless mode is not active">
+        <step>2. enter plan mode to prepare for specification update</step>
+    </condition>
     <step>3. <execute name="explore">$description</execute></step>
     <loop over="areas needing specification updates">
         <step>4. <execute name="clarify">area needing specification update</execute></step>

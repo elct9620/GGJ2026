@@ -81,7 +81,12 @@ If any renaming is needed to align with the specification, ensure that all refer
     <description>Align specification and codebase with spec-knowledge skill</description>
     <parameter name="scope of alignment" type="string">Scope of alignment should be considered, e.g., specific module, feature set, or entire codebase</parameter>
     <step>1. activate the spec-knowledge skill</step>
-    <step>2. enter plan mode to prepare for alignment</step>
+    <condition if="headless mode is active">
+        <step>2. skip plan mode activation</step>
+    </condition>
+    <condition if="headless mode is not active">
+        <step>2. enter plan mode to prepare for alignment</step>
+    </condition>
     <step>3. <execute name="explore">$scope of alignment</execute></step>
     <loop over="areas where codebase does not align with specification">
         <step>4. ensure follow conventions of the project for any changes made</step>

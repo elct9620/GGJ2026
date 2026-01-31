@@ -80,7 +80,12 @@ Identity and utilize appropriate design patterns where applicable.
 <procedure name="main">
     <description>Refactor codebase to improve structure, readability, and maintainability</description>
     <parameter name="focus areas" type="string" optional="true">Specific areas of the codebase to focus refactoring efforts on</parameter>
-    <step>1. enter plan mode to prepare for refactoring</step>
+    <condition if="headless mode is active">
+        <step>1. skip plan mode activation</step>
+    </condition>
+    <condition if="headless mode is not active">
+        <step>1. enter plan mode to prepare for refactoring</step>
+    </condition>
     <step>2. <execute name="explore">$focus areas</execute></step>
     <step>3. pick top 3 areas needing refactoring based on impact and effort</step>
     <loop over="areas needing refactoring" max="3">

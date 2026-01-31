@@ -68,7 +68,7 @@ jobs:
             Progress Tracking:
             Follow the progress tracking instructions strictly.
 
-            **NO CLARIFY IN THIS TASK, THIS IS HEADLESS MODE. MAKE CHANGES DIRECTLY AND WAIT FOR NEXT FEEDBACK.**
+            **NO CONFIRM IN THIS TASK, THIS IS HEADLESS MODE. MAKE CHANGES DIRECTLY AND WAIT FOR NEXT FEEDBACK.**
 
           claude_args: "--allowed-tools Bash, Skill"
 
