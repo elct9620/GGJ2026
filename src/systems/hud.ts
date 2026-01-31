@@ -179,7 +179,7 @@ export class HUDSystem implements ISystem {
 
   /**
    * Setup skill buttons in the bulletClassBase area (820×126px)
-   * 5 keyBindTip icons (46×46px) with skill cost indicators below
+   * Each skill has: btn_skillIcon (116×116px) background, keyBindTip (46×46px), cost indicators (20×20px)
    */
   private setupSkillButtons(): void {
     const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
@@ -188,6 +188,7 @@ export class HUDSystem implements ISystem {
     const buttonCount = 5;
     const spacing = sectionWidth / buttonCount; // 164px per button area
 
+    const skillIconSize = 116;
     const keyTipSize = 46;
     const costIndicatorSize = 20;
 
@@ -199,25 +200,34 @@ export class HUDSystem implements ISystem {
     const skillCosts = [3, 3, 3, 3, 1];
 
     // Cost indicator types per skill (which skillTip image to use)
-    // 0=red, 1=blue, 2=green, 3=special
+    // skillTip_0=gray, skillTip_1=red, skillTip_2=blue, skillTip_3=green
+    // Pearl=blue(2), Tofu=green(3), BloodCake=red(1)
     const skillCostTypes = [
-      [0, 1, 2], // Skill 1: red, blue, green (夜市總匯: Pearl+Tofu+BloodCake)
-      [2, 2, 2], // Skill 2: green×3 (臭豆腐: Tofu×3)
-      [1, 1, 1], // Skill 3: blue×3 (珍珠奶茶: Pearl×3)
-      [0, 0, 0], // Skill 4: red×3 (豬血糕: BloodCake×3)
-      [3], // Skill 5: special (蚵仔煎: 10 kills)
+      [2, 3, 1], // Skill 1: blue+green+red (夜市總匯: Pearl+Tofu+BloodCake)
+      [3, 3, 3], // Skill 2: green×3 (臭豆腐: Tofu×3)
+      [2, 2, 2], // Skill 3: blue×3 (珍珠奶茶: Pearl×3)
+      [1, 1, 1], // Skill 4: red×3 (豬血糕: BloodCake×3)
+      [3], // Skill 5: green (蚵仔煎: 10 kills)
     ];
 
     for (let i = 0; i < buttonCount; i++) {
-      // Create keyBindTip sprite
+      const buttonCenterX = baseX + i * spacing + spacing / 2;
+
+      // Add skill button background (btn_skillIcon.png 116×116px)
+      const skillBg = new Sprite(getTexture(AssetKeys.skillIcon));
+      skillBg.width = skillIconSize;
+      skillBg.height = skillIconSize;
+      const skillBgX = buttonCenterX - skillIconSize / 2;
+      const skillBgY = bottomY + (LAYOUT.BOTTOM_HUD_HEIGHT - skillIconSize) / 2;
+      skillBg.position.set(skillBgX, skillBgY);
+      this.bottomHUD.addChild(skillBg);
+
+      // Create keyBindTip sprite (46×46px) - positioned at top of skill button
       const keyTip = new Sprite(getTexture(AssetKeys.keyBindTip));
       keyTip.width = keyTipSize;
       keyTip.height = keyTipSize;
-
-      // Position: center in button area, upper part
-      const buttonCenterX = baseX + i * spacing + spacing / 2;
       const keyTipX = buttonCenterX - keyTipSize / 2;
-      const keyTipY = bottomY + 10;
+      const keyTipY = skillBgY + 5;
       keyTip.position.set(keyTipX, keyTipY);
 
       this.skillKeyTips.push(keyTip);
@@ -226,8 +236,8 @@ export class HUDSystem implements ISystem {
       // Add number label on keyBindTip
       const numberLabel = this.createSmallText(
         `${i + 1}`,
-        buttonCenterX - 6,
-        keyTipY + 12,
+        buttonCenterX - 5,
+        keyTipY + 13,
       );
       this.bottomHUD.addChild(numberLabel);
 
@@ -235,9 +245,10 @@ export class HUDSystem implements ISystem {
       const indicators: Sprite[] = [];
       const costCount = skillCosts[i];
       const costTypes = skillCostTypes[i];
-      const indicatorStartX =
-        buttonCenterX - (costCount * (costIndicatorSize + 4)) / 2;
-      const indicatorY = keyTipY + keyTipSize + 5;
+      const indicatorY = keyTipY + keyTipSize + 8;
+      const indicatorTotalWidth =
+        costCount * costIndicatorSize + (costCount - 1) * 4;
+      const indicatorStartX = buttonCenterX - indicatorTotalWidth / 2;
 
       for (let j = 0; j < costCount; j++) {
         const costType = costTypes[j];
@@ -255,11 +266,21 @@ export class HUDSystem implements ISystem {
       }
       this.skillCostIndicators.push(indicators);
 
+      // For skill 5 (大招), add "×10" text next to indicator
+      if (i === 4) {
+        const killCountLabel = this.createSmallText(
+          "×10",
+          indicatorStartX + costIndicatorSize + 4,
+          indicatorY + 2,
+        );
+        this.bottomHUD.addChild(killCountLabel);
+      }
+
       // Add skill label below indicators
-      const labelY = indicatorY + costIndicatorSize + 2;
+      const labelY = indicatorY + costIndicatorSize + 4;
       const label = this.createSmallText(
         skillLabels[i],
-        buttonCenterX - 20,
+        buttonCenterX - 16,
         labelY,
       );
       this.bottomHUD.addChild(label);
@@ -269,15 +290,16 @@ export class HUDSystem implements ISystem {
   private getSkillTipKey(
     type: number,
   ): "skillTip0" | "skillTip1" | "skillTip2" | "skillTip3" {
+    // skillTip_0=gray, skillTip_1=red, skillTip_2=blue, skillTip_3=green
     switch (type) {
       case 0:
-        return AssetKeys.skillTip0;
+        return AssetKeys.skillTip0; // gray
       case 1:
-        return AssetKeys.skillTip1;
+        return AssetKeys.skillTip1; // red
       case 2:
-        return AssetKeys.skillTip2;
+        return AssetKeys.skillTip2; // blue
       case 3:
-        return AssetKeys.skillTip3;
+        return AssetKeys.skillTip3; // green
       default:
         return AssetKeys.skillTip0;
     }

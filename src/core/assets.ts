@@ -18,6 +18,7 @@ import skillTip1 from "../assets/image_skillTip_1.png";
 import skillTip2 from "../assets/image_skillTip_2.png";
 import skillTip3 from "../assets/image_skillTip_3.png";
 import upgradeIcon from "../assets/image_upgradeIcon.png";
+import skillIcon from "../assets/btn_skillIcon.png";
 
 /**
  * Asset keys for type-safe access
@@ -40,6 +41,7 @@ export const AssetKeys = {
   skillTip2: "skillTip2",
   skillTip3: "skillTip3",
   upgradeIcon: "upgradeIcon",
+  skillIcon: "skillIcon",
 } as const;
 
 export type AssetKey = (typeof AssetKeys)[keyof typeof AssetKeys];
@@ -65,6 +67,7 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.skillTip2]: skillTip2,
   [AssetKeys.skillTip3]: skillTip3,
   [AssetKeys.upgradeIcon]: upgradeIcon,
+  [AssetKeys.skillIcon]: skillIcon,
 };
 
 /**
