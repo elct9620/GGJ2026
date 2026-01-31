@@ -65,6 +65,23 @@ export const BULLET_CONFIG = {
   normalDamage: 1,
   /** 子彈碰撞箱大小 (px) */
   collisionSize: 8,
+  /** 子彈視覺大小 (px) - 較大的視覺效果便於玩家辨識 */
+  visualSize: 16,
+  /** 子彈顏色 (各種類型) */
+  colors: {
+    /** 普通子彈 - 黃色 */
+    normal: 0xf1c40f,
+    /** 夜市總匯 - 紫色（連鎖閃電） */
+    nightMarket: 0x9b59b6,
+    /** 臭豆腐 - 綠色（貫穿） */
+    stinkyTofu: 0x27ae60,
+    /** 珍珠奶茶 - 棕色（散射） */
+    bubbleTea: 0x8b4513,
+    /** 豬血糕 - 紅色（追蹤） */
+    bloodCake: 0xe74c3c,
+    /** 蚵仔煎 - 橙色（百分比傷害） */
+    oysterOmelette: 0xe67e22,
+  },
 } as const;
 
 // =============================================================================

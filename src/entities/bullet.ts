@@ -6,6 +6,7 @@ import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
+import { SpecialBulletType } from "../values/special-bullet";
 
 /**
  * Bullet entity fired by player
@@ -24,6 +25,9 @@ export class Bullet extends Entity {
   public isTracking: boolean = false;
   public trackingTarget: Enemy | null = null;
 
+  // Bullet type for visual differentiation
+  private bulletType: SpecialBulletType = SpecialBulletType.None;
+
   // Backward compatible getter/setter
   public get damage(): number {
     return this._damage.toNumber();
@@ -38,32 +42,64 @@ export class Bullet extends Entity {
     return this._damage;
   }
 
-  // 子彈視覺半徑（碰撞箱為 8×8，半徑為 4）
-  private readonly radius = BULLET_CONFIG.collisionSize / 2;
+  // 子彈視覺半徑（使用較大的視覺大小便於辨識）
+  private readonly visualRadius = BULLET_CONFIG.visualSize / 2;
+  // 子彈碰撞半徑（維持 8×8 碰撞箱）
+  private readonly collisionRadius = BULLET_CONFIG.collisionSize / 2;
 
-  constructor(initialPosition: Vector, direction: Vector) {
+  constructor(
+    initialPosition: Vector,
+    direction: Vector,
+    bulletType: SpecialBulletType = SpecialBulletType.None,
+  ) {
     super();
     this.position = initialPosition;
     this.velocity = direction.normalize().multiply(this.speed);
+    this.bulletType = bulletType;
     this.sprite = this.createSprite();
   }
 
   private createSprite(): Graphics {
     const sprite = new Graphics();
+    const color = this.getBulletColor();
 
-    // Draw a simple yellow circle for bullet (prototype visualization)
-    sprite.circle(0, 0, this.radius);
-    sprite.fill(0xf1c40f); // Yellow color
+    // Draw bullet with visual size for better visibility
+    sprite.circle(0, 0, this.visualRadius);
+    sprite.fill(color);
 
     return sprite;
   }
 
   /**
-   * 碰撞箱（與視覺大小同步，8×8 px）
+   * Get bullet color based on type
+   */
+  private getBulletColor(): number {
+    const colors = BULLET_CONFIG.colors;
+    switch (this.bulletType) {
+      case SpecialBulletType.NightMarket:
+        return colors.nightMarket;
+      case SpecialBulletType.StinkyTofu:
+        return colors.stinkyTofu;
+      case SpecialBulletType.BubbleTea:
+        return colors.bubbleTea;
+      case SpecialBulletType.BloodCake:
+        return colors.bloodCake;
+      case SpecialBulletType.OysterOmelette:
+        return colors.oysterOmelette;
+      default:
+        return colors.normal;
+    }
+  }
+
+  /**
+   * 碰撞箱（8×8 px，視覺大小與碰撞分離）
    * SPEC § 4.2.5: AABB 碰撞檢測
    */
   public get collisionBox(): CollisionBox {
-    return { width: this.radius * 2, height: this.radius * 2 };
+    return {
+      width: this.collisionRadius * 2,
+      height: this.collisionRadius * 2,
+    };
   }
 
   /**
@@ -121,14 +157,30 @@ export class Bullet extends Entity {
   /**
    * Reset bullet state for object pool reuse
    */
-  public reset(position: Vector, direction: Vector): void {
+  public reset(
+    position: Vector,
+    direction: Vector,
+    bulletType: SpecialBulletType = SpecialBulletType.None,
+  ): void {
     this.active = true;
     this.position = position;
     this.velocity = direction.normalize().multiply(this.speed);
     this._damage = Damage.normal();
     this.isTracking = false;
     this.trackingTarget = null;
+    this.bulletType = bulletType;
+    this.updateSprite();
     this.updateSpritePosition();
+  }
+
+  /**
+   * Update sprite appearance based on current bullet type
+   */
+  private updateSprite(): void {
+    this.sprite.clear();
+    const color = this.getBulletColor();
+    this.sprite.circle(0, 0, this.visualRadius);
+    this.sprite.fill(color);
   }
 
   /**

@@ -69,6 +69,20 @@ describe("Game Balance Config", () => {
     it("子彈碰撞箱應為 8 px (SPEC § 2.6.3)", () => {
       expect(BULLET_CONFIG.collisionSize).toBe(8);
     });
+
+    it("子彈視覺大小應為 16 px（較大便於辨識）", () => {
+      expect(BULLET_CONFIG.visualSize).toBe(16);
+    });
+
+    it("應定義各類型子彈顏色", () => {
+      expect(BULLET_CONFIG.colors).toBeDefined();
+      expect(BULLET_CONFIG.colors.normal).toBe(0xf1c40f);
+      expect(BULLET_CONFIG.colors.nightMarket).toBe(0x9b59b6);
+      expect(BULLET_CONFIG.colors.stinkyTofu).toBe(0x27ae60);
+      expect(BULLET_CONFIG.colors.bubbleTea).toBe(0x8b4513);
+      expect(BULLET_CONFIG.colors.bloodCake).toBe(0xe74c3c);
+      expect(BULLET_CONFIG.colors.oysterOmelette).toBe(0xe67e22);
+    });
   });
 
   describe("COMBAT_CONFIG", () => {

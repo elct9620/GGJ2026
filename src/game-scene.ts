@@ -238,7 +238,7 @@ export class GameScene {
    * Spawn bullet(s) based on current buff (SPEC § 2.3.3)
    * - BubbleTea: 3-way spread (+2 bullets at ±15°)
    * - BloodCake: Tracking bullet toward nearest enemy
-   * - Others: Normal single bullet moving right
+   * - Others: Normal single bullet moving right (with color based on buff)
    */
   private spawnBullet(): void {
     const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
@@ -249,15 +249,19 @@ export class GameScene {
     } else if (currentBuff === SpecialBulletType.BloodCake) {
       this.spawnTrackingBullet();
     } else {
-      this.spawnNormalBullet();
+      this.spawnTypedBullet(currentBuff);
     }
   }
 
   /**
-   * Spawn normal bullet moving right
+   * Spawn bullet with specific type (for color differentiation)
    */
-  private spawnNormalBullet(): void {
-    const bullet = new Bullet(this.player.position, new Vector(1, 0));
+  private spawnTypedBullet(bulletType: SpecialBulletType): void {
+    const bullet = new Bullet(
+      this.player.position,
+      new Vector(1, 0),
+      bulletType,
+    );
     this.bullets.push(bullet);
     this.bulletsContainer.addChild(bullet.sprite);
   }
@@ -269,16 +273,17 @@ export class GameScene {
   private spawnBubbleTeaBullets(): void {
     const extraBullets = RECIPE_CONFIG.bubbleTea.extraBullets;
     const spreadAngle = 15; // degrees
+    const bulletType = SpecialBulletType.BubbleTea;
 
     // Center bullet
-    this.spawnNormalBullet();
+    this.spawnTypedBullet(bulletType);
 
     // Extra spread bullets
     for (let i = 0; i < extraBullets; i++) {
       const angleOffset = i % 2 === 0 ? spreadAngle : -spreadAngle;
       const radians = (angleOffset * Math.PI) / 180;
       const direction = new Vector(Math.cos(radians), Math.sin(radians));
-      const bullet = new Bullet(this.player.position, direction);
+      const bullet = new Bullet(this.player.position, direction, bulletType);
       this.bullets.push(bullet);
       this.bulletsContainer.addChild(bullet.sprite);
     }
@@ -289,7 +294,11 @@ export class GameScene {
    * Tracks the nearest enemy
    */
   private spawnTrackingBullet(): void {
-    const bullet = new Bullet(this.player.position, new Vector(1, 0));
+    const bullet = new Bullet(
+      this.player.position,
+      new Vector(1, 0),
+      SpecialBulletType.BloodCake,
+    );
 
     // Find nearest enemy to track
     const target = this.findNearestEnemy();
