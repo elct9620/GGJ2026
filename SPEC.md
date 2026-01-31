@@ -79,6 +79,8 @@
 | **Synthesis（合成）** | 消耗 3 個食材產生特殊子彈效果                        |
 | **Upgrade（升級）**   | 回合間強化能力的永久效果                             |
 | **Vector（向量）**    | 不可變的 2D 座標值物件，用於位置和方向計算           |
+| **Event（事件）**     | 遊戲中發生的狀態變更通知，包含類型和可選資料         |
+| **EventQueue（事件佇列）** | 管理和調度遊戲事件的系統，統一處理延遲執行       |
 
 ## 2.3 Core Systems
 
@@ -279,6 +281,87 @@
 | 5      | 10         | 1       | 11       |
 | 10     | 20         | 1       | 21       |
 | 15     | 30         | 1       | 31       |
+
+### 2.3.6 EventQueue System
+
+**Purpose**: 統一管理遊戲事件和延遲執行，替代散落的 `setTimeout` 呼叫，讓各系統透過事件驅動方式互動。
+
+**Constraints**:
+
+- 事件佇列為單例（Singleton），全域唯一實例
+- 事件按照發佈順序和延遲時間依序執行
+- 每個事件類型可有多個訂閱者（Subscriber）
+- 訂閱者必須提供處理函式（Handler）
+- 支援延遲執行（Delayed Execution），單位為毫秒（ms）
+
+**Behaviors**:
+
+- **Publish Event（發佈事件）**:
+  - 系統調用 `publish(eventType, data?, delay?)` 發佈事件
+  - 若無延遲（`delay = 0` 或未指定），立即通知所有訂閱者
+  - 若有延遲（`delay > 0`），加入延遲佇列，等待指定時間後執行
+
+- **Subscribe（訂閱事件）**:
+  - 系統調用 `subscribe(eventType, handler)` 訂閱事件類型
+  - 當事件發佈時，所有訂閱者的 `handler` 函式被調用
+  - 訂閱者可訂閱多個事件類型
+
+- **Unsubscribe（取消訂閱）**:
+  - 系統調用 `unsubscribe(eventType, handler)` 取消訂閱
+  - 取消後不再接收該事件類型的通知
+
+- **Process Queue（處理佇列）**:
+  - 每個遊戲幀（Game Loop Tick）檢查延遲佇列
+  - 若事件到達執行時間，從佇列移除並通知訂閱者
+  - 事件按照到達執行時間排序（最早到達的先執行）
+
+**Error Scenarios**:
+
+| 操作       | 當前狀態                 | 結果                   |
+| ---------- | ------------------------ | ---------------------- |
+| 發佈事件   | 無訂閱者                 | 事件被丟棄（無錯誤）   |
+| 訂閱事件   | 重複訂閱同一處理函式     | 僅保留一個訂閱（去重） |
+| 取消訂閱   | 處理函式不存在           | 無效果                 |
+| 處理延遲事件 | 延遲時間為負數         | 視為立即執行（delay=0）|
+| Handler 拋出錯誤 | 訂閱者處理函式執行失敗 | 記錄錯誤，繼續執行其他訂閱者 |
+
+**Event Types**:
+
+遊戲中定義的事件類型：
+
+| 事件類型            | 資料結構                  | 發佈時機                 | 訂閱系統           |
+| ------------------- | ------------------------- | ------------------------ | ------------------ |
+| `WaveComplete`      | `{ waveNumber: number }`  | 回合內所有敵人清除       | Wave System        |
+| `WaveStart`         | `{ waveNumber: number }`  | 新回合開始               | Wave System, UI    |
+| `UpgradeSelected`   | `{ upgradeId: string }`   | 玩家選擇升級             | Upgrade System     |
+| `ReloadComplete`    | `{}`                      | 彈夾重裝完成（3 秒後）   | Combat System      |
+| `SynthesisTriggered`| `{ recipeId: string }`    | 合成槽放入第 3 個食材    | Synthesis System   |
+| `BuffExpired`       | `{ buffType: string }`    | 特殊子彈 Buff 結束（2 秒後）| Combat System  |
+| `EnemyDeath`        | `{ enemyId: string, position: Vector }` | 敵人生命值歸零 | Combat System, Booth System |
+| `EnemyReachedEnd`   | `{ enemyId: string }`     | 敵人到達底線             | Wave System, Player |
+| `PlayerDeath`       | `{}`                      | 玩家生命值歸零           | Game Scene         |
+
+**Integration with Systems**:
+
+各系統使用 EventQueue 的方式：
+
+- **Wave System**:
+  - 發佈 `WaveStart` 事件（回合開始）
+  - 訂閱 `EnemyReachedEnd` 和 `EnemyDeath` 事件（追蹤敵人數量）
+  - 發佈 `WaveComplete` 事件（延遲觸發，用於回合轉換）
+
+- **Combat System**:
+  - 發佈 `ReloadComplete` 事件（延遲 3000ms）
+  - 訂閱 `SynthesisTriggered` 事件（啟動特殊子彈 Buff）
+  - 發佈 `BuffExpired` 事件（延遲 2000ms）
+
+- **Synthesis System**:
+  - 發佈 `SynthesisTriggered` 事件（放入第 3 個食材時）
+
+- **Booth System**:
+  - 訂閱 `EnemyDeath` 事件（自動儲存掉落食材）
+
+**測試案例**：參見 [docs/testing.md](docs/testing.md) § 2.9 EventQueue Tests。
 
 ## 2.4 Player Interactions
 
@@ -567,18 +650,37 @@ abstract class Entity {
 敵人死亡 → 掉落食材 → 自動進入攤位 → 提取到合成槽 → 消耗合成 → 特殊子彈
 ```
 
+**事件驅動模式**:
+
+遊戲使用 EventQueue 系統統一管理狀態變更和系統間通訊：
+
+- 系統透過 `publish` 發佈事件，透過 `subscribe` 訂閱事件
+- 延遲執行透過事件的 `delay` 參數指定（毫秒），由 EventQueue 統一處理
+- 系統間解耦：發佈者不直接依賴訂閱者，透過事件類型間接通訊
+- 事件流範例：
+  ```
+  Combat System 發佈 EnemyDeath 事件
+    → Booth System 訂閱並儲存掉落食材
+    → Wave System 訂閱並更新敵人計數
+  ```
+
 **時間驅動模式**:
 
-- 彈夾重裝：3 秒固定時間
-- 特殊 Buff：2 秒固定時間
-- 敵人移動：持續性移動（速度固定）
+透過 EventQueue 的延遲執行機制實現：
+
+- 彈夾重裝：發佈 `ReloadComplete` 事件（延遲 3000ms）
+- 特殊 Buff：發佈 `BuffExpired` 事件（延遲 2000ms）
+- 回合轉換：發佈 `WaveComplete` 事件（延遲可配置，預設立即）
+- 敵人移動：持續性移動（速度固定，不使用事件）
 
 **自動觸發模式**:
 
-- 食材儲存：敵人死亡掉落食材後自動進入對應攤位
-- 合成：放入第 3 個食材自動觸發
-- 重裝：彈夾歸零自動開始
-- 回合進程：敵人清空自動進入升級
+透過事件訂閱實現自動化行為：
+
+- 食材儲存：Booth System 訂閱 `EnemyDeath` 事件，自動儲存掉落食材
+- 合成：Synthesis System 檢測到合成槽 3/3 時發佈 `SynthesisTriggered` 事件
+- 重裝：Combat System 檢測到彈夾歸零時發佈 `ReloadComplete` 事件（延遲 3000ms）
+- 回合進程：Wave System 檢測到敵人清空時發佈 `WaveComplete` 事件
 
 ## 3.2 Forms
 
@@ -645,12 +747,31 @@ abstract class Entity {
 - 物件池管理透過 `active` 狀態切換
 - 停用的 Entity（`active = false`）應被系統忽略
 
-**系統間通訊**:
+**系統間通訊協議**:
 
-- 戰鬥系統 → 合成系統：檢查當前 Buff 狀態
-- 合成系統 → 攤位系統：提取食材請求
-- 回合系統 → 升級系統：回合結束觸發
-- 升級系統 → 戰鬥系統：永久修改參數
+所有系統間通訊透過 EventQueue 進行：
+
+- **事件發佈契約**：
+  - 發佈者調用 `eventQueue.publish(eventType, data?, delay?)`
+  - `eventType` 必須為已定義的事件類型字串（參見 § 2.3.6 Event Types）
+  - `data` 為可選的事件資料，型別依事件類型而定
+  - `delay` 為可選的延遲時間（毫秒），預設為 0（立即執行）
+
+- **事件訂閱契約**：
+  - 訂閱者調用 `eventQueue.subscribe(eventType, handler)`
+  - `handler` 簽章：`(data?: any) => void`
+  - Handler 必須是冪等的（Idempotent）：重複執行不改變結果
+  - Handler 不應拋出未處理的錯誤（錯誤應在內部處理）
+
+- **系統範例**：
+  - Combat System 發佈 `EnemyDeath` → Booth System 訂閱並儲存食材
+  - Synthesis System 發佈 `SynthesisTriggered` → Combat System 訂閱並啟動 Buff
+  - Wave System 發佈 `WaveComplete` → Upgrade System 訂閱並顯示升級選項
+  - Combat System 發佈 `ReloadComplete`（延遲 3000ms）→ Combat System 自身訂閱並恢復彈夾
+
+- **直接調用（非事件）**：
+  - 合成系統 → 攤位系統：`booth.retrieveFood()` 提取食材（同步操作）
+  - 升級系統 → 戰鬥系統：`combat.applyUpgrade()` 永久修改參數（同步操作）
 
 **值物件契約**:
 
