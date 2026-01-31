@@ -100,46 +100,9 @@
 | CS-19   | 特殊 Buff 期間 + 按數字鍵       | 無效果                         | 無法再次合成               |
 | CS-20   | Buff 剩餘 0.5 秒 + 按 Space     | 特殊子彈                       | Buff 期間仍有效            |
 
-## 2.3 Synthesis System Tests
+## 2.3 Upgrade System Tests
 
-### 2.3.1 Decision Table: Synthesis Recipes
-
-| Test ID | 珍珠 | 豆腐 | 米血 | 按鍵 | Expected Recipe | Buff Duration | Accept Criteria                                                                  |
-| ------- | ---- | ---- | ---- | ---- | --------------- | ------------- | -------------------------------------------------------------------------------- |
-| SY-01   | 3    | 0    | 0    | 3    | 珍珠奶茶        | 2s            | 散射                                                                             |
-| SY-02   | 0    | 3    | 0    | 2    | 臭豆腐          | 2s            | 貫穿                                                                             |
-| SY-03   | 0    | 0    | 3    | 4    | 豬血糕          | 2s            | 追蹤彈                                                                           |
-| SY-04   | 2    | 1    | 0    | 3    | 珍珠奶茶        | 2s            | 散射（剩餘珍珠2）                                                                |
-| SY-05   | 1    | 2    | 0    | 2    | 臭豆腐          | 2s            | 貫穿（剩餘豆腐2）                                                                |
-| SY-06   | 2    | 0    | 1    | 3    | 珍珠奶茶        | 2s            | 散射（剩餘珍珠2）                                                                |
-| SY-07   | 1    | 0    | 2    | 4    | 豬血糕          | 2s            | 追蹤彈（剩餘米血2）                                                              |
-| SY-08   | 0    | 2    | 1    | 2    | 臭豆腐          | 2s            | 貫穿（剩餘豆腐2）                                                                |
-| SY-09   | 0    | 1    | 2    | 4    | 豬血糕          | 2s            | 追蹤彈（剩餘米血2）                                                              |
-| SY-10   | 1    | 1    | 1    | 1    | 夜市總匯        | 2s            | 發射閃電追蹤子彈，打到敵人後自動找下一位敵人攻擊，子彈在螢幕外消失，基礎傷害 ×10 |
-| SY-11   | 0    | 0    | 0    | 5    | 蚵仔煎          | 2s            | 基礎傷害 ×8，消耗擊殺數 ×10                                                      |
-
-### 2.3.2 Trigger Special Bullets
-
-| Test ID | Input                        | Expected Output    | Accept Criteria                    |
-| ------- | ---------------------------- | ------------------ | ---------------------------------- |
-| SY-12   | 按 1（夜市總匯）             | Buff 啟動 2s       | 消耗豆腐1珍珠1米血1                |
-| SY-13   | 按 2（臭豆腐）               | Buff 啟動 2s       | 消耗豆腐3                          |
-| SY-14   | 按 3（珍珠奶茶）             | Buff 啟動 2s       | 消耗珍珠3                          |
-| SY-15   | 按 4（豬血糕）               | Buff 啟動 2s       | 消耗米血3                          |
-| SY-16   | 按 5（蚵仔煎），擊殺數≥10    | Buff 啟動 2s       | 消耗擊殺數 10，擊殺數 -10          |
-| SY-17   | 按 5（蚵仔煎），擊殺數<10    | 無反應             | UI 提示擊殺數不足                  |
-| SY-18   | 按 1，食材不足               | 無反應             | UI 提示庫存不足                    |
-| SY-19   | Buff 期間按 1                | 無反應             | 無法疊加 Buff                      |
-| SY-20   | Buff 結束後按 5，擊殺數≥10   | Buff 啟動 2s       | 蚵仔煎可重複使用，再次消耗 10      |
-| SY-21   | 選「打折」後按 2             | 消耗豆腐2          | 打折效果永久生效                   |
-| SY-22   | 選「快吃」後按 2             | 消耗豆腐2          | 快吃效果當場生效                   |
-| SY-23   | 打折+快吃後按 2              | 消耗豆腐1（最低1） | 兩種效果疊加（最低1）              |
-| SY-24   | 擊殺 7 隻 + 選「快吃」+ 按 5 | Buff 啟動 2s       | 消耗從 10→5，7≥5 可觸發，擊殺數 -5 |
-| SY-25   | 擊殺 4 隻 + 選「快吃」+ 按 5 | 無反應             | 消耗從 10→5，4<5 不可觸發          |
-
-## 2.4 Upgrade System Tests
-
-### 2.4.1 Decision Table: Upgrade Availability
+### 2.3.1 Decision Table: Upgrade Availability
 
 | Test ID | 豆腐庫存 | 珍珠庫存 | 米血庫存 | 升級選項 | Available | Accept Criteria    |
 | ------- | -------- | -------- | -------- | -------- | --------- | ------------------ |
@@ -152,7 +115,7 @@
 | UP-07   | 0        | 0        | 0        | 快吃     | ✓         | Boss升級，總是可選 |
 | UP-08   | 0        | 0        | 0        | 飢餓三十 | ✓         | Boss升級，總是可選 |
 
-### 2.4.2 Present Options
+### 2.3.2 Present Options
 
 | Test ID | Input        | Expected Output    | Accept Criteria |
 | ------- | ------------ | ------------------ | --------------- |
@@ -160,7 +123,7 @@
 | UP-10   | 多次回合結束 | 選項組合不全相同   | 隨機性          |
 | UP-11   | 升級選項顯示 | 包含效果和消耗說明 | UI 顯示完整資訊 |
 
-### 2.4.3 Apply Upgrade
+### 2.3.3 Apply Upgrade
 
 | Test ID | Input                      | Expected Output                 | Accept Criteria  |
 | ------- | -------------------------- | ------------------------------- | ---------------- |
@@ -173,9 +136,9 @@
 | UP-18   | 選擇「快吃」               | 特殊子彈消耗 -1（當場，最低 1） | 當場生效         |
 | UP-19   | 打折 + 快吃                | 消耗減少效果疊加（最低 1）      | 兩種效果可疊加   |
 
-## 2.5 Wave System Tests
+## 2.4 Wave System Tests
 
-### 2.5.1 Decision Table: Enemy Spawning
+### 2.4.1 Decision Table: Enemy Spawning
 
 | Test ID | 回合數 | 一般敵人數 | Boss 數 | 總敵人數 | Accept Criteria      |
 | ------- | ------ | ---------- | ------- | -------- | -------------------- |
@@ -187,7 +150,7 @@
 | WS-06   | 6      | 12         | 0       | 12       | 非 5 倍數回合無 Boss |
 | WS-07   | 25     | 50         | 1       | 51       | 最大敵人數測試       |
 
-### 2.5.2 Wave Progression
+### 2.4.2 Wave Progression
 
 | Test ID | Input             | Expected Output | Accept Criteria        |
 | ------- | ----------------- | --------------- | ---------------------- |
@@ -196,9 +159,9 @@
 | WS-10   | 玩家生命值 = 0    | 遊戲結束        | 不進入下一回合         |
 | WS-11   | 所有敵人到達底線  | 觸發升級畫面    | 敵人清空（即使未擊殺） |
 
-## 2.6 Player Tests
+## 2.5 Player Tests
 
-### 2.6.1 Movement
+### 2.5.1 Movement
 
 | Test ID | Input                       | Expected Output  | Accept Criteria |
 | ------- | --------------------------- | ---------------- | --------------- |
@@ -212,7 +175,7 @@
 | PL-08   | 玩家 (500, 1080) + 按 S     | 玩家 (500, 1080) | 碰到下邊界停止  |
 | PL-09   | 同時按 W + D                | 玩家向右上移動   | 對角線移動      |
 
-### 2.6.2 Collision
+### 2.5.2 Collision
 
 | Test ID | Input                                 | Expected Output | Accept Criteria   |
 | ------- | ------------------------------------- | --------------- | ----------------- |
@@ -220,7 +183,7 @@
 | PL-11   | 玩家中心 (500, 500) + 敵人 (510, 500) | 無碰撞（穿透）  | 玩家不受傷        |
 | PL-12   | 碰撞箱測試                            | 24×24 px        | 碰撞箱大小正確    |
 
-### 2.6.3 Health
+### 2.5.3 Health
 
 | Test ID | Input                 | Expected Output  | Accept Criteria  |
 | ------- | --------------------- | ---------------- | ---------------- |
@@ -228,9 +191,9 @@
 | PL-14   | 生命 1 + 敵人到達底線 | 生命 0，遊戲結束 | 觸發遊戲結束畫面 |
 | PL-15   | 遊戲結束畫面          | 顯示存活回合數   | 統計資訊正確     |
 
-## 2.7 Enemy Tests
+## 2.6 Enemy Tests
 
-### 2.7.1 Ghost (餓鬼)
+### 2.6.1 Ghost (餓鬼)
 
 | Test ID | Input                    | Expected Output       | Accept Criteria    |
 | ------- | ------------------------ | --------------------- | ------------------ |
@@ -240,7 +203,7 @@
 | EN-04   | 餓鬼死亡位置 (500, 500)  | 食材生成 (500, 500)   | 食材在死亡位置     |
 | EN-05   | 餓鬼到達 x = 384         | 玩家生命 -1，餓鬼消失 | 到達底線           |
 
-### 2.7.2 Boss (餓死鬼)
+### 2.6.2 Boss (餓死鬼)
 
 | Test ID | Input                    | Expected Output        | Accept Criteria    |
 | ------- | ------------------------ | ---------------------- | ------------------ |
@@ -250,7 +213,7 @@
 | EN-09   | Boss 到達 x = 384        | 玩家生命 -1，Boss 消失 | 到達底線           |
 | EN-10   | Boss 死亡                | 掉落隨機食材           | 珍珠/豆腐/米血其一 |
 
-### 2.7.3 Booth Interaction
+### 2.6.3 Booth Interaction
 
 | Test ID | Input               | Expected Output  | Accept Criteria |
 | ------- | ------------------- | ---------------- | --------------- |
@@ -258,9 +221,9 @@
 | EN-12   | 敵人偷取後          | 敵人繼續向左移動 | 不停留在攤位    |
 | EN-13   | 攤位 0/6 + 敵人觸碰 | 攤位 0/6         | 無食材可偷      |
 
-## 2.8 Vector Tests
+## 2.7 Vector Tests
 
-### 2.8.1 Construction and Properties
+### 2.7.1 Construction and Properties
 
 | Test ID | Input              | Expected Output | Accept Criteria    |
 | ------- | ------------------ | --------------- | ------------------ |
@@ -269,7 +232,7 @@
 | VT-03   | Vector(-5, -10)    | x=-5, y=-10     | 支援負數座標       |
 | VT-04   | Vector(0, 0)       | x=0, y=0        | 零向量             |
 
-### 2.8.2 add Operation
+### 2.7.2 add Operation
 
 | Test ID | Input                             | Expected Output | Accept Criteria |
 | ------- | --------------------------------- | --------------- | --------------- |
@@ -278,7 +241,7 @@
 | VT-07   | Vector(0, 0).add(Vector(5, 3))    | Vector(5, 3)    | 零向量加法      |
 | VT-08   | Vector(10, 20).add(null)          | 拋出 TypeError  | 參數驗證        |
 
-### 2.8.3 subtract Operation
+### 2.7.3 subtract Operation
 
 | Test ID | Input                                   | Expected Output | Accept Criteria |
 | ------- | --------------------------------------- | --------------- | --------------- |
@@ -287,7 +250,7 @@
 | VT-11   | Vector(10, 20).subtract(Vector(10, 20)) | Vector(0, 0)    | 結果為零向量    |
 | VT-12   | Vector(10, 20).subtract(undefined)      | 拋出 TypeError  | 參數驗證        |
 
-### 2.8.4 multiply Operation
+### 2.7.4 multiply Operation
 
 | Test ID | Input                             | Expected Output  | Accept Criteria    |
 | ------- | --------------------------------- | ---------------- | ------------------ |
@@ -298,7 +261,7 @@
 | VT-17   | Vector(10, 20).multiply(NaN)      | 拋出 TypeError   | 參數驗證           |
 | VT-18   | Vector(10, 20).multiply(Infinity) | 拋出 RangeError  | 參數驗證           |
 
-### 2.8.5 normalize Operation
+### 2.7.5 normalize Operation
 
 | Test ID | Input                     | Expected Output | Accept Criteria        |
 | ------- | ------------------------- | --------------- | ---------------------- |
@@ -307,7 +270,7 @@
 | VT-21   | Vector(10, 0).normalize() | Vector(1, 0)    | 水平向量正規化         |
 | VT-22   | Vector(0, 10).normalize() | Vector(0, 1)    | 垂直向量正規化         |
 
-### 2.8.6 magnitude Operation
+### 2.7.6 magnitude Operation
 
 | Test ID | Input                      | Expected Output | Accept Criteria |
 | ------- | -------------------------- | --------------- | --------------- |
@@ -316,7 +279,7 @@
 | VT-25   | Vector(5, 0).magnitude()   | 5               | 水平向量長度    |
 | VT-26   | Vector(-3, -4).magnitude() | 5               | 負數座標長度    |
 
-### 2.8.7 distance Operation
+### 2.7.7 distance Operation
 
 | Test ID | Input                                   | Expected Output | Accept Criteria |
 | ------- | --------------------------------------- | --------------- | --------------- |
@@ -325,7 +288,7 @@
 | VT-29   | Vector(0, 0).distance(Vector(-3, -4))   | 5               | 負數座標距離    |
 | VT-30   | Vector(10, 10).distance(null)           | 拋出 TypeError  | 參數驗證        |
 
-### 2.8.8 dot Operation
+### 2.7.8 dot Operation
 
 | Test ID | Input                           | Expected Output | Accept Criteria     |
 | ------- | ------------------------------- | --------------- | ------------------- |
@@ -334,9 +297,9 @@
 | VT-33   | Vector(1, 0).dot(Vector(-1, 0)) | -1              | 反向向量點積為負數  |
 | VT-34   | Vector(10, 20).dot(undefined)   | 拋出 TypeError  | 參數驗證            |
 
-## 2.9 Entity Tests
+## 2.8 Entity Tests
 
-### 2.9.1 ID Generation
+### 2.8.1 ID Generation
 
 | Test ID | Input                | Expected Output   | Accept Criteria     |
 | ------- | -------------------- | ----------------- | ------------------- |
@@ -346,7 +309,7 @@
 | ET-04   | Entity 建立後修改 id | 編譯錯誤          | id 為 readonly 屬性 |
 | ET-05   | 兩個 Entity 的 id    | id 必定不同       | ID 唯一性           |
 
-### 2.9.2 Lifecycle Management
+### 2.8.2 Lifecycle Management
 
 | Test ID | Input                           | Expected Output | Accept Criteria             |
 | ------- | ------------------------------- | --------------- | --------------------------- |
@@ -356,7 +319,7 @@
 | ET-09   | 停用的 Entity（active = false） | 系統應忽略      | 遊戲邏輯不處理停用的 Entity |
 | ET-10   | 啟用的 Entity（active = true）  | 系統正常處理    | 遊戲邏輯處理啟用的 Entity   |
 
-### 2.9.3 Object Pool Integration
+### 2.8.3 Object Pool Integration
 
 | Test ID | Input                         | Expected Output            | Accept Criteria    |
 | ------- | ----------------------------- | -------------------------- | ------------------ |
@@ -366,7 +329,7 @@
 | ET-14   | 重新啟用池內 Entity           | active = true，ID 不變     | ID 保持不變        |
 | ET-15   | 連續建立/回收 10 次           | ID 總數 ≤ 10               | 物件池有效重用     |
 
-### 2.9.4 Inheritance
+### 2.8.4 Inheritance
 
 | Test ID | Input              | Expected Output      | Accept Criteria  |
 | ------- | ------------------ | -------------------- | ---------------- |
@@ -377,9 +340,9 @@
 | ET-20   | Food 繼承 Entity   | Food.id 存在且唯一   | 繼承 Entity 屬性 |
 | ET-21   | 不同類型的 Entity  | 所有 id 必定不同     | 全域 ID 唯一性   |
 
-## 2.10 Kill Counter and Oyster Omelet Consumption Tests
+## 2.9 Kill Counter and Oyster Omelet Consumption Tests
 
-### 2.10.1 Kill Counter
+### 2.9.1 Kill Counter
 
 | Test ID | Input          | Expected Output    | Accept Criteria      |
 | ------- | -------------- | ------------------ | -------------------- |
@@ -389,7 +352,7 @@
 | KC-04   | 敵人到達底線   | killCount 不變     | 到達底線不計入擊殺數 |
 | KC-05   | 跨回合擊殺累計 | killCount 持續累加 | 全局計數器不重置     |
 
-### 2.10.2 Oyster Omelet Consumption
+### 2.9.2 Oyster Omelet Consumption
 
 | Test ID | Input                 | Expected Output          | Accept Criteria           |
 | ------- | --------------------- | ------------------------ | ------------------------- |
@@ -400,7 +363,7 @@
 | KC-10   | 擊殺 20 隻，按 5 兩次 | 第二次 Buff 啟動 2s      | 可重複消耗，剩餘 0        |
 | KC-11   | UI 顯示可用狀態       | 顯示 X/10（可用/不可用） | 實時更新擊殺數和可用狀態  |
 
-### 2.10.3 Quick Eat Effect on Oyster Omelet
+### 2.9.3 Quick Eat Effect on Oyster Omelet
 
 | Test ID | Input                             | Expected Output     | Accept Criteria                       |
 | ------- | --------------------------------- | ------------------- | ------------------------------------- |
@@ -411,7 +374,7 @@
 | KC-16   | 快吃升級後 UI 顯示                | 顯示 X/5 而非 X/10  | 消耗需求正確更新                      |
 | KC-17   | 多次選「快吃」升級                | 消耗持續減半        | 快吃可堆疊（5→2.5→1.25...，向上取整） |
 
-### 2.10.4 Integration Tests
+### 2.9.4 Integration Tests
 
 | Test ID | Input                                | Expected Output | Accept Criteria                  |
 | ------- | ------------------------------------ | --------------- | -------------------------------- |
@@ -421,9 +384,9 @@
 | KC-21   | 結束畫面顯示擊殺數                   | 顯示總擊殺數    | 統計數據正確（含已消耗數量）     |
 | KC-22   | 擊殺 15 隻 + 按 5 + 擊殺 3 隻 + 按 5 | 第二次無反應    | 第一次消耗 10，剩 5，3<10 不可用 |
 
-## 2.11 Game State Tests
+## 2.10 Game State Tests
 
-### 2.11.1 Start Screen
+### 2.10.1 Start Screen
 
 | Test ID | Input               | Expected Output | Accept Criteria        |
 | ------- | ------------------- | --------------- | ---------------------- |
@@ -432,7 +395,7 @@
 | GS-03   | 開始畫面 + 按其他鍵 | 無效果          | 開始畫面仍顯示         |
 | GS-04   | 開始畫面顯示        | 遊戲未更新      | 遊戲邏輯暫停           |
 
-### 2.11.2 Game Over Screen
+### 2.10.2 Game Over Screen
 
 | Test ID | Input                            | Expected Output      | Accept Criteria                |
 | ------- | -------------------------------- | -------------------- | ------------------------------ |
@@ -444,7 +407,7 @@
 | GS-10   | 結束畫面 + 按 Space + 再按 Space | 遊戲重新開始         | 玩家生命值恢復，回合數重置為 1 |
 | GS-11   | 結束畫面顯示                     | 遊戲未更新           | 遊戲邏輯暫停                   |
 
-### 2.11.3 Game Statistics Tracking
+### 2.10.3 Game Statistics Tracking
 
 | Test ID | Input         | Expected Output     | Accept Criteria |
 | ------- | ------------- | ------------------- | --------------- |
