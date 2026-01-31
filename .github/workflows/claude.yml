@@ -60,7 +60,7 @@ jobs:
             - The `/align-design` to update code and content files to align with SPEC.md when user requests align design.
             - The `/refactor` to improve code quality without changing functionality when user requests refactor.
 
-            **ENSURE ONLY WORK RELATED SCOPE BASED ON THE SKILL INSTRUCTION.**
+            **ENSURE ONLY WORK RELATED SCOPE BASED ON THE SKILL INSTRUCTION, AND PUSH CHANGES DIRECTLY.**
 
             Commits:
             Use `git:commit` skill to follow the commit message conventions when making changes.
