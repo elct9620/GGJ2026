@@ -6,6 +6,7 @@ import { Food } from "./entities/food";
 import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
+import { CombatSystem } from "./systems/combat";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -35,9 +36,7 @@ export class GameScene {
 
   // Game state
   private currentWave: number = 1;
-  private synthesisSlot: FoodType[] = [];
-  private shootCooldown: number = 0;
-  private readonly shootCooldownTime: number = 0.2; // 200ms between shots
+  private synthesisSlot: FoodType[] = []; // TODO: Remove in Phase 2 (new synthesis mechanism)
   private isWaveTransitioning: boolean = false; // Prevent multiple wave spawns
 
   // Game statistics (Spec: § 2.8.2)
@@ -69,22 +68,34 @@ export class GameScene {
 
     // Initialize SystemManager and register all systems
     this.systemManager = new SystemManager();
-    this.systemManager.register(new EventQueue());
+    const eventQueue = new EventQueue();
+    const combatSystem = new CombatSystem();
+
+    this.systemManager.register(eventQueue);
     this.systemManager.register(new InputSystem());
+    this.systemManager.register(combatSystem);
     this.systemManager.register(new HUDSystem());
     this.systemManager.register(new BoothSystem());
     this.systemManager.initialize();
 
     // Subscribe to WaveComplete event
-    const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
     eventQueue.subscribe(
       EventType.WaveComplete,
       this.onWaveComplete.bind(this),
     );
 
+    // Subscribe to EnemyDeath event for food drops
+    eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
+
     // Initialize player at center of playable area
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
     this.playerContainer.addChild(this.player.sprite);
+
+    // Connect Combat System with game entities
+    combatSystem.setPlayer(this.player);
+    combatSystem.setBullets(this.bullets);
+    combatSystem.setEnemies(this.enemies);
+    combatSystem.setEventQueue(eventQueue);
 
     // Setup booth visualization
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
@@ -139,20 +150,22 @@ export class GameScene {
    */
   public update(deltaTime: number): void {
     // Update all systems (EventQueue will process first due to priority)
+    // Combat System handles: shooting, collisions, buff management
     this.systemManager.update(deltaTime);
 
     this.handleInput(deltaTime);
     this.updatePlayer(deltaTime);
     this.updateEnemies(deltaTime);
     this.updateBullets(deltaTime);
-    this.checkCollisions();
     this.updateHUD();
     this.checkWaveCompletion();
+    this.checkFoodCollection(); // Auto-collect dropped food
   }
 
   private handleInput(deltaTime: number): void {
     const inputSystem = this.systemManager.get<InputSystem>("InputSystem");
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+    const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
 
     // Handle movement
     const moveDirection = inputSystem.getMovementDirection();
@@ -160,17 +173,15 @@ export class GameScene {
       this.player.move(moveDirection, deltaTime);
     }
 
-    // Handle shooting
-    this.shootCooldown = Math.max(0, this.shootCooldown - deltaTime);
-
-    if (inputSystem.isShootPressed() && this.shootCooldown <= 0) {
-      if (this.player.shoot()) {
+    // Handle shooting (delegated to Combat System)
+    if (inputSystem.isShootPressed()) {
+      if (combatSystem.shoot()) {
         this.spawnBullet();
-        this.shootCooldown = this.shootCooldownTime;
       }
     }
 
     // Handle booth interactions
+    // TODO: Remove in Phase 2 (new synthesis mechanism)
     const boothKey = inputSystem.getBoothKeyPressed();
     if (boothKey !== null && this.synthesisSlot.length < 3) {
       const food = boothSystem.retrieveFood(boothKey);
@@ -233,37 +244,11 @@ export class GameScene {
     }
   }
 
-  private checkCollisions(): void {
-    // Check bullet-enemy collisions
-    for (const bullet of this.bullets) {
-      if (!bullet.active) continue;
-
-      for (const enemy of this.enemies) {
-        if (!enemy.active) continue;
-
-        // Simple distance-based collision
-        const distance = bullet.position.distance(enemy.position);
-        if (distance < 20) {
-          // Hit!
-          const died = enemy.takeDamage(bullet.damage);
-
-          if (died) {
-            // Enemy died, drop food
-            const foodType = enemy.dropFood();
-            this.spawnFood(foodType, enemy.position);
-
-            // Track statistics (Spec: § 2.8.2)
-            this.stats.enemiesDefeated++;
-          }
-
-          // Bullet is consumed (not piercing in prototype)
-          bullet.active = false;
-          break;
-        }
-      }
-    }
-
-    // Check food collection (auto-collect when dropped)
+  /**
+   * Check and collect dropped food (auto-collect)
+   * SPEC § 2.3.1: Food is automatically stored in booth
+   */
+  private checkFoodCollection(): void {
     for (let i = this.foods.length - 1; i >= 0; i--) {
       const food = this.foods[i];
 
@@ -280,6 +265,26 @@ export class GameScene {
       this.foodsContainer.removeChild(food.sprite);
       this.foods.splice(i, 1);
     }
+  }
+
+  /**
+   * Handle EnemyDeath event (SPEC § 2.3.6)
+   * Drop food when enemy dies
+   */
+  private onEnemyDeath(data: {
+    enemyId: string;
+    position: { x: number; y: number };
+  }): void {
+    // Find the enemy that died
+    const enemy = this.enemies.find((e) => e.id === data.enemyId);
+    if (!enemy) return;
+
+    // Drop food at enemy position
+    const foodType = enemy.dropFood();
+    this.spawnFood(foodType, new Vector(data.position.x, data.position.y));
+
+    // Track statistics (Spec: § 2.8.2)
+    this.stats.enemiesDefeated++;
   }
 
   private spawnFood(type: FoodType, position: Vector): void {
@@ -374,8 +379,7 @@ export class GameScene {
 
     // Reset game state
     this.currentWave = 1;
-    this.synthesisSlot = [];
-    this.shootCooldown = 0;
+    this.synthesisSlot = []; // TODO: Remove in Phase 2
     this.isWaveTransitioning = false;
 
     // Reset statistics
