@@ -8,7 +8,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
-import type { FoodType } from "../entities/booth";
+import { type FoodType, getBoothIdForFood } from "../entities/booth";
 
 /**
  * Upgrade option definition
@@ -248,7 +248,7 @@ export class UpgradeSystem implements ISystem {
     if (option.cost) {
       if (!this.boothSystem) return false;
 
-      const boothId = this.getFoodBoothId(option.cost.foodType);
+      const boothId = getBoothIdForFood(option.cost.foodType);
       const availableFood = this.boothSystem.getFoodCount(boothId);
 
       if (availableFood < option.cost.amount) {
@@ -276,22 +276,6 @@ export class UpgradeSystem implements ISystem {
     this.currentOptions = [];
 
     return true;
-  }
-
-  /**
-   * Get booth ID for food type (1-indexed)
-   */
-  private getFoodBoothId(foodType: FoodType): number {
-    switch (foodType) {
-      case "Pearl":
-        return 1;
-      case "Tofu":
-        return 2;
-      case "BloodCake":
-        return 3;
-      default:
-        return 1;
-    }
   }
 
   /**

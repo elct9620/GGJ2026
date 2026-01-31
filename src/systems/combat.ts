@@ -11,20 +11,11 @@ import type { Enemy } from "../entities/enemy";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
-/**
- * Special bullet types (SPEC § 2.3.3)
- */
-export const SpecialBulletType = {
-  None: "None", // 普通子彈
-  NightMarket: "NightMarket", // 夜市總匯（連鎖閃電）
-  StinkyTofu: "StinkyTofu", // 臭豆腐（貫穿）
-  BubbleTea: "BubbleTea", // 珍珠奶茶（散射）
-  BloodCake: "BloodCake", // 豬血糕（追蹤）
-  OysterOmelette: "OysterOmelette", // 蚵仔煎（高傷害）
-} as const;
+import { RECIPE_BUFF_MAPPING } from "../values/recipes";
+import { SpecialBulletType } from "../values/special-bullet";
 
-export type SpecialBulletType =
-  (typeof SpecialBulletType)[keyof typeof SpecialBulletType];
+// Re-export for backwards compatibility
+export { SpecialBulletType } from "../values/special-bullet";
 
 /**
  * Combat System
@@ -269,19 +260,6 @@ export class CombatSystem implements ISystem {
    * Map recipe ID (1-5) to buff type (SPEC § 2.3.3)
    */
   private mapRecipeToBuffType(recipeId: string): SpecialBulletType {
-    switch (recipeId) {
-      case "1":
-        return SpecialBulletType.NightMarket;
-      case "2":
-        return SpecialBulletType.StinkyTofu;
-      case "3":
-        return SpecialBulletType.BubbleTea;
-      case "4":
-        return SpecialBulletType.BloodCake;
-      case "5":
-        return SpecialBulletType.OysterOmelette;
-      default:
-        return SpecialBulletType.None;
-    }
+    return RECIPE_BUFF_MAPPING[recipeId] ?? SpecialBulletType.None;
   }
 }

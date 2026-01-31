@@ -3,6 +3,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
 import { getTexture, AssetKeys } from "../core/assets";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
+import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values/recipes";
 
 /**
  * Recipe status for HUD display
@@ -192,23 +193,13 @@ export class HUDSystem implements ISystem {
     const keyTipSize = 46;
     const costIndicatorSize = 20;
 
-    // Skill names for labels
-    const skillLabels = ["技能1", "技能2", "技能3", "技能4", "大招"];
-
-    // Skill costs (number of indicators to show)
-    // Skills 1-4 use 3 materials, skill 5 (大招) uses kill count
-    const skillCosts = [3, 3, 3, 3, 1];
-
-    // Cost indicator types per skill (which skillTip image to use)
-    // skillTip_0=gray, skillTip_1=red, skillTip_2=blue, skillTip_3=green
-    // Pearl=blue(2), Tofu=green(3), BloodCake=red(1)
-    const skillCostTypes = [
-      [2, 3, 1], // Skill 1: blue+green+red (夜市總匯: Pearl+Tofu+BloodCake)
-      [3, 3, 3], // Skill 2: green×3 (臭豆腐: Tofu×3)
-      [2, 2, 2], // Skill 3: blue×3 (珍珠奶茶: Pearl×3)
-      [1, 1, 1], // Skill 4: red×3 (豬血糕: BloodCake×3)
-      [3], // Skill 5: green (蚵仔煎: 10 kills)
-    ];
+    // Get skill display configs from centralized recipes
+    const recipeIds = ["1", "2", "3", "4", "5"];
+    const skillLabels = recipeIds.map((id) => RECIPE_DISPLAY[id].label);
+    const skillCosts = recipeIds.map((id) => RECIPE_DISPLAY[id].costs.length);
+    const skillCostTypes = recipeIds.map((id) =>
+      RECIPE_DISPLAY[id].costs.map((foodType) => FOOD_HUD_COLOR[foodType]),
+    );
 
     for (let i = 0; i < buttonCount; i++) {
       const buttonCenterX = baseX + i * spacing + spacing / 2;
