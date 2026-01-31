@@ -303,15 +303,13 @@ describe("CombatSystem", () => {
 
   describe("EnemyDeath Event", () => {
     it("should publish EnemyDeath event with correct data", () => {
-      let eventData: {
+      let receivedData: {
         enemyId: string;
         position: { x: number; y: number };
       } | null = null;
-      eventQueue.subscribe(EventType.EnemyDeath, (data) => {
-        eventData = data as {
-          enemyId: string;
-          position: { x: number; y: number };
-        };
+
+      eventQueue.subscribe(EventType.EnemyDeath, (data: any) => {
+        receivedData = data;
       });
 
       const enemy = new Enemy(EnemyType.Ghost, new Vector(500, 540));
@@ -322,12 +320,11 @@ describe("CombatSystem", () => {
 
       combatSystem.update(0.016);
 
-      expect(eventData).not.toBeNull();
-      if (eventData) {
-        expect(eventData.enemyId).toBe(enemy.id);
-        expect(eventData.position.x).toBeCloseTo(500, 0);
-        expect(eventData.position.y).toBeCloseTo(540, 0);
-      }
+      expect(receivedData).not.toBeNull();
+      const data = receivedData!;
+      expect(data.enemyId).toBe(enemy.id);
+      expect(data.position.x).toBeCloseTo(500, 0);
+      expect(data.position.y).toBeCloseTo(540, 0);
     });
   });
 });
