@@ -43,7 +43,7 @@ export function createGameContainers(): GameContainers {
  */
 export function attachGameContainers(
   gameLayer: Container,
-  containers: GameContainers
+  containers: GameContainers,
 ): void {
   // 按照 SPEC.md § 4.2.2 的順序添加
   gameLayer.addChild(containers.booth);

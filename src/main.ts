@@ -5,6 +5,8 @@ import {
   attachGameContainers,
 } from "./core/game-containers";
 import { GameLoop } from "./core/game-loop";
+import { GameScene } from "./game-scene";
+import { createBackground } from "./core/background";
 
 async function main() {
   const appContainer = document.getElementById("app");
@@ -23,29 +25,46 @@ async function main() {
   const layers = createLayers();
   attachLayers(app.stage, layers);
 
+  // 添加背景
+  const background = createBackground();
+  layers.background.addChild(background);
+
   // 建立遊戲容器子結構
   const gameContainers = createGameContainers();
   attachGameContainers(layers.game, gameContainers);
 
+  // 初始化遊戲場景 (遊戲原型)
+  const gameScene = new GameScene(
+    gameContainers.player,
+    gameContainers.enemies,
+    gameContainers.bullets,
+    gameContainers.foodDrops,
+    gameContainers.booth,
+    layers.ui,
+  );
+
   // 初始化遊戲主循環
   const gameLoop = new GameLoop(app.ticker);
 
-  gameLoop.setUpdateCallback((_deltaTime, _totalTime) => {
-    // 預留系統更新邏輯接口
-    // 未來將在此處調用各系統的 update 方法
-    // console.log(`Update: deltaTime=${_deltaTime.toFixed(3)}s, totalTime=${_totalTime.toFixed(2)}s`);
+  gameLoop.setUpdateCallback((deltaTime, _totalTime) => {
+    // 更新遊戲場景
+    gameScene.update(deltaTime);
   });
 
   // 啟動遊戲循環
   gameLoop.start();
 
-  console.log("Game initialized successfully");
+  console.log("Game prototype initialized successfully");
   console.log(`Canvas: ${app.canvas.width}x${app.canvas.height}`);
   console.log(`Layers: ${app.stage.children.length}`);
   console.log(
-    `Game Containers: ${layers.game.children.length} (Booth, FoodDrops, Player, Enemies, Bullets)`
+    `Game Containers: ${layers.game.children.length} (Booth, FoodDrops, Player, Enemies, Bullets)`,
   );
   console.log("Game loop started - Target: 60 FPS");
+  console.log("Controls:");
+  console.log("  WASD - Move player");
+  console.log("  Space - Shoot");
+  console.log("  1/2/3 - Retrieve food from booths");
 }
 
 main().catch((error) => {
