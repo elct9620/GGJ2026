@@ -68,6 +68,8 @@ jobs:
             Progress Tracking:
             Follow the progress tracking instructions strictly.
 
+            **NO CLARIFY IN THIS TASK, THIS IS HEADLESS MODE. MAKE CHANGES DIRECTLY AND WAIT FOR NEXT FEEDBACK.**
+
           claude_args: "--allowed-tools Bash, Skill"
 
           # Optional: Add claude_args to customize behavior and configuration
