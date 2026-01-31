@@ -182,6 +182,18 @@ export class BoothSystem implements ISystem {
       booth.reset();
     }
   }
+
+  /**
+   * Get total food count across all booths
+   * Single Source of Truth for total food count
+   */
+  public getTotalFoodCount(): number {
+    let total = 0;
+    for (const booth of this.booths.values()) {
+      total += booth.count;
+    }
+    return total;
+  }
 }
 
 /**

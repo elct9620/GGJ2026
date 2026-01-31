@@ -120,4 +120,48 @@ describe("BoothSystem", () => {
       expect(boothSystem.getFoodCount(3)).toBe(0);
     });
   });
+
+  describe("getTotalFoodCount", () => {
+    it("空攤位應回傳 0", () => {
+      expect(boothSystem.getTotalFoodCount()).toBe(0);
+    });
+
+    it("應正確計算單一攤位的食材數", () => {
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Pearl);
+
+      expect(boothSystem.getTotalFoodCount()).toBe(2);
+    });
+
+    it("應正確加總多攤位的食材數", () => {
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Tofu);
+      boothSystem.storeFood(FoodType.BloodCake);
+      boothSystem.storeFood(FoodType.BloodCake);
+      boothSystem.storeFood(FoodType.BloodCake);
+
+      expect(boothSystem.getTotalFoodCount()).toBe(6);
+    });
+
+    it("提取食材後應更新總數", () => {
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Tofu);
+
+      boothSystem.retrieveFood(1);
+
+      expect(boothSystem.getTotalFoodCount()).toBe(2);
+    });
+
+    it("reset 後應回傳 0", () => {
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Tofu);
+      boothSystem.storeFood(FoodType.BloodCake);
+
+      boothSystem.reset();
+
+      expect(boothSystem.getTotalFoodCount()).toBe(0);
+    });
+  });
 });

@@ -6,10 +6,11 @@
  *       This system only handles collision detection and food consumption logic.
  */
 
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import type { BoothSystem } from "./booth";
 import type { Enemy } from "../entities/enemy";
 import { Container } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
@@ -29,19 +30,22 @@ const BOOTH_POOL_HEIGHT = 256;
  * - 監聽攤位食材變化（訂閱 FoodStored/FoodConsumed）
  * - 敵人碰撞檢測（在 Booth Pool 區域 x=340~468）
  * - 碰撞時消耗食材並消滅敵人（不掉落）
+ *
+ * Note: totalFoodCount is now derived from BoothSystem (Single Source of Truth)
  */
-export class BoxSystem implements ISystem {
+export class BoxSystem extends InjectableSystem {
   public readonly name = "BoxSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Event queue reference
-  private eventQueue: EventQueue | null = null;
+  // Dependency keys
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
+  private static readonly DEP_BOOTH = "BoothSystem";
 
   // Enemies reference (for collision detection)
   private enemies: Enemy[] = [];
 
   // Box state (SPEC § 2.3.7)
-  private totalFoodCount = 0;
+  // Note: totalFoodCount removed - now derived from BoothSystem
   private boxExists = false;
 
   // Booth Pool collision area (SPEC § 2.7.2)
@@ -53,31 +57,48 @@ export class BoxSystem implements ISystem {
   // Empty container (no visual elements - handled by BoothSystem)
   private container: Container = new Container();
 
+  constructor() {
+    super();
+    this.declareDependency(BoxSystem.DEP_EVENT_QUEUE);
+    this.declareDependency(BoxSystem.DEP_BOOTH);
+  }
+
+  /**
+   * Get EventQueue dependency
+   */
+  private get eventQueue(): EventQueue {
+    return this.getDependency<EventQueue>(BoxSystem.DEP_EVENT_QUEUE);
+  }
+
+  /**
+   * Get BoothSystem dependency
+   */
+  private get boothSystem(): BoothSystem {
+    return this.getDependency<BoothSystem>(BoxSystem.DEP_BOOTH);
+  }
+
   /**
    * Initialize box system
    */
   public initialize(): void {
-    this.totalFoodCount = 0;
     this.boxExists = false;
 
     // Subscribe to food events (SPEC § 2.3.7)
-    if (this.eventQueue) {
-      this.eventQueue.subscribe(
-        EventType.FoodStored,
-        this.onFoodStored.bind(this),
-      );
-      this.eventQueue.subscribe(
-        EventType.FoodConsumed,
-        this.onFoodConsumed.bind(this),
-      );
-    }
+    this.eventQueue.subscribe(
+      EventType.FoodStored,
+      this.onFoodStored.bind(this),
+    );
+    this.eventQueue.subscribe(
+      EventType.FoodConsumed,
+      this.onFoodConsumed.bind(this),
+    );
   }
 
   /**
    * Update box system - check enemy collisions with booth pool area
    */
   public update(): void {
-    if (!this.boxExists || !this.eventQueue) return;
+    if (!this.boxExists) return;
 
     // Check enemy collisions with booth pool area (SPEC § 2.3.7)
     // Pool area: x from poolX to poolX + BOOTH_POOL_WIDTH
@@ -96,19 +117,17 @@ export class BoxSystem implements ISystem {
         enemyY <= this.poolStartY + BOOTH_POOL_HEIGHT * 3;
 
       if (inPoolX && inPoolY) {
-        // Consume 1 food from booth
-        this.totalFoodCount = Math.max(0, this.totalFoodCount - 1);
-
         // Deactivate enemy (SPEC § 2.3.7: 不掉落食材)
         enemy.active = false;
 
-        // Publish BoxBlocked event (for statistics tracking)
+        // Publish EnemyReachedEnd event (for statistics tracking)
         this.eventQueue.publish(EventType.EnemyReachedEnd, {
           enemyId: enemy.id,
         });
 
-        // Update box state
-        if (this.totalFoodCount === 0) {
+        // Update box state based on BoothSystem's total count
+        // Note: Food consumption happens via events, not directly here
+        if (this.getTotalFoodCount() === 0) {
           this.boxExists = false;
         }
 
@@ -121,16 +140,24 @@ export class BoxSystem implements ISystem {
    * Cleanup resources
    */
   public destroy(): void {
-    this.eventQueue = null;
     this.enemies = [];
     this.boxExists = false;
   }
 
   /**
    * Set EventQueue reference
+   * @deprecated Use SystemManager.provideDependency instead
    */
   public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
+    this.inject(BoxSystem.DEP_EVENT_QUEUE, eventQueue);
+  }
+
+  /**
+   * Set BoothSystem reference
+   * @deprecated Use SystemManager.provideDependency instead
+   */
+  public setBoothSystem(boothSystem: BoothSystem): void {
+    this.inject(BoxSystem.DEP_BOOTH, boothSystem);
   }
 
   /**
@@ -148,10 +175,10 @@ export class BoxSystem implements ISystem {
   }
 
   /**
-   * Get current food count
+   * Get current food count (from BoothSystem - Single Source of Truth)
    */
   public getTotalFoodCount(): number {
-    return this.totalFoodCount;
+    return this.boothSystem.getTotalFoodCount();
   }
 
   /**
@@ -165,8 +192,6 @@ export class BoxSystem implements ISystem {
    * Handle FoodStored event (SPEC § 2.3.7)
    */
   private onFoodStored(): void {
-    this.totalFoodCount++;
-
     if (!this.boxExists) {
       this.spawnBox();
     }
@@ -176,9 +201,7 @@ export class BoxSystem implements ISystem {
    * Handle FoodConsumed event (SPEC § 2.3.7)
    */
   private onFoodConsumed(): void {
-    this.totalFoodCount = Math.max(0, this.totalFoodCount - 1);
-
-    if (this.totalFoodCount === 0) {
+    if (this.getTotalFoodCount() === 0) {
       this.boxExists = false;
     }
   }
@@ -196,7 +219,6 @@ export class BoxSystem implements ISystem {
    * Reset box system for new game
    */
   public reset(): void {
-    this.totalFoodCount = 0;
     this.boxExists = false;
   }
 }

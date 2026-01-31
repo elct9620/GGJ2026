@@ -3,7 +3,7 @@
  * SPEC § 2.3.3: 透過按鍵快速發動特殊子彈效果（即時消耗食材）
  */
 
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { BoothSystem } from "./booth";
 import type { InputSystem } from "./input";
@@ -24,15 +24,56 @@ import { type Recipe, RECIPES } from "../values/recipes";
  * - 蚵仔煎消耗擊殺數（SPEC § 2.3.8）
  * - 發佈 SynthesisTriggered 事件
  */
-export class SynthesisSystem implements ISystem {
+export class SynthesisSystem extends InjectableSystem {
   public readonly name = "SynthesisSystem";
   public readonly priority = SystemPriority.SYNTHESIS;
 
-  // System dependencies
-  private inputSystem: InputSystem | null = null;
-  private boothSystem: BoothSystem | null = null;
-  private eventQueue: EventQueue | null = null;
-  private killCounterSystem: KillCounterSystem | null = null;
+  // Dependency keys
+  private static readonly DEP_INPUT = "InputSystem";
+  private static readonly DEP_BOOTH = "BoothSystem";
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
+  private static readonly DEP_KILL_COUNTER = "KillCounterSystem";
+
+  constructor() {
+    super();
+    this.declareDependency(SynthesisSystem.DEP_INPUT);
+    this.declareDependency(SynthesisSystem.DEP_BOOTH);
+    this.declareDependency(SynthesisSystem.DEP_EVENT_QUEUE);
+    this.declareDependency(SynthesisSystem.DEP_KILL_COUNTER, false); // Optional
+  }
+
+  /**
+   * Get InputSystem dependency
+   */
+  private get inputSystem(): InputSystem {
+    return this.getDependency<InputSystem>(SynthesisSystem.DEP_INPUT);
+  }
+
+  /**
+   * Get BoothSystem dependency
+   */
+  private get boothSystem(): BoothSystem {
+    return this.getDependency<BoothSystem>(SynthesisSystem.DEP_BOOTH);
+  }
+
+  /**
+   * Get EventQueue dependency
+   */
+  private get eventQueue(): EventQueue {
+    return this.getDependency<EventQueue>(SynthesisSystem.DEP_EVENT_QUEUE);
+  }
+
+  /**
+   * Get KillCounterSystem dependency (optional)
+   */
+  private get killCounterSystem(): KillCounterSystem | null {
+    if (this.hasDependency(SynthesisSystem.DEP_KILL_COUNTER)) {
+      return this.getDependency<KillCounterSystem>(
+        SynthesisSystem.DEP_KILL_COUNTER,
+      );
+    }
+    return null;
+  }
 
   /**
    * Initialize synthesis system
@@ -45,8 +86,6 @@ export class SynthesisSystem implements ISystem {
    * Update synthesis system (每幀呼叫)
    */
   public update(): void {
-    if (!this.inputSystem || !this.boothSystem || !this.eventQueue) return;
-
     // Check for synthesis key press (1-5)
     const synthesisKey = this.inputSystem.getSynthesisKeyPressed();
     if (synthesisKey !== null) {
@@ -58,38 +97,39 @@ export class SynthesisSystem implements ISystem {
    * Cleanup resources
    */
   public destroy(): void {
-    this.inputSystem = null;
-    this.boothSystem = null;
-    this.eventQueue = null;
-    this.killCounterSystem = null;
+    // No cleanup needed - dependencies are managed by InjectableSystem
   }
 
   /**
    * Set InputSystem reference
+   * @deprecated Use SystemManager.provideDependency instead
    */
   public setInputSystem(inputSystem: InputSystem): void {
-    this.inputSystem = inputSystem;
+    this.inject(SynthesisSystem.DEP_INPUT, inputSystem);
   }
 
   /**
    * Set BoothSystem reference
+   * @deprecated Use SystemManager.provideDependency instead
    */
   public setBoothSystem(boothSystem: BoothSystem): void {
-    this.boothSystem = boothSystem;
+    this.inject(SynthesisSystem.DEP_BOOTH, boothSystem);
   }
 
   /**
    * Set EventQueue reference
+   * @deprecated Use SystemManager.provideDependency instead
    */
   public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
+    this.inject(SynthesisSystem.DEP_EVENT_QUEUE, eventQueue);
   }
 
   /**
    * Set KillCounterSystem reference
+   * @deprecated Use SystemManager.provideDependency instead
    */
   public setKillCounterSystem(killCounterSystem: KillCounterSystem): void {
-    this.killCounterSystem = killCounterSystem;
+    this.inject(SynthesisSystem.DEP_KILL_COUNTER, killCounterSystem);
   }
 
   /**
@@ -97,8 +137,6 @@ export class SynthesisSystem implements ISystem {
    * SPEC § 2.3.3: 按鍵觸發檢查食材並消耗
    */
   private trySynthesize(recipeId: string): void {
-    if (!this.boothSystem || !this.eventQueue) return;
-
     const recipe = RECIPES[recipeId];
     if (!recipe) return;
 
@@ -136,8 +174,6 @@ export class SynthesisSystem implements ISystem {
    * SPEC § 2.3.3: 檢查食材是否滿足配方
    */
   private checkFoodRequirements(recipe: Recipe): boolean {
-    if (!this.boothSystem) return false;
-
     for (const [foodType, required] of Object.entries(
       recipe.foodRequirements,
     )) {
@@ -157,8 +193,6 @@ export class SynthesisSystem implements ISystem {
    * SPEC § 2.3.3: 直接從攤位扣除對應食材
    */
   private consumeFood(recipe: Recipe): void {
-    if (!this.boothSystem) return;
-
     for (const [foodType, amount] of Object.entries(recipe.foodRequirements)) {
       const boothId = getBoothIdForFood(foodType as FoodType);
 

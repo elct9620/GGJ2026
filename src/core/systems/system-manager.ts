@@ -1,4 +1,5 @@
 import type { ISystem } from "./system.interface";
+import { isInjectableSystem } from "./injectable";
 
 export class SystemManagerError extends Error {
   constructor(message: string) {
@@ -10,6 +11,7 @@ export class SystemManagerError extends Error {
 /**
  * 系統管理器
  * 負責系統的註冊、生命週期管理、優先級排程
+ * 支援依賴注入（InjectableSystem）
  */
 export class SystemManager {
   // 快速查找：O(1) 查詢系統
@@ -20,6 +22,9 @@ export class SystemManager {
 
   // 初始化狀態
   private initialized = false;
+
+  // 依賴註冊表（供 InjectableSystem 使用）
+  private dependencyRegistry: Map<string, unknown> = new Map();
 
   /**
    * 註冊系統
@@ -82,7 +87,33 @@ export class SystemManager {
   }
 
   /**
+   * 提供依賴（供 InjectableSystem 注入）
+   * @param key 依賴的唯一識別符
+   * @param dependency 依賴實例
+   */
+  public provideDependency<T>(key: string, dependency: T): void {
+    this.dependencyRegistry.set(key, dependency);
+  }
+
+  /**
+   * 取得已提供的依賴
+   */
+  public getDependency<T>(key: string): T | undefined {
+    return this.dependencyRegistry.get(key) as T | undefined;
+  }
+
+  /**
+   * 檢查依賴是否已提供
+   */
+  public hasDependency(key: string): boolean {
+    return this.dependencyRegistry.has(key);
+  }
+
+  /**
    * 初始化所有系統（依優先級順序）
+   * 1. 注入依賴到所有 InjectableSystem
+   * 2. 驗證所有 InjectableSystem 的依賴
+   * 3. 呼叫各系統的 initialize()
    */
   public initialize(): void {
     if (this.initialized) {
@@ -90,6 +121,31 @@ export class SystemManager {
       return;
     }
 
+    // 1. 注入依賴到所有 InjectableSystem
+    for (const system of this.sortedSystems) {
+      if (isInjectableSystem(system)) {
+        for (const [key, dep] of this.dependencyRegistry) {
+          system.inject(key, dep);
+        }
+      }
+    }
+
+    // 2. 驗證所有 InjectableSystem 的依賴
+    for (const system of this.sortedSystems) {
+      if (isInjectableSystem(system)) {
+        try {
+          system.validateDependencies();
+        } catch (error) {
+          console.error(
+            `Dependency validation failed for system "${system.name}":`,
+            error,
+          );
+          throw error; // Fail fast
+        }
+      }
+    }
+
+    // 3. 初始化各系統
     for (const system of this.sortedSystems) {
       try {
         system.initialize?.();
@@ -140,6 +196,7 @@ export class SystemManager {
 
     this.systems.clear();
     this.sortedSystems = [];
+    this.dependencyRegistry.clear();
     this.initialized = false;
   }
 

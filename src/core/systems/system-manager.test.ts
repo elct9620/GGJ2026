@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SystemManager, SystemManagerError } from "./system-manager";
 import { SystemPriority } from "./system.interface";
 import type { ISystem } from "./system.interface";
+import { InjectableSystem, DependencyError } from "./injectable";
 
 // 測試輔助函式：建立 Mock 系統
 function createMockSystem(
@@ -15,6 +16,44 @@ function createMockSystem(
     update: vi.fn(),
     destroy: vi.fn(),
   };
+}
+
+// 測試用 InjectableSystem
+class TestInjectableSystem extends InjectableSystem {
+  public readonly name: string;
+  public readonly priority = SystemPriority.DEFAULT;
+
+  private static readonly DEP_SERVICE_A = "ServiceA";
+  private static readonly DEP_SERVICE_B = "ServiceB";
+
+  public initializeCalled = false;
+
+  constructor(name: string, requireA = true, requireB = true) {
+    super();
+    this.name = name;
+    if (requireA) {
+      this.declareDependency(TestInjectableSystem.DEP_SERVICE_A);
+    }
+    if (requireB) {
+      this.declareDependency(TestInjectableSystem.DEP_SERVICE_B);
+    }
+  }
+
+  public getServiceA<T>(): T {
+    return this.getDependency<T>(TestInjectableSystem.DEP_SERVICE_A);
+  }
+
+  public getServiceB<T>(): T {
+    return this.getDependency<T>(TestInjectableSystem.DEP_SERVICE_B);
+  }
+
+  public initialize(): void {
+    this.initializeCalled = true;
+  }
+
+  public update(): void {
+    // No-op for testing
+  }
 }
 
 describe("SystemManager", () => {
@@ -412,6 +451,107 @@ describe("SystemManager", () => {
 
       manager.unregister("System1");
       expect(manager.count).toBe(1);
+    });
+  });
+
+  describe("Dependency Injection", () => {
+    it("provideDependency 應正確註冊依賴", () => {
+      const service = { value: "test" };
+      manager.provideDependency("ServiceA", service);
+
+      expect(manager.hasDependency("ServiceA")).toBe(true);
+      expect(manager.getDependency("ServiceA")).toBe(service);
+    });
+
+    it("hasDependency 應正確檢查依賴存在", () => {
+      expect(manager.hasDependency("NonExistent")).toBe(false);
+
+      manager.provideDependency("ServiceA", {});
+      expect(manager.hasDependency("ServiceA")).toBe(true);
+    });
+
+    it("initialize 時應自動注入依賴到 InjectableSystem", () => {
+      const serviceA = { name: "A" };
+      const serviceB = { name: "B" };
+      const system = new TestInjectableSystem("TestSystem");
+
+      manager.provideDependency("ServiceA", serviceA);
+      manager.provideDependency("ServiceB", serviceB);
+      manager.register(system);
+      manager.initialize();
+
+      expect(system.getServiceA()).toBe(serviceA);
+      expect(system.getServiceB()).toBe(serviceB);
+    });
+
+    it("initialize 時應驗證 InjectableSystem 的依賴", () => {
+      const system = new TestInjectableSystem("TestSystem");
+      manager.provideDependency("ServiceA", {}); // 只提供 A，缺少 B
+
+      manager.register(system);
+
+      expect(() => manager.initialize()).toThrow(DependencyError);
+    });
+
+    it("依賴驗證失敗時應 fail fast 不執行 initialize", () => {
+      const system = new TestInjectableSystem("TestSystem");
+      manager.provideDependency("ServiceA", {}); // 缺少 ServiceB
+
+      manager.register(system);
+
+      try {
+        manager.initialize();
+      } catch {
+        // Expected to throw
+      }
+
+      expect(system.initializeCalled).toBe(false);
+    });
+
+    it("所有依賴都提供時應正常初始化", () => {
+      const system = new TestInjectableSystem("TestSystem");
+      manager.provideDependency("ServiceA", {});
+      manager.provideDependency("ServiceB", {});
+
+      manager.register(system);
+      manager.initialize();
+
+      expect(system.initializeCalled).toBe(true);
+    });
+
+    it("混合 ISystem 和 InjectableSystem 應正常運作", () => {
+      const regularSystem = createMockSystem("RegularSystem");
+      const injectableSystem = new TestInjectableSystem("InjectableSystem");
+
+      manager.provideDependency("ServiceA", {});
+      manager.provideDependency("ServiceB", {});
+
+      manager.register(regularSystem);
+      manager.register(injectableSystem);
+      manager.initialize();
+
+      expect(regularSystem.initialize).toHaveBeenCalled();
+      expect(injectableSystem.initializeCalled).toBe(true);
+    });
+
+    it("不需要依賴的 InjectableSystem 應正常初始化", () => {
+      const system = new TestInjectableSystem("NoDepSystem", false, false);
+
+      manager.register(system);
+      manager.initialize();
+
+      expect(system.initializeCalled).toBe(true);
+    });
+
+    it("destroy 應清空依賴註冊表", () => {
+      manager.provideDependency("ServiceA", {});
+      manager.provideDependency("ServiceB", {});
+      manager.initialize();
+
+      manager.destroy();
+
+      expect(manager.hasDependency("ServiceA")).toBe(false);
+      expect(manager.hasDependency("ServiceB")).toBe(false);
     });
   });
 

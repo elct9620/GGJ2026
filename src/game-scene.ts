@@ -126,12 +126,14 @@ export class GameScene {
     synthesisSystem.setInputSystem(inputSystem);
     synthesisSystem.setBoothSystem(boothSystem);
     synthesisSystem.setEventQueue(eventQueue);
+    synthesisSystem.setKillCounterSystem(killCounterSystem);
 
     // Connect Booth System with EventQueue (SPEC § 2.3.7)
     boothSystem.setEventQueue(eventQueue);
 
     // Connect Box System with dependencies (SPEC § 2.3.7)
     boxSystem.setEventQueue(eventQueue);
+    boxSystem.setBoothSystem(boothSystem);
     boxSystem.setEnemies(this.enemies);
 
     // Connect Kill Counter System (SPEC § 2.3.8)
