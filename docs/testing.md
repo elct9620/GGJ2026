@@ -256,6 +256,82 @@
 | EN-12   | 敵人偷取後          | 敵人繼續向左移動 | 不停留在攤位    |
 | EN-13   | 攤位 0/6 + 敵人觸碰 | 攤位 0/6         | 無食材可偷      |
 
+## 2.8 Vector Tests
+
+### 2.8.1 Construction and Properties
+
+| Test ID | Input              | Expected Output | Accept Criteria    |
+| ------- | ------------------ | --------------- | ------------------ |
+| VT-01   | Vector(10, 20)     | x=10, y=20      | 正確建立向量       |
+| VT-02   | Vector(10.7, 20.3) | x=11, y=20      | 座標四捨五入為整數 |
+| VT-03   | Vector(-5, -10)    | x=-5, y=-10     | 支援負數座標       |
+| VT-04   | Vector(0, 0)       | x=0, y=0        | 零向量             |
+
+### 2.8.2 add Operation
+
+| Test ID | Input                             | Expected Output | Accept Criteria |
+| ------- | --------------------------------- | --------------- | --------------- |
+| VT-05   | Vector(10, 20).add(Vector(5, 3))  | Vector(15, 23)  | 向量加法        |
+| VT-06   | Vector(10, 20).add(Vector(-5, 3)) | Vector(5, 23)   | 負數加法        |
+| VT-07   | Vector(0, 0).add(Vector(5, 3))    | Vector(5, 3)    | 零向量加法      |
+| VT-08   | Vector(10, 20).add(null)          | 拋出 TypeError  | 參數驗證        |
+
+### 2.8.3 subtract Operation
+
+| Test ID | Input                                    | Expected Output  | Accept Criteria |
+| ------- | ---------------------------------------- | ---------------- | --------------- |
+| VT-09   | Vector(10, 20).subtract(Vector(5, 3))    | Vector(5, 17)    | 向量減法        |
+| VT-10   | Vector(10, 20).subtract(Vector(15, 25))  | Vector(-5, -5)   | 結果為負數      |
+| VT-11   | Vector(10, 20).subtract(Vector(10, 20))  | Vector(0, 0)     | 結果為零向量    |
+| VT-12   | Vector(10, 20).subtract(undefined)       | 拋出 TypeError   | 參數驗證        |
+
+### 2.8.4 multiply Operation
+
+| Test ID | Input                      | Expected Output | Accept Criteria      |
+| ------- | -------------------------- | --------------- | -------------------- |
+| VT-13   | Vector(10, 20).multiply(2) | Vector(20, 40)  | 純量乘法             |
+| VT-14   | Vector(10, 20).multiply(0) | Vector(0, 0)    | 乘以 0 返回零向量    |
+| VT-15   | Vector(3, 5).multiply(0.5) | Vector(2, 3)    | 小數乘法並四捨五入   |
+| VT-16   | Vector(10, 20).multiply(-1)| Vector(-10, -20)| 負數乘法（反向）     |
+| VT-17   | Vector(10, 20).multiply(NaN)| 拋出 TypeError | 參數驗證             |
+| VT-18   | Vector(10, 20).multiply(Infinity)| 拋出 RangeError | 參數驗證        |
+
+### 2.8.5 normalize Operation
+
+| Test ID | Input                    | Expected Output | Accept Criteria          |
+| ------- | ------------------------ | --------------- | ------------------------ |
+| VT-19   | Vector(3, 4).normalize() | Vector(1, 1)    | 正規化並四捨五入         |
+| VT-20   | Vector(0, 0).normalize() | Vector(0, 0)    | 零向量正規化返回零向量   |
+| VT-21   | Vector(10, 0).normalize()| Vector(1, 0)    | 水平向量正規化           |
+| VT-22   | Vector(0, 10).normalize()| Vector(0, 1)    | 垂直向量正規化           |
+
+### 2.8.6 magnitude Operation
+
+| Test ID | Input                     | Expected Output | Accept Criteria |
+| ------- | ------------------------- | --------------- | --------------- |
+| VT-23   | Vector(3, 4).magnitude()  | 5               | 計算向量長度    |
+| VT-24   | Vector(0, 0).magnitude()  | 0               | 零向量長度為 0  |
+| VT-25   | Vector(5, 0).magnitude()  | 5               | 水平向量長度    |
+| VT-26   | Vector(-3, -4).magnitude()| 5               | 負數座標長度    |
+
+### 2.8.7 distance Operation
+
+| Test ID | Input                                   | Expected Output | Accept Criteria      |
+| ------- | --------------------------------------- | --------------- | -------------------- |
+| VT-27   | Vector(0, 0).distance(Vector(3, 4))     | 5               | 計算兩點距離         |
+| VT-28   | Vector(10, 10).distance(Vector(10, 10)) | 0               | 相同點距離為 0       |
+| VT-29   | Vector(0, 0).distance(Vector(-3, -4))   | 5               | 負數座標距離         |
+| VT-30   | Vector(10, 10).distance(null)           | 拋出 TypeError  | 參數驗證             |
+
+### 2.8.8 dot Operation
+
+| Test ID | Input                              | Expected Output | Accept Criteria      |
+| ------- | ---------------------------------- | --------------- | -------------------- |
+| VT-31   | Vector(2, 3).dot(Vector(4, 5))     | 23              | 點積運算（2×4+3×5）  |
+| VT-32   | Vector(1, 0).dot(Vector(0, 1))     | 0               | 垂直向量點積為 0     |
+| VT-33   | Vector(1, 0).dot(Vector(-1, 0))    | -1              | 反向向量點積為負數   |
+| VT-34   | Vector(10, 20).dot(undefined)      | 拋出 TypeError  | 參數驗證             |
+
 # 3. Integration Tests
 
 ## 3.1 Gameplay Loop
@@ -275,6 +351,9 @@
 | IT-06   | 戰鬥系統 | 合成系統 | 檢查當前 Buff 狀態 | 返回 Buff 類型和剩餘時間 | Buff 狀態正確   |
 | IT-07   | 回合系統 | 升級系統 | 回合結束觸發升級   | 升級系統顯示選項         | 觸發機制正常    |
 | IT-08   | 敵人系統 | 攤位系統 | 敵人請求偷取食材   | 攤位系統扣除 1 個食材    | 系統間通訊正常  |
+| IT-09   | 子彈系統 | Vector   | 追蹤子彈計算方向   | 子彈正確朝向敵人移動     | Vector 運算正確 |
+| IT-10   | 碰撞系統 | Vector   | 碰撞距離檢測       | 正確判斷碰撞範圍         | 距離計算正確    |
+| IT-11   | 散射系統 | Vector   | 散射子彈方向生成   | 生成多個不同方向的子彈   | 向量運算正確    |
 
 # 4. Acceptance Tests
 
