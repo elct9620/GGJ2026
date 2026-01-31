@@ -170,7 +170,9 @@ export class GameScene {
    */
   private onWaveStart(data: { waveNumber: number }): void {
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
-    hudSystem.updateWave(data.waveNumber);
+    // SPEC: enemy count = wave × 2
+    const totalEnemies = data.waveNumber * 2;
+    hudSystem.updateWave(data.waveNumber, totalEnemies);
     hudSystem.updateEnemyCount(this.enemies.length);
   }
 
@@ -324,6 +326,7 @@ export class GameScene {
     // Top HUD
     hudSystem.updateEnemyCount(this.enemies.length);
     hudSystem.updateHealthDisplay(this.player.health);
+    hudSystem.updateScore(this.stats.enemiesDefeated * 10);
 
     // Bottom HUD
     hudSystem.updateAmmo(this.player.ammo, this.player.maxAmmo);

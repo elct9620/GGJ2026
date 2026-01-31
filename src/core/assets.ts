@@ -12,6 +12,12 @@ import monster0 from "../assets/Monster_0.png";
 import upgradeBase from "../assets/image_UpgradeBase.png";
 import bulletClassBase from "../assets/image_BulletClassBase.png";
 import keyBind from "../assets/image_keyBind.png";
+import keyBindTip from "../assets/image_keyBindTip.png";
+import skillTip0 from "../assets/image_skillTip_0.png";
+import skillTip1 from "../assets/image_skillTip_1.png";
+import skillTip2 from "../assets/image_skillTip_2.png";
+import skillTip3 from "../assets/image_skillTip_3.png";
+import upgradeIcon from "../assets/image_upgradeIcon.png";
 
 /**
  * Asset keys for type-safe access
@@ -28,6 +34,12 @@ export const AssetKeys = {
   upgradeBase: "upgradeBase",
   bulletClassBase: "bulletClassBase",
   keyBind: "keyBind",
+  keyBindTip: "keyBindTip",
+  skillTip0: "skillTip0",
+  skillTip1: "skillTip1",
+  skillTip2: "skillTip2",
+  skillTip3: "skillTip3",
+  upgradeIcon: "upgradeIcon",
 } as const;
 
 export type AssetKey = (typeof AssetKeys)[keyof typeof AssetKeys];
@@ -47,6 +59,12 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.upgradeBase]: upgradeBase,
   [AssetKeys.bulletClassBase]: bulletClassBase,
   [AssetKeys.keyBind]: keyBind,
+  [AssetKeys.keyBindTip]: keyBindTip,
+  [AssetKeys.skillTip0]: skillTip0,
+  [AssetKeys.skillTip1]: skillTip1,
+  [AssetKeys.skillTip2]: skillTip2,
+  [AssetKeys.skillTip3]: skillTip3,
+  [AssetKeys.upgradeIcon]: upgradeIcon,
 };
 
 /**
