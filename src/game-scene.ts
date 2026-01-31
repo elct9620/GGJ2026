@@ -8,6 +8,7 @@ import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { CombatSystem } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
+import { KillCounterSystem } from "./systems/kill-counter";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -73,11 +74,13 @@ export class GameScene {
     const boothSystem = new BoothSystem();
     const combatSystem = new CombatSystem();
     const synthesisSystem = new SynthesisSystem();
+    const killCounterSystem = new KillCounterSystem();
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
     this.systemManager.register(combatSystem);
     this.systemManager.register(synthesisSystem);
+    this.systemManager.register(killCounterSystem);
     this.systemManager.register(new HUDSystem());
     this.systemManager.register(boothSystem);
     this.systemManager.initialize();
@@ -105,6 +108,9 @@ export class GameScene {
     synthesisSystem.setInputSystem(inputSystem);
     synthesisSystem.setBoothSystem(boothSystem);
     synthesisSystem.setEventQueue(eventQueue);
+
+    // Connect Kill Counter System (SPEC § 2.3.8)
+    killCounterSystem.setEventQueue(eventQueue);
 
     // Setup booth visualization
     this.boothContainer.addChild(boothSystem.getContainer());
