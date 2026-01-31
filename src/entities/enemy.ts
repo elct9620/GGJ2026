@@ -1,5 +1,6 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import type { CollisionBox } from "../values/collision";
 import { Container, Graphics, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
@@ -126,6 +127,14 @@ export class Enemy extends Entity {
    */
   public hasReachedBaseline(): boolean {
     return this.position.x <= LAYOUT.BASELINE_X;
+  }
+
+  /**
+   * 碰撞箱（與視覺大小同步）
+   * SPEC § 4.2.5: AABB 碰撞檢測
+   */
+  public get collisionBox(): CollisionBox {
+    return { width: LAYOUT.ENEMY_SIZE, height: LAYOUT.ENEMY_SIZE };
   }
 
   /**

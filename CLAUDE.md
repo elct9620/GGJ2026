@@ -124,7 +124,7 @@ Application.stage
 │   │   ├── 3 booths (Pearl/Tofu/BloodCake) - BoothSystem.getContainer()
 │   │   └── Box sprite (x=340) - BoxSystem.getContainer()
 │   ├── Food Drops Container (dynamic, auto-collected)
-│   ├── Player Sprite (24×24 collision box)
+│   ├── Player Sprite (256×256 collision box)
 │   ├── Enemies Container (Ghosts + Bosses)
 │   └── Bullets Container (Normal + Special)
 └── UI Layer (z-index: 2)
@@ -233,7 +233,7 @@ interface ISystem {
 3. **合成機制**: 按鍵 1-5 直接觸發合成（**已移除** 3-slot 槽位機制）
 4. 敵人數量公式: 回合數 × 2
 5. Boss 出現頻率: 每 5 回合
-6. 玩家碰撞箱: 24×24 px（縮小碰撞，提高容錯率）
+6. 碰撞箱與視覺同步: Player/Enemy 256×256 px, Bullet 8×8 px, Food 16×16 px
 7. 食材掉落率: 100%（類型隨機）
 8. 使用物件池管理子彈和敵人（**計劃中，尚未實作**）
 9. Booth ID mapping: **1-indexed** (1=Pearl, 2=Tofu, 3=BloodCake)

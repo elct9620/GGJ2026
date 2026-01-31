@@ -1,3 +1,5 @@
+import type { CollisionBox } from "../values/collision";
+
 /**
  * Entity - 遊戲物件基礎類別
  *
@@ -5,6 +7,7 @@
  * - 所有遊戲物件（Player、Ghost、Boss、Bullet、Food）繼承此類別
  * - 提供唯一 ID（自增整數轉字串）
  * - 支援物件池管理（active 狀態）
+ * - 定義碰撞箱介面（SPEC § 4.2.5 AABB 碰撞）
  */
 
 let nextEntityId = 1;
@@ -12,6 +15,12 @@ let nextEntityId = 1;
 export abstract class Entity {
   public readonly id: string;
   public active: boolean = true;
+
+  /**
+   * 碰撞箱（預設同步視覺大小，子類別可覆寫）
+   * SPEC § 4.2.5: AABB 碰撞檢測
+   */
+  public abstract get collisionBox(): CollisionBox;
 
   constructor() {
     this.id = String(nextEntityId++);

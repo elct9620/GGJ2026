@@ -1,5 +1,6 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 
@@ -14,6 +15,9 @@ export class Bullet extends Entity {
   public damage: number = 1; // Base damage (SPEC § 2.6.3)
   public sprite: Graphics;
 
+  // 子彈視覺半徑
+  private readonly radius = 4;
+
   constructor(initialPosition: Vector, direction: Vector) {
     super();
     this.position = initialPosition;
@@ -25,10 +29,18 @@ export class Bullet extends Entity {
     const sprite = new Graphics();
 
     // Draw a simple yellow circle for bullet (prototype visualization)
-    sprite.circle(0, 0, 4);
+    sprite.circle(0, 0, this.radius);
     sprite.fill(0xf1c40f); // Yellow color
 
     return sprite;
+  }
+
+  /**
+   * 碰撞箱（與視覺大小同步，8×8 px）
+   * SPEC § 4.2.5: AABB 碰撞檢測
+   */
+  public get collisionBox(): CollisionBox {
+    return { width: this.radius * 2, height: this.radius * 2 };
   }
 
   /**

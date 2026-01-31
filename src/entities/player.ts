@@ -1,5 +1,6 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import type { CollisionBox } from "../values/collision";
 import { Container, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
 import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
@@ -11,7 +12,6 @@ import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 export class Player extends Entity {
   public position: Vector;
   public readonly speed: number = 200; // px/s (SPEC § 2.6.1)
-  public readonly collisionSize: number = 24; // 24×24 px (SPEC § 2.6.1)
   public health: number = 5; // 5 lives (SPEC § 2.6.1)
   public ammo: number = 6; // Magazine capacity (SPEC § 2.6.1)
   public readonly maxAmmo: number = 6;
@@ -139,6 +139,14 @@ export class Player extends Entity {
     }
 
     this.updateSpritePosition();
+  }
+
+  /**
+   * 碰撞箱（與視覺大小同步）
+   * SPEC § 4.2.5: AABB 碰撞檢測
+   */
+  public get collisionBox(): CollisionBox {
+    return { width: LAYOUT.PLAYER_SIZE, height: LAYOUT.PLAYER_SIZE };
   }
 
   /**

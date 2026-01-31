@@ -10,6 +10,7 @@ import type { Bullet } from "../entities/bullet";
 import type { Enemy } from "../entities/enemy";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import { checkAABBCollision } from "../values/collision";
 /**
  * Special bullet types (SPEC § 2.3.3)
  */
@@ -193,7 +194,8 @@ export class CombatSystem implements ISystem {
   }
 
   /**
-   * Check bullet-enemy collisions (SPEC § 2.3.2)
+   * Check bullet-enemy collisions (SPEC § 2.3.2, § 4.2.5)
+   * 使用 AABB 碰撞檢測
    */
   private checkCollisions(): void {
     for (const bullet of this.bullets) {
@@ -202,9 +204,15 @@ export class CombatSystem implements ISystem {
       for (const enemy of this.enemies) {
         if (!enemy.active) continue;
 
-        // Simple distance-based collision
-        const distance = bullet.position.distance(enemy.position);
-        if (distance < 20) {
+        // AABB collision detection (SPEC § 4.2.5)
+        if (
+          checkAABBCollision(
+            bullet.position,
+            bullet.collisionBox,
+            enemy.position,
+            enemy.collisionBox,
+          )
+        ) {
           // Hit detected
           const died = enemy.takeDamage(bullet.damage);
 

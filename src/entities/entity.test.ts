@@ -1,8 +1,13 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import { Entity, resetEntityIdCounter } from "./entity";
+import type { CollisionBox } from "../values/collision";
 
 // Test implementation of Entity
-class TestEntity extends Entity {}
+class TestEntity extends Entity {
+  public get collisionBox(): CollisionBox {
+    return { width: 10, height: 10 };
+  }
+}
 
 describe("Entity", () => {
   beforeEach(() => {

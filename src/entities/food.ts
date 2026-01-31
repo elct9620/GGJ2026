@@ -1,5 +1,6 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
 import { FoodType } from "./enemy";
 
@@ -11,6 +12,9 @@ export class Food extends Entity {
   public position: Vector;
   public readonly type: FoodType;
   public sprite: Graphics;
+
+  // 統一碰撞大小
+  private readonly size = 16;
 
   constructor(type: FoodType, initialPosition: Vector) {
     super();
@@ -55,6 +59,14 @@ export class Food extends Entity {
    */
   private updateSpritePosition(): void {
     this.sprite.position.set(this.position.x, this.position.y);
+  }
+
+  /**
+   * 碰撞箱（統一大小 16×16 px）
+   * SPEC § 4.2.5: AABB 碰撞檢測
+   */
+  public get collisionBox(): CollisionBox {
+    return { width: this.size, height: this.size };
   }
 
   /**
