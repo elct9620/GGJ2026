@@ -1,6 +1,7 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
-import { Graphics } from "pixi.js";
+import { Container, Graphics, Sprite } from "pixi.js";
+import { getTexture, AssetKeys } from "../core/assets";
 
 export const EnemyType = {
   Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2)
@@ -27,7 +28,10 @@ export class Enemy extends Entity {
   public health: number;
   public readonly maxHealth: number;
   public readonly speed: number; // px/s
-  public sprite: Graphics;
+  public sprite: Container;
+
+  private enemySprite: Sprite;
+  private healthBarContainer: Graphics | null = null;
 
   constructor(type: EnemyType, initialPosition: Vector) {
     super();
@@ -46,39 +50,35 @@ export class Enemy extends Entity {
       this.speed = 30; // 0.3 units/s ≈ 30 px/s
     }
 
-    this.sprite = this.createSprite();
+    this.sprite = new Container();
+    this.enemySprite = this.createSprite();
+    this.sprite.addChild(this.enemySprite);
+
+    // Add health bar for Boss
+    if (type === EnemyType.Boss) {
+      this.healthBarContainer = new Graphics();
+      this.sprite.addChild(this.healthBarContainer);
+      this.updateHealthBar();
+    }
+
+    this.updateSpritePosition();
   }
 
-  private createSprite(): Graphics {
-    const sprite = new Graphics();
+  private createSprite(): Sprite {
+    const sprite = new Sprite(getTexture(AssetKeys.monster));
 
-    if (this.type === EnemyType.Ghost) {
-      // Draw a simple red triangle for Ghost (prototype visualization)
-      sprite.moveTo(0, -15);
-      sprite.lineTo(12, 15);
-      sprite.lineTo(-12, 15);
-      sprite.lineTo(0, -15);
-      sprite.fill(0xe74c3c); // Red color
-    } else {
-      // Draw a larger purple hexagon for Boss (prototype visualization)
-      const size = 20;
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI / 3) * i;
-        const x = size * Math.cos(angle);
-        const y = size * Math.sin(angle);
-        if (i === 0) {
-          sprite.moveTo(x, y);
-        } else {
-          sprite.lineTo(x, y);
-        }
-      }
-      sprite.fill(0x9b59b6); // Purple color
+    // Asset size is 256×256
+    // Ghost: smaller scale, Boss: larger scale
+    const scale = this.type === EnemyType.Ghost ? 0.25 : 0.4;
+    sprite.width = 256 * scale;
+    sprite.height = 256 * scale;
 
-      // Add health indicator (simple bars)
-      for (let i = 0; i < this.maxHealth; i++) {
-        sprite.rect(-12 + i * 8, -28, 6, 4);
-        sprite.fill(0x2ecc71); // Green for health bars
-      }
+    // Set anchor to center
+    sprite.anchor.set(0.5, 0.5);
+
+    // Tint Boss to differentiate
+    if (this.type === EnemyType.Boss) {
+      sprite.tint = 0x9b59b6; // Purple tint for Boss
     }
 
     return sprite;
@@ -142,29 +142,23 @@ export class Enemy extends Entity {
    * Update health bar visualization for Boss
    */
   private updateHealthBar(): void {
-    if (this.type !== EnemyType.Boss) return;
+    if (this.type !== EnemyType.Boss || !this.healthBarContainer) return;
 
-    // Recreate sprite with updated health
-    this.sprite.clear();
+    this.healthBarContainer.clear();
 
-    // Draw hexagon
-    const size = 20;
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI / 3) * i;
-      const x = size * Math.cos(angle);
-      const y = size * Math.sin(angle);
-      if (i === 0) {
-        this.sprite.moveTo(x, y);
-      } else {
-        this.sprite.lineTo(x, y);
-      }
-    }
-    this.sprite.fill(0x9b59b6);
+    const barWidth = 8;
+    const barHeight = 6;
+    const barSpacing = 2;
+    const totalWidth =
+      this.maxHealth * barWidth + (this.maxHealth - 1) * barSpacing;
+    const startX = -totalWidth / 2;
+    const startY = -this.enemySprite.height / 2 - 15;
 
     // Draw health bars (green for remaining health, gray for lost health)
     for (let i = 0; i < this.maxHealth; i++) {
-      this.sprite.rect(-12 + i * 8, -28, 6, 4);
-      this.sprite.fill(i < this.health ? 0x2ecc71 : 0x7f8c8d);
+      const x = startX + i * (barWidth + barSpacing);
+      this.healthBarContainer.rect(x, startY, barWidth, barHeight);
+      this.healthBarContainer.fill(i < this.health ? 0x2ecc71 : 0x7f8c8d);
     }
   }
 

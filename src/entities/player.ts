@@ -1,6 +1,7 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
-import { Graphics } from "pixi.js";
+import { Container, Sprite } from "pixi.js";
+import { getTexture, AssetKeys } from "../core/assets";
 
 /**
  * Player entity with keyboard controls and shooting capability
@@ -17,30 +18,54 @@ export class Player extends Entity {
   public reloadTimer: number = 0;
   public readonly reloadTime: number = 3; // 3 seconds (SPEC § 2.3.2)
 
-  // Visual representation (simple rectangle for prototype)
-  public sprite: Graphics;
+  // Visual representation
+  public sprite: Container;
+  private playerSprite: Sprite;
+  private dirHintSprite: Sprite;
+
+  // Visual size (256×256) vs collision size (24×24)
+  private readonly visualSize: number = 256;
 
   constructor(initialPosition: Vector) {
     super();
     this.position = initialPosition;
-    this.sprite = this.createSprite();
+
+    // Create container to hold player sprite and direction hint
+    this.sprite = new Container();
+    this.playerSprite = this.createPlayerSprite();
+    this.dirHintSprite = this.createDirHintSprite();
+
+    this.sprite.addChild(this.playerSprite);
+    this.sprite.addChild(this.dirHintSprite);
+
+    this.updateSpritePosition();
   }
 
-  private createSprite(): Graphics {
-    const sprite = new Graphics();
+  private createPlayerSprite(): Sprite {
+    const sprite = new Sprite(getTexture(AssetKeys.player));
 
-    // Draw a simple blue square for the player (prototype visualization)
-    sprite.rect(
-      -this.collisionSize / 2,
-      -this.collisionSize / 2,
-      this.collisionSize,
-      this.collisionSize,
-    );
-    sprite.fill(0x4a90e2); // Blue color
+    // Asset size is 256×256, scale down for game balance
+    const scale = 0.5; // 128×128 visual size
+    sprite.width = this.visualSize * scale;
+    sprite.height = this.visualSize * scale;
 
-    // Add a direction indicator (small white rectangle pointing right)
-    sprite.rect(this.collisionSize / 2 - 2, -2, 8, 4);
-    sprite.fill(0xffffff);
+    // Set anchor to center for proper positioning
+    sprite.anchor.set(0.5, 0.5);
+
+    return sprite;
+  }
+
+  private createDirHintSprite(): Sprite {
+    const sprite = new Sprite(getTexture(AssetKeys.playerDirHint));
+
+    // Asset size is 100×256, scale proportionally
+    const scale = 0.3;
+    sprite.width = 100 * scale;
+    sprite.height = 256 * scale;
+
+    // Position to the right of player
+    sprite.anchor.set(0, 0.5);
+    sprite.position.set(this.playerSprite.width / 2, 0);
 
     return sprite;
   }

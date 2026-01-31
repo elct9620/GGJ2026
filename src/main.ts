@@ -11,6 +11,7 @@ import { GameState } from "./core/game-state";
 import type { GameStats } from "./core/game-state";
 import { StartScreen } from "./screens/start-screen";
 import { GameOverScreen } from "./screens/game-over-screen";
+import { loadAssets } from "./core/assets";
 
 async function main() {
   const appContainer = document.getElementById("app");
@@ -21,6 +22,11 @@ async function main() {
 
   const canvas = document.createElement("canvas");
   appContainer.appendChild(canvas);
+
+  // 載入遊戲素材
+  console.log("Loading game assets...");
+  await loadAssets();
+  console.log("Assets loaded successfully");
 
   // 初始化 Pixi.js Application
   const app = await createApplication(canvas);

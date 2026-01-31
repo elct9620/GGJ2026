@@ -1,6 +1,7 @@
-import { Container, Graphics, Text } from "pixi.js";
+import { Container, Graphics, Sprite, Text } from "pixi.js";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
+import { getTexture, AssetKeys } from "../core/assets";
 
 /**
  * Recipe status for HUD display
@@ -27,6 +28,9 @@ export class HUDSystem implements ISystem {
   private healthDisplay: Graphics;
 
   // Bottom HUD elements
+  private upgradeBaseSprite: Sprite;
+  private bulletClassBaseSprite: Sprite;
+  private keyBindSprite: Sprite;
   private ammoText: Text;
   private reloadText: Text;
   private foodStockText: Text;
@@ -42,18 +46,49 @@ export class HUDSystem implements ISystem {
     this.enemyCountText = this.createText("Enemies: 0", 200, 20);
     this.healthDisplay = new Graphics();
 
-    this.ammoText = this.createText("Ammo: 6/6", 20, 1020);
-    this.reloadText = this.createText("", 200, 1020);
+    // Create bottom UI base sprites
+    this.upgradeBaseSprite = this.createUpgradeBaseSprite();
+    this.bulletClassBaseSprite = this.createBulletClassBaseSprite();
+    this.keyBindSprite = this.createKeyBindSprite();
+
+    // Bottom HUD text elements (positioned relative to base sprites)
+    const bottomY = 1080 - 126;
+    this.ammoText = this.createText("Ammo: 6/6", 570, bottomY + 50);
+    this.reloadText = this.createText("", 750, bottomY + 50);
     this.foodStockText = this.createText(
       "Pearl:0 Tofu:0 BloodCake:0",
-      400,
-      1020,
+      570,
+      bottomY + 80,
     );
-    this.killCountText = this.createText("Kills: 0", 700, 1020);
-    this.buffStatusText = this.createText("", 900, 1020);
+    this.killCountText = this.createText("Kills: 0", 20, bottomY + 50);
+    this.buffStatusText = this.createText("", 20, bottomY + 80);
     this.recipesDisplay = new Graphics();
 
     this.setupHUD();
+  }
+
+  private createUpgradeBaseSprite(): Sprite {
+    const sprite = new Sprite(getTexture(AssetKeys.upgradeBase));
+    sprite.width = 550;
+    sprite.height = 126;
+    sprite.position.set(0, 1080 - 126);
+    return sprite;
+  }
+
+  private createBulletClassBaseSprite(): Sprite {
+    const sprite = new Sprite(getTexture(AssetKeys.bulletClassBase));
+    sprite.width = 820;
+    sprite.height = 126;
+    sprite.position.set(550, 1080 - 126);
+    return sprite;
+  }
+
+  private createKeyBindSprite(): Sprite {
+    const sprite = new Sprite(getTexture(AssetKeys.keyBind));
+    sprite.width = 550;
+    sprite.height = 126;
+    sprite.position.set(1370, 1080 - 126);
+    return sprite;
   }
 
   /**
@@ -100,6 +135,11 @@ export class HUDSystem implements ISystem {
     this.topHUD.addChild(this.enemyCountText);
     this.topHUD.addChild(this.healthDisplay);
     this.updateHealthDisplay(5); // Initial health
+
+    // Bottom HUD base sprites
+    this.bottomHUD.addChild(this.upgradeBaseSprite);
+    this.bottomHUD.addChild(this.bulletClassBaseSprite);
+    this.bottomHUD.addChild(this.keyBindSprite);
 
     // Bottom HUD (§ 2.7.3 - Ammo, Food Stock, Kill Count, Buff Status, Recipes)
     this.bottomHUD.addChild(this.ammoText);
@@ -190,8 +230,9 @@ export class HUDSystem implements ISystem {
    * Setup recipe indicators (5 circles for keys 1-5)
    */
   private setupRecipeIndicators(): void {
+    const bottomY = 1080 - 126;
     const startX = 1400;
-    const startY = 1020;
+    const startY = bottomY + 60;
     const radius = 15;
     const spacing = 40;
 
@@ -213,8 +254,9 @@ export class HUDSystem implements ISystem {
   public updateRecipeAvailability(recipes: RecipeStatus[]): void {
     this.recipesDisplay.clear();
 
+    const bottomY = 1080 - 126;
     const startX = 1400;
-    const startY = 1020;
+    const startY = bottomY + 60;
     const radius = 15;
     const spacing = 40;
 

@@ -1,9 +1,10 @@
-import { Container, Graphics, Text } from "pixi.js";
+import { Container, Sprite, Text } from "pixi.js";
 import { FoodType } from "../entities/enemy";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import { getTexture, AssetKeys } from "../core/assets";
 
 /**
  * Booth system for storing food ingredients
@@ -60,31 +61,29 @@ export class BoothSystem implements ISystem {
     // Booth 2: Tofu (豆腐)
     // Booth 3: Blood Cake (米血)
 
-    const boothHeight = 300;
-    const boothSpacing = 60;
-    const startY = (1080 - (boothHeight * 3 + boothSpacing * 2)) / 2;
+    // New layout: 128×256 sprites aligned to right of booth area
+    // X position: 384 - 128 = 256 (right-aligned to baseline)
+    // Start Y: (1080 - 768) / 2 = 156 (vertically centered)
+    const boothWidth = 128;
+    const boothHeight = 256;
+    const startX = 384 - boothWidth; // 256
+    const startY = (1080 - boothHeight * 3) / 2; // 156
 
     this.booths.set(
       1,
-      new Booth(1, FoodType.Pearl, 50, startY, this.container),
+      new Booth(1, FoodType.Pearl, startX, startY, this.container),
     );
     this.booths.set(
       2,
-      new Booth(
-        2,
-        FoodType.Tofu,
-        50,
-        startY + boothHeight + boothSpacing,
-        this.container,
-      ),
+      new Booth(2, FoodType.Tofu, startX, startY + boothHeight, this.container),
     );
     this.booths.set(
       3,
       new Booth(
         3,
         FoodType.BloodCake,
-        50,
-        startY + (boothHeight + boothSpacing) * 2,
+        startX,
+        startY + boothHeight * 2,
         this.container,
       ),
     );
@@ -179,7 +178,7 @@ class Booth {
   public count: number = 0;
   public readonly maxCapacity: number = 6; // SPEC § 2.3.1
 
-  private graphics: Graphics;
+  private sprite: Sprite;
   private countText: Text;
   private nameText: Text;
 
@@ -193,7 +192,10 @@ class Booth {
     this.id = id;
     this.foodType = foodType;
 
-    this.graphics = new Graphics();
+    // Create sprite using booth pool assets
+    this.sprite = this.createSprite();
+    this.sprite.position.set(x, y);
+
     this.countText = new Text({
       text: "0/6",
       style: {
@@ -212,10 +214,34 @@ class Booth {
       },
     });
 
-    this.setupVisuals(x, y);
-    parent.addChild(this.graphics);
+    this.setupTextPositions(x, y);
+    parent.addChild(this.sprite);
     parent.addChild(this.countText);
     parent.addChild(this.nameText);
+  }
+
+  private createSprite(): Sprite {
+    // Map booth id to corresponding pool asset
+    let assetKey: keyof typeof AssetKeys;
+    switch (this.id) {
+      case 1:
+        assetKey = "boothPool0";
+        break;
+      case 2:
+        assetKey = "boothPool1";
+        break;
+      case 3:
+        assetKey = "boothPool2";
+        break;
+      default:
+        assetKey = "boothPool0";
+    }
+
+    const sprite = new Sprite(getTexture(AssetKeys[assetKey]));
+    // Asset size is 128×256, use as-is
+    sprite.width = 128;
+    sprite.height = 256;
+    return sprite;
   }
 
   private getFoodName(): string {
@@ -229,31 +255,10 @@ class Booth {
     }
   }
 
-  private getBoothColor(): number {
-    switch (this.foodType) {
-      case FoodType.Pearl:
-        return 0xecf0f1; // White/gray
-      case FoodType.Tofu:
-        return 0xf39c12; // Orange
-      case FoodType.BloodCake:
-        return 0xc0392b; // Dark red
-    }
-  }
-
-  private setupVisuals(x: number, y: number): void {
-    // Draw booth background (simple rectangle)
-    this.graphics.rect(x, y, 280, 280);
-    this.graphics.fill(0x34495e); // Dark gray
-
-    // Draw booth border
-    this.graphics.rect(x, y, 280, 280);
-    this.graphics.stroke({ width: 3, color: this.getBoothColor() });
-
-    // Position texts
+  private setupTextPositions(x: number, y: number): void {
+    // Position texts relative to booth sprite
     this.nameText.position.set(x + 10, y + 10);
-    this.countText.position.set(x + 10, y + 240);
-
-    this.updateVisuals();
+    this.countText.position.set(x + 10, y + 220);
   }
 
   /**
@@ -289,35 +294,6 @@ class Booth {
    */
   private updateVisuals(): void {
     this.countText.text = `${this.count}/${this.maxCapacity}`;
-
-    // Draw food items as small squares (2 rows of 3)
-    // This is a simple prototype visualization
-    const startX = this.graphics.x + 50;
-    const startY = this.graphics.y + 80;
-    const itemSize = 30;
-    const spacing = 40;
-
-    // Clear previous items
-    this.graphics.clear();
-
-    // Redraw booth background
-    const x = this.graphics.x;
-    const y = this.graphics.y;
-    this.graphics.rect(x, y, 280, 280);
-    this.graphics.fill(0x34495e);
-    this.graphics.rect(x, y, 280, 280);
-    this.graphics.stroke({ width: 3, color: this.getBoothColor() });
-
-    // Draw food items
-    for (let i = 0; i < this.count; i++) {
-      const col = i % 3;
-      const row = Math.floor(i / 3);
-      const itemX = startX + col * spacing;
-      const itemY = startY + row * spacing;
-
-      this.graphics.rect(itemX, itemY, itemSize, itemSize);
-      this.graphics.fill(this.getBoothColor());
-    }
   }
 
   /**
