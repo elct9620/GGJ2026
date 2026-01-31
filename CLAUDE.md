@@ -38,6 +38,9 @@ pnpm preview
 # 執行測試（watch mode）
 pnpm test
 
+# 執行單一測試檔案
+pnpm test -- <filename>.test.ts
+
 # 測試 UI 介面
 pnpm test:ui
 
@@ -110,33 +113,82 @@ This project uses a **three-layer specification framework** (Intent → Design �
 
 ### Pixi.js Scene Structure
 
+**Container hierarchy** (managed by `GameScene`):
+
 ```
 Application.stage
 ├── Background Layer (z-index: 0)
 │   └── 攤位區域背景 (384px width, left 20%)
 ├── Game Layer (z-index: 1)
-│   ├── Booth Container (3 booths: 珍珠/豆腐/米血)
-│   ├── Food Drops Container (dynamic)
+│   ├── Booth Container
+│   │   ├── 3 booths (Pearl/Tofu/BloodCake) - BoothSystem.getContainer()
+│   │   └── Box sprite (x=384) - BoxSystem.getContainer()
+│   ├── Food Drops Container (dynamic, auto-collected)
 │   ├── Player Sprite (24×24 collision box)
 │   ├── Enemies Container (Ghosts + Bosses)
 │   └── Bullets Container (Normal + Special)
 └── UI Layer (z-index: 2)
-    ├── Top HUD (Wave, Enemy Count, Health)
-    └── Bottom HUD (Synthesis Slot, Buff, Ammo)
+    ├── Top HUD - HUDSystem.getTopHUD()
+    │   └── Wave, Enemy Count, Health
+    └── Bottom HUD - HUDSystem.getBottomHUD()
+        └── Buff Display, Ammo, Reload Progress
 ```
+
+**Important**: Container visibility is managed by screen state (start/game/gameover).
 
 ### Core Game Systems
 
-每個系統應該是獨立的模組，位於 `src/systems/` 下：
+**System Architecture**: All systems implement `ISystem` interface and are managed by `SystemManager`:
 
-1. **Booth System** (`src/systems/booth/`): 食材儲存與提取
-2. **Combat System** (`src/systems/combat/`): 射擊、重裝、子彈管理
-3. **Synthesis System** (`src/systems/synthesis/`): 食材合成與特殊子彈
-4. **Upgrade System** (`src/systems/upgrade/`): 回合間永久升級
-5. **Wave System** (`src/systems/wave/`): 敵人生成與回合進程
+```typescript
+interface ISystem {
+  name: string;
+  priority: SystemPriority;  // Execution order (EVENT_QUEUE → BOOTH → DEFAULT)
+  initialize(): void;
+  update(deltaTime: number): void;
+  destroy(): void;
+}
+```
 
-遊戲實體應位於 `src/entities/` 下：
-- `Player`, `Ghost`, `Boss`, `Bullet`, `Food`
+**Implemented Systems** (`src/systems/`):
+
+1. **EventQueue System**: 事件中樞，替代 setTimeout 的延遲執行機制
+   - Priority: `EVENT_QUEUE` (highest, executes first)
+   - 11 event types: WaveStart, WaveComplete, EnemyDeath, SynthesisTriggered, etc.
+   - Publish/Subscribe pattern for system decoupling
+
+2. **Input System**: 鍵盤輸入處理 (WASD 移動, Space 射擊, 1-5 合成)
+
+3. **Booth System**: 食材儲存與提取 (3 booths: Pearl/Tofu/BloodCake, max 6 each)
+   - Publishes `FoodStored` and `FoodConsumed` events
+
+4. **Box System**: 寶箱防禦機制 (spawns at x=384, durability = total booth food)
+   - Subscribes to `FoodStored`/`FoodConsumed` events
+
+5. **Combat System**: 射擊、重裝、Buff 管理、碰撞檢測
+   - Manages reload (3s cooldown), shooting cooldown (200ms)
+   - Buff duration: 2s (affected by Upgrade System)
+
+6. **Synthesis System**: 按鍵 1-5 直接觸發合成 (no slot UI)
+   - 5 recipes: NightMarket, StinkyTofu, BubbleTea, BloodCake, OysterOmelette
+   - Publishes `SynthesisTriggered` event
+
+7. **Kill Counter System**: 累積擊殺計數，10 隻解鎖蚵仔煎
+
+8. **Wave System**: 敵人生成與回合進程
+   - Enemy count formula: `wave × 2`
+   - Boss every 5 waves
+   - Publishes `WaveStart` and `WaveComplete` (2s delay) events
+
+9. **Upgrade System**: 回合間永久升級 (3 normal + 4 boss upgrades)
+   - Normal: cost food, stacking bonuses
+   - Boss: no cost, multiplicative effects
+
+10. **HUD System**: UI 顯示 (Wave, Health, Ammo, Enemy Count)
+
+**Entities** (`src/entities/`):
+- All extend `Entity` base class (id generation, active state)
+- `Player`, `Enemy` (Ghost/Boss), `Bullet`, `Food`
 
 ### Object Pool Pattern
 
@@ -177,13 +229,14 @@ Application.stage
 ## Key Design Decisions (from SPEC.md 5.1)
 
 1. 攤位位置固定（不可移動）
-2. 特殊子彈為臨時 Buff（不替換彈夾內容）
-3. 自動合成觸發（放入第 3 個食材時）
+2. 特殊子彈為臨時 Buff（不替換彈夾內容，持續 2 秒）
+3. **合成機制**: 按鍵 1-5 直接觸發合成（**已移除** 3-slot 槽位機制）
 4. 敵人數量公式: 回合數 × 2
 5. Boss 出現頻率: 每 5 回合
 6. 玩家碰撞箱: 24×24 px（縮小碰撞，提高容錯率）
 7. 食材掉落率: 100%（類型隨機）
-8. 使用物件池管理子彈和敵人
+8. 使用物件池管理子彈和敵人（**計劃中，尚未實作**）
+9. Booth ID mapping: **1-indexed** (1=Pearl, 2=Tofu, 3=BloodCake)
 
 ## Git Workflow
 
@@ -230,13 +283,64 @@ pnpm build
 # Node version: 18.x
 ```
 
+## System Integration Pattern
+
+When adding new systems, follow this integration pattern (see `GameScene` constructor):
+
+```typescript
+// 1. Create system instances
+const eventQueue = new EventQueue();
+const mySystem = new MySystem();
+
+// 2. Register with SystemManager
+this.systemManager.register(eventQueue);  // EventQueue first!
+this.systemManager.register(mySystem);
+
+// 3. Connect dependencies (before initialize)
+mySystem.setEventQueue(eventQueue);
+mySystem.setOtherDependency(dependency);
+
+// 4. Initialize all systems
+this.systemManager.initialize();
+
+// 5. Subscribe to events (after initialize)
+eventQueue.subscribe(EventType.SomeEvent, this.onSomeEvent.bind(this));
+
+// 6. Add visual containers if needed
+this.container.addChild(mySystem.getContainer());
+```
+
+**Critical order**: EventQueue must be registered first (highest priority).
+
+## Event-Driven Communication
+
+Systems communicate via `EventQueue` (publish/subscribe pattern):
+
+```typescript
+// Publishing events
+eventQueue.publish(EventType.EnemyDeath, {
+  enemyId: enemy.id,
+  position: { x: enemy.x, y: enemy.y }
+});
+
+// With delay (2000ms)
+eventQueue.publish(EventType.WaveComplete, { waveNumber: 5 }, 2000);
+
+// Subscribing to events
+eventQueue.subscribe(EventType.EnemyDeath, (data) => {
+  // Handle enemy death
+});
+```
+
+**Available events**: See `EventType` and `EventData` in `src/systems/event-queue.ts`.
+
 ## Critical Reminders
 
 1. **Always read SPEC.md** before implementing features - it contains complete system behaviors, constraints, and error scenarios
 2. **Write tests before code** - test cases are pre-defined in `docs/testing.md`
 3. **Use strict TypeScript** - all compiler warnings must be resolved
-4. **Follow object pool pattern** for bullets and enemies
-5. **Maintain 60 FPS** - profile performance regularly
+4. **Booth ID mapping**: 1-indexed (1=Pearl, 2=Tofu, 3=BloodCake) - not 0-indexed
+5. **Event-driven architecture**: Systems communicate via EventQueue, avoid direct coupling
 6. **Consult SPEC.md for game values** (damage, speed, cooldowns) - do not hardcode arbitrary numbers
 7. **Use conventional commits** - follow user's commit message style
-8. **Test coverage minimum 80%** - verify with `pnpm test:coverage`
+8. **Test coverage minimum 80%** - verify with `pnpm test:coverage` (currently at 92%+)
