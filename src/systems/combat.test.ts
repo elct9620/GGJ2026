@@ -25,11 +25,13 @@ describe("CombatSystem", () => {
     enemies = [];
     eventQueue = new EventQueue();
 
+    // Inject dependencies using new API
+    combatSystem.inject("EventQueue", eventQueue);
     combatSystem.initialize();
     combatSystem.setPlayer(player);
     combatSystem.setBullets(bullets);
     combatSystem.setEnemies(enemies);
-    combatSystem.setEventQueue(eventQueue);
+    combatSystem.subscribeToEvents();
   });
 
   describe("Normal Attack", () => {

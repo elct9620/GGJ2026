@@ -3,7 +3,7 @@
  * SPEC § 2.3.2: 管理玩家射擊、碰撞檢測、特殊子彈 Buff
  */
 
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Player } from "../entities/player";
 import type { Bullet } from "../entities/bullet";
@@ -28,15 +28,17 @@ export { SpecialBulletType } from "../values/special-bullet";
  * - 子彈 vs 敵人碰撞檢測
  * - 發佈事件: ReloadComplete, BuffExpired, EnemyDeath
  */
-export class CombatSystem implements ISystem {
+export class CombatSystem extends InjectableSystem {
   public readonly name = "CombatSystem";
   public readonly priority = SystemPriority.COMBAT;
 
-  // References to game entities
+  // Dependency keys
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
+
+  // References to game entities (not injectable - set via setters)
   private player: Player | null = null;
   private bullets: Bullet[] = [];
   private enemies: Enemy[] = [];
-  private eventQueue: EventQueue | null = null;
 
   // Shooting cooldown (SPEC § 2.3.2)
   private shootCooldown = 0;
@@ -46,6 +48,21 @@ export class CombatSystem implements ISystem {
   private currentBuff: SpecialBulletType = SpecialBulletType.None;
   private buffTimer = 0;
   private readonly buffDuration = 2; // 2 seconds (SPEC § 2.3.2)
+
+  constructor() {
+    super();
+    this.declareDependency(CombatSystem.DEP_EVENT_QUEUE, false); // Optional for testing
+  }
+
+  /**
+   * Get EventQueue dependency (optional)
+   */
+  private get eventQueue(): EventQueue | null {
+    if (this.hasDependency(CombatSystem.DEP_EVENT_QUEUE)) {
+      return this.getDependency<EventQueue>(CombatSystem.DEP_EVENT_QUEUE);
+    }
+    return null;
+  }
 
   /**
    * Initialize combat system
@@ -72,41 +89,40 @@ export class CombatSystem implements ISystem {
     this.player = null;
     this.bullets = [];
     this.enemies = [];
-    this.eventQueue = null;
   }
 
   /**
-   * Set player reference
+   * Set player reference (not injectable - entity reference)
    */
   public setPlayer(player: Player): void {
     this.player = player;
   }
 
   /**
-   * Set bullet array reference
+   * Set bullet array reference (not injectable - entity reference)
    */
   public setBullets(bullets: Bullet[]): void {
     this.bullets = bullets;
   }
 
   /**
-   * Set enemy array reference
+   * Set enemy array reference (not injectable - entity reference)
    */
   public setEnemies(enemies: Enemy[]): void {
     this.enemies = enemies;
   }
 
   /**
-   * Set EventQueue reference
+   * Subscribe to events after EventQueue is injected
+   * Called by GameScene after injection
    */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
-
-    // Subscribe to SynthesisTriggered event (SPEC § 2.3.6)
-    this.eventQueue.subscribe(
-      EventType.SynthesisTriggered,
-      this.onSynthesisTriggered.bind(this),
-    );
+  public subscribeToEvents(): void {
+    if (this.eventQueue) {
+      this.eventQueue.subscribe(
+        EventType.SynthesisTriggered,
+        this.onSynthesisTriggered.bind(this),
+      );
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 import { Container, Sprite, Text } from "pixi.js";
 import { FoodType } from "../entities/booth";
 import { SystemPriority } from "../core/systems/system.interface";
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { getTexture, AssetKeys } from "../core/assets";
@@ -11,19 +11,33 @@ import { LAYOUT } from "../utils/constants";
  * Booth system for storing food ingredients
  * Spec: § 2.3.1 Booth System
  */
-export class BoothSystem implements ISystem {
+export class BoothSystem extends InjectableSystem {
   public readonly name = "BoothSystem";
   public readonly priority = SystemPriority.BOOTH;
+
+  // Dependency keys
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
 
   private booths: Map<number, Booth> = new Map();
   private container: Container;
   private backgroundSprite: Sprite | null = null;
-  private eventQueue: EventQueue | null = null;
 
   constructor() {
+    super();
+    this.declareDependency(BoothSystem.DEP_EVENT_QUEUE, false); // Optional dependency
     this.container = new Container();
     this.initializeBackground();
     this.initializeBooths();
+  }
+
+  /**
+   * Get EventQueue dependency (optional)
+   */
+  private get eventQueue(): EventQueue | null {
+    if (this.hasDependency(BoothSystem.DEP_EVENT_QUEUE)) {
+      return this.getDependency<EventQueue>(BoothSystem.DEP_EVENT_QUEUE);
+    }
+    return null;
   }
 
   /**
@@ -60,14 +74,6 @@ export class BoothSystem implements ISystem {
   public destroy(): void {
     this.container.destroy({ children: true });
     this.booths.clear();
-    this.eventQueue = null;
-  }
-
-  /**
-   * Set EventQueue reference
-   */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
   }
 
   private initializeBooths(): void {

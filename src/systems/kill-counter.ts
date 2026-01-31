@@ -3,7 +3,7 @@
  * SPEC § 2.3.8: 追踪玩家擊殺敵人數量，蚵仔煎消耗擊殺數
  */
 
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
@@ -18,16 +18,28 @@ import { EventType } from "./event-queue";
  * - 提供蚵仔煎消耗機制（消耗 20 擊殺數）
  * - 提供 UI 顯示用的進度資訊
  */
-export class KillCounterSystem implements ISystem {
+export class KillCounterSystem extends InjectableSystem {
   public readonly name = "KillCounterSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Event queue reference
-  private eventQueue: EventQueue | null = null;
+  // Dependency keys
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
 
   // Kill counter state (SPEC § 2.3.8)
   private killCount = 0;
   private readonly consumeThreshold = 20;
+
+  constructor() {
+    super();
+    this.declareDependency(KillCounterSystem.DEP_EVENT_QUEUE);
+  }
+
+  /**
+   * Get EventQueue dependency
+   */
+  private get eventQueue(): EventQueue {
+    return this.getDependency<EventQueue>(KillCounterSystem.DEP_EVENT_QUEUE);
+  }
 
   /**
    * Initialize kill counter system
@@ -36,12 +48,10 @@ export class KillCounterSystem implements ISystem {
     this.killCount = 0;
 
     // Subscribe to EnemyDeath event (SPEC § 2.3.8)
-    if (this.eventQueue) {
-      this.eventQueue.subscribe(
-        EventType.EnemyDeath,
-        this.onEnemyDeath.bind(this),
-      );
-    }
+    this.eventQueue.subscribe(
+      EventType.EnemyDeath,
+      this.onEnemyDeath.bind(this),
+    );
   }
 
   /**
@@ -56,14 +66,7 @@ export class KillCounterSystem implements ISystem {
    * Cleanup resources
    */
   public destroy(): void {
-    this.eventQueue = null;
-  }
-
-  /**
-   * Set EventQueue reference
-   */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
+    // Dependencies are managed by InjectableSystem
   }
 
   /**
@@ -101,12 +104,10 @@ export class KillCounterSystem implements ISystem {
     this.killCount -= this.consumeThreshold;
 
     // Publish consumption event
-    if (this.eventQueue) {
-      this.eventQueue.publish(EventType.KillCounterConsumed, {
-        consumed: this.consumeThreshold,
-        remaining: this.killCount,
-      });
-    }
+    this.eventQueue.publish(EventType.KillCounterConsumed, {
+      consumed: this.consumeThreshold,
+      remaining: this.killCount,
+    });
 
     return true;
   }

@@ -19,8 +19,10 @@ describe("UpgradeSystem", () => {
     eventQueue = new EventQueue();
     boothSystem = new BoothSystem();
 
-    upgradeSystem.setEventQueue(eventQueue);
-    upgradeSystem.setBoothSystem(boothSystem);
+    // Inject dependencies using new API
+    upgradeSystem.inject("EventQueue", eventQueue);
+    upgradeSystem.inject("BoothSystem", boothSystem);
+    upgradeSystem.validateDependencies();
     upgradeSystem.initialize();
     eventQueue.initialize();
     boothSystem.initialize();

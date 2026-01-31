@@ -3,7 +3,7 @@
  * SPEC § 2.3.4: 回合間及 Boss 擊敗後永久強化玩家能力
  */
 
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
@@ -47,15 +47,13 @@ export interface UpgradeState {
  * - 玩家選擇後消耗食材並套用效果
  * - 永久修改遊戲參數
  */
-export class UpgradeSystem implements ISystem {
+export class UpgradeSystem extends InjectableSystem {
   public readonly name = "UpgradeSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Event queue reference
-  private eventQueue: EventQueue | null = null;
-
-  // Booth system reference (for food consumption)
-  private boothSystem: BoothSystem | null = null;
+  // Dependency keys
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
+  private static readonly DEP_BOOTH = "BoothSystem";
 
   // Upgrade state
   private state: UpgradeState = {
@@ -73,6 +71,26 @@ export class UpgradeSystem implements ISystem {
 
   // Pending upgrade (waiting for player selection)
   private isPendingUpgrade = false;
+
+  constructor() {
+    super();
+    this.declareDependency(UpgradeSystem.DEP_EVENT_QUEUE);
+    this.declareDependency(UpgradeSystem.DEP_BOOTH);
+  }
+
+  /**
+   * Get EventQueue dependency
+   */
+  private get eventQueue(): EventQueue {
+    return this.getDependency<EventQueue>(UpgradeSystem.DEP_EVENT_QUEUE);
+  }
+
+  /**
+   * Get BoothSystem dependency
+   */
+  private get boothSystem(): BoothSystem {
+    return this.getDependency<BoothSystem>(UpgradeSystem.DEP_BOOTH);
+  }
 
   // Upgrade pools (SPEC § 2.3.4)
   private readonly normalUpgrades: UpgradeOption[] = [
@@ -151,12 +169,10 @@ export class UpgradeSystem implements ISystem {
     this.resetState();
 
     // Subscribe to WaveComplete event (SPEC § 2.3.4)
-    if (this.eventQueue) {
-      this.eventQueue.subscribe(
-        EventType.WaveComplete,
-        this.onWaveComplete.bind(this),
-      );
-    }
+    this.eventQueue.subscribe(
+      EventType.WaveComplete,
+      this.onWaveComplete.bind(this),
+    );
   }
 
   /**
@@ -170,22 +186,7 @@ export class UpgradeSystem implements ISystem {
    * Cleanup resources
    */
   public destroy(): void {
-    this.eventQueue = null;
-    this.boothSystem = null;
-  }
-
-  /**
-   * Set EventQueue reference
-   */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
-  }
-
-  /**
-   * Set BoothSystem reference
-   */
-  public setBoothSystem(boothSystem: BoothSystem): void {
-    this.boothSystem = boothSystem;
+    // Dependencies are managed by InjectableSystem
   }
 
   /**
@@ -246,8 +247,6 @@ export class UpgradeSystem implements ISystem {
 
     // Check and consume food for normal upgrades
     if (option.cost) {
-      if (!this.boothSystem) return false;
-
       const boothId = getBoothIdForFood(option.cost.foodType);
       const availableFood = this.boothSystem.getFoodCount(boothId);
 
@@ -265,11 +264,9 @@ export class UpgradeSystem implements ISystem {
     option.effect(this.state);
 
     // Publish UpgradeSelected event (SPEC § 2.3.6)
-    if (this.eventQueue) {
-      this.eventQueue.publish(EventType.UpgradeSelected, {
-        upgradeId: option.id,
-      });
-    }
+    this.eventQueue.publish(EventType.UpgradeSelected, {
+      upgradeId: option.id,
+    });
 
     // Clear pending state
     this.isPendingUpgrade = false;

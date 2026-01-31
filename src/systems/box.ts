@@ -145,23 +145,7 @@ export class BoxSystem extends InjectableSystem {
   }
 
   /**
-   * Set EventQueue reference
-   * @deprecated Use SystemManager.provideDependency instead
-   */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.inject(BoxSystem.DEP_EVENT_QUEUE, eventQueue);
-  }
-
-  /**
-   * Set BoothSystem reference
-   * @deprecated Use SystemManager.provideDependency instead
-   */
-  public setBoothSystem(boothSystem: BoothSystem): void {
-    this.inject(BoxSystem.DEP_BOOTH, boothSystem);
-  }
-
-  /**
-   * Set enemies reference for collision detection
+   * Set enemies reference for collision detection (not injectable - entity reference)
    */
   public setEnemies(enemies: Enemy[]): void {
     this.enemies = enemies;

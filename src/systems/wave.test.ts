@@ -17,7 +17,9 @@ describe("WaveSystem", () => {
     eventQueue = new EventQueue();
     spawnedEnemies = [];
 
-    waveSystem.setEventQueue(eventQueue);
+    // Inject dependencies using new API
+    waveSystem.inject("EventQueue", eventQueue);
+    waveSystem.validateDependencies();
     waveSystem.setSpawnCallback((type, x, y) => {
       spawnedEnemies.push({ type, x, y });
     });

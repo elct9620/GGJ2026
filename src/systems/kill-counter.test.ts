@@ -15,7 +15,9 @@ describe("KillCounterSystem", () => {
     killCounterSystem = new KillCounterSystem();
     eventQueue = new EventQueue();
 
-    killCounterSystem.setEventQueue(eventQueue);
+    // Inject dependencies using new API
+    killCounterSystem.inject("EventQueue", eventQueue);
+    killCounterSystem.validateDependencies();
     killCounterSystem.initialize();
     eventQueue.initialize();
   });

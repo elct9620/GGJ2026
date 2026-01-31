@@ -92,10 +92,14 @@ export class GameScene {
     this.systemManager.register(boothSystem);
     this.systemManager.register(boxSystem);
 
-    // Set system dependencies (before initialize)
-    waveSystem.setEventQueue(eventQueue);
-    upgradeSystem.setEventQueue(eventQueue);
-    upgradeSystem.setBoothSystem(boothSystem);
+    // Provide dependencies for InjectableSystem instances (before initialize)
+    this.systemManager.provideDependency("EventQueue", eventQueue);
+    this.systemManager.provideDependency("InputSystem", inputSystem);
+    this.systemManager.provideDependency("BoothSystem", boothSystem);
+    this.systemManager.provideDependency(
+      "KillCounterSystem",
+      killCounterSystem,
+    );
 
     this.systemManager.initialize();
 
@@ -116,28 +120,14 @@ export class GameScene {
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
     this.playerContainer.addChild(this.player.sprite);
 
-    // Connect Combat System with game entities
+    // Connect Combat System with game entities (entity references - not injectable)
     combatSystem.setPlayer(this.player);
     combatSystem.setBullets(this.bullets);
     combatSystem.setEnemies(this.enemies);
-    combatSystem.setEventQueue(eventQueue);
+    combatSystem.subscribeToEvents(); // Subscribe after dependencies injected
 
-    // Connect Synthesis System with dependencies (SPEC § 2.3.3)
-    synthesisSystem.setInputSystem(inputSystem);
-    synthesisSystem.setBoothSystem(boothSystem);
-    synthesisSystem.setEventQueue(eventQueue);
-    synthesisSystem.setKillCounterSystem(killCounterSystem);
-
-    // Connect Booth System with EventQueue (SPEC § 2.3.7)
-    boothSystem.setEventQueue(eventQueue);
-
-    // Connect Box System with dependencies (SPEC § 2.3.7)
-    boxSystem.setEventQueue(eventQueue);
-    boxSystem.setBoothSystem(boothSystem);
+    // Connect Box System with enemies (entity reference - not injectable)
     boxSystem.setEnemies(this.enemies);
-
-    // Connect Kill Counter System (SPEC § 2.3.8)
-    killCounterSystem.setEventQueue(eventQueue);
 
     // Setup booth visualization
     this.boothContainer.addChild(boothSystem.getContainer());

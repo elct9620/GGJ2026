@@ -25,12 +25,15 @@ describe("SynthesisSystem", () => {
     killCounterSystem = new KillCounterSystem();
     eventQueue = new EventQueue();
 
-    synthesisSystem.setInputSystem(inputSystem);
-    synthesisSystem.setBoothSystem(boothSystem);
-    synthesisSystem.setEventQueue(eventQueue);
-    synthesisSystem.setKillCounterSystem(killCounterSystem);
+    // Inject dependencies using new API
+    synthesisSystem.inject("InputSystem", inputSystem);
+    synthesisSystem.inject("BoothSystem", boothSystem);
+    synthesisSystem.inject("EventQueue", eventQueue);
+    synthesisSystem.inject("KillCounterSystem", killCounterSystem);
+    synthesisSystem.validateDependencies();
 
-    killCounterSystem.setEventQueue(eventQueue);
+    killCounterSystem.inject("EventQueue", eventQueue);
+    killCounterSystem.validateDependencies();
 
     synthesisSystem.initialize();
     inputSystem.initialize();

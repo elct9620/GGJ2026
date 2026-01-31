@@ -35,13 +35,14 @@ describe("BoxSystem", () => {
     eventQueue = new EventQueue();
     enemies = [];
 
-    // Setup dependencies using new injection API
-    boxSystem.setEventQueue(eventQueue);
-    boxSystem.setBoothSystem(boothSystem);
+    // Setup dependencies using injection API
+    boxSystem.inject("EventQueue", eventQueue);
+    boxSystem.inject("BoothSystem", boothSystem);
+    boxSystem.validateDependencies();
     boxSystem.setEnemies(enemies);
 
     // Connect BoothSystem to EventQueue for food events
-    boothSystem.setEventQueue(eventQueue);
+    boothSystem.inject("EventQueue", eventQueue);
 
     boxSystem.initialize();
     boothSystem.initialize();

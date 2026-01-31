@@ -101,38 +101,6 @@ export class SynthesisSystem extends InjectableSystem {
   }
 
   /**
-   * Set InputSystem reference
-   * @deprecated Use SystemManager.provideDependency instead
-   */
-  public setInputSystem(inputSystem: InputSystem): void {
-    this.inject(SynthesisSystem.DEP_INPUT, inputSystem);
-  }
-
-  /**
-   * Set BoothSystem reference
-   * @deprecated Use SystemManager.provideDependency instead
-   */
-  public setBoothSystem(boothSystem: BoothSystem): void {
-    this.inject(SynthesisSystem.DEP_BOOTH, boothSystem);
-  }
-
-  /**
-   * Set EventQueue reference
-   * @deprecated Use SystemManager.provideDependency instead
-   */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.inject(SynthesisSystem.DEP_EVENT_QUEUE, eventQueue);
-  }
-
-  /**
-   * Set KillCounterSystem reference
-   * @deprecated Use SystemManager.provideDependency instead
-   */
-  public setKillCounterSystem(killCounterSystem: KillCounterSystem): void {
-    this.inject(SynthesisSystem.DEP_KILL_COUNTER, killCounterSystem);
-  }
-
-  /**
    * Attempt to synthesize special bullet
    * SPEC § 2.3.3: 按鍵觸發檢查食材並消耗
    */

@@ -3,7 +3,7 @@
  * SPEC § 2.3.5: 控制敵人生成和回合進程
  */
 
-import type { ISystem } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
@@ -27,12 +27,12 @@ export type EnemySpawnCallback = (
  * - 訂閱 EnemyDeath 和 EnemyReachedEnd 追蹤剩餘敵人
  * - 發佈 WaveStart 和 WaveComplete 事件
  */
-export class WaveSystem implements ISystem {
+export class WaveSystem extends InjectableSystem {
   public readonly name = "WaveSystem";
   public readonly priority = SystemPriority.WAVE;
 
-  // Event queue reference
-  private eventQueue: EventQueue | null = null;
+  // Dependency keys
+  private static readonly DEP_EVENT_QUEUE = "EventQueue";
 
   // Enemy tracking
   private enemiesSpawnedThisWave = 0;
@@ -42,8 +42,20 @@ export class WaveSystem implements ISystem {
   private currentWave = 0;
   private isWaveActive = false;
 
-  // Spawn callback (GameScene provides this)
+  // Spawn callback (GameScene provides this - not injectable)
   private onSpawnEnemy: EnemySpawnCallback | null = null;
+
+  constructor() {
+    super();
+    this.declareDependency(WaveSystem.DEP_EVENT_QUEUE);
+  }
+
+  /**
+   * Get EventQueue dependency
+   */
+  private get eventQueue(): EventQueue {
+    return this.getDependency<EventQueue>(WaveSystem.DEP_EVENT_QUEUE);
+  }
 
   /**
    * Initialize wave system
@@ -55,16 +67,14 @@ export class WaveSystem implements ISystem {
     this.enemiesRemainingThisWave = 0;
 
     // Subscribe to enemy events (SPEC § 2.3.6)
-    if (this.eventQueue) {
-      this.eventQueue.subscribe(
-        EventType.EnemyDeath,
-        this.onEnemyDeath.bind(this),
-      );
-      this.eventQueue.subscribe(
-        EventType.EnemyReachedEnd,
-        this.onEnemyReachedEnd.bind(this),
-      );
-    }
+    this.eventQueue.subscribe(
+      EventType.EnemyDeath,
+      this.onEnemyDeath.bind(this),
+    );
+    this.eventQueue.subscribe(
+      EventType.EnemyReachedEnd,
+      this.onEnemyReachedEnd.bind(this),
+    );
   }
 
   /**
@@ -85,15 +95,7 @@ export class WaveSystem implements ISystem {
    * Cleanup resources
    */
   public destroy(): void {
-    this.eventQueue = null;
     this.onSpawnEnemy = null;
-  }
-
-  /**
-   * Set EventQueue reference
-   */
-  public setEventQueue(eventQueue: EventQueue): void {
-    this.eventQueue = eventQueue;
   }
 
   /**
@@ -113,9 +115,7 @@ export class WaveSystem implements ISystem {
     this.enemiesSpawnedThisWave = 0;
 
     // Publish WaveStart event (SPEC § 2.3.6)
-    if (this.eventQueue) {
-      this.eventQueue.publish(EventType.WaveStart, { waveNumber });
-    }
+    this.eventQueue.publish(EventType.WaveStart, { waveNumber });
 
     // Calculate enemy count (SPEC § 2.3.5)
     const enemyCount = waveNumber * 2;
@@ -203,13 +203,11 @@ export class WaveSystem implements ISystem {
 
     // Publish WaveComplete event (SPEC § 2.3.6)
     // Delay can be configured (default 2000ms for upgrade screen)
-    if (this.eventQueue) {
-      this.eventQueue.publish(
-        EventType.WaveComplete,
-        { waveNumber: this.currentWave },
-        2000,
-      );
-    }
+    this.eventQueue.publish(
+      EventType.WaveComplete,
+      { waveNumber: this.currentWave },
+      2000,
+    );
   }
 
   /**
