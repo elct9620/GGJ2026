@@ -8,7 +8,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
-import type { FoodType } from "../entities/enemy";
+import type { FoodType } from "../entities/booth";
 
 /**
  * Upgrade option definition

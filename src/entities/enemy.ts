@@ -4,6 +4,7 @@ import type { CollisionBox } from "../values/collision";
 import { Container, Graphics, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
+import { FoodType } from "./booth";
 
 export const EnemyType = {
   Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2)
@@ -11,26 +12,6 @@ export const EnemyType = {
 } as const;
 
 export type EnemyType = (typeof EnemyType)[keyof typeof EnemyType];
-
-export const FoodType = {
-  Pearl: "Pearl", // 珍珠
-  Tofu: "Tofu", // 豆腐
-  BloodCake: "BloodCake", // 米血
-} as const;
-
-export type FoodType = (typeof FoodType)[keyof typeof FoodType];
-
-/**
- * Map FoodType to Booth ID (1-indexed per SPEC § 2.3.1)
- */
-export function getBoothIdForFood(foodType: FoodType): number {
-  const mapping: Record<FoodType, number> = {
-    Pearl: 1,
-    Tofu: 2,
-    BloodCake: 3,
-  };
-  return mapping[foodType];
-}
 
 /**
  * Enemy entity (Ghost or Boss)

@@ -3,7 +3,7 @@
  * SPEC § 2.3.3: 特殊子彈配方
  */
 
-import type { FoodType } from "../entities/enemy";
+import type { FoodType } from "../entities/booth";
 
 /**
  * Recipe configuration (SPEC § 2.3.3)

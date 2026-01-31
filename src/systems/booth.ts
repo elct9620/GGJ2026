@@ -1,5 +1,5 @@
 import { Container, Sprite, Text } from "pixi.js";
-import { FoodType } from "../entities/enemy";
+import { FoodType } from "../entities/booth";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";

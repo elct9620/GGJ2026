@@ -9,7 +9,7 @@ import type { BoothSystem } from "./booth";
 import type { InputSystem } from "./input";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
-import { type FoodType, getBoothIdForFood } from "../entities/enemy";
+import { type FoodType, getBoothIdForFood } from "../entities/booth";
 import { type Recipe, RECIPES } from "../values/recipes";
 
 /**

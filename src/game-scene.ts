@@ -1,13 +1,8 @@
 import { Container } from "pixi.js";
 import { Player } from "./entities/player";
-import {
-  Enemy,
-  EnemyType,
-  FoodType,
-  getBoothIdForFood,
-} from "./entities/enemy";
+import { Enemy, EnemyType } from "./entities/enemy";
 import { Bullet } from "./entities/bullet";
-import { Food } from "./entities/food";
+import { Food, FoodType, getBoothIdForFood } from "./entities/booth";
 import { InputSystem } from "./systems/input";
 import { HUDSystem, type RecipeStatus } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";

@@ -8,7 +8,7 @@ import { SynthesisSystem } from "./synthesis";
 import { InputSystem } from "./input";
 import { BoothSystem } from "./booth";
 import { EventQueue, EventType } from "./event-queue";
-import type { FoodType } from "../entities/enemy";
+import type { FoodType } from "../entities/booth";
 
 describe("SynthesisSystem", () => {
   let synthesisSystem: SynthesisSystem;
