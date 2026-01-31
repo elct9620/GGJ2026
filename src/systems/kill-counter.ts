@@ -1,6 +1,6 @@
 /**
  * Kill Counter System
- * SPEC § 2.3.8: 追踪玩家擊殺敵人數量，解鎖蚵仔煎特殊子彈
+ * SPEC § 2.3.8: 追踪玩家擊殺敵人數量，蚵仔煎消耗擊殺數
  */
 
 import type { ISystem } from "../core/systems/system.interface";
@@ -15,7 +15,7 @@ import { EventType } from "./event-queue";
  * Responsibilities:
  * - 訂閱 EnemyDeath 事件（僅限子彈擊殺）
  * - 累積擊殺計數（全局，不重置）
- * - 達到門檻時發佈 KillCounterUnlocked 事件
+ * - 提供蚵仔煎消耗機制（消耗 20 擊殺數）
  * - 提供 UI 顯示用的進度資訊
  */
 export class KillCounterSystem implements ISystem {
@@ -27,15 +27,13 @@ export class KillCounterSystem implements ISystem {
 
   // Kill counter state (SPEC § 2.3.8)
   private killCount = 0;
-  private readonly unlockThreshold = 10;
-  private isUnlocked = false;
+  private readonly consumeThreshold = 20;
 
   /**
    * Initialize kill counter system
    */
   public initialize(): void {
     this.killCount = 0;
-    this.isUnlocked = false;
 
     // Subscribe to EnemyDeath event (SPEC § 2.3.8)
     if (this.eventQueue) {
@@ -76,27 +74,48 @@ export class KillCounterSystem implements ISystem {
   }
 
   /**
-   * Get unlock threshold
+   * Get consume threshold
    */
-  public getUnlockThreshold(): number {
-    return this.unlockThreshold;
+  public getConsumeThreshold(): number {
+    return this.consumeThreshold;
   }
 
   /**
-   * Check if unlocked
+   * Check if can consume (enough kills for oyster omelet)
+   * SPEC § 2.3.8: 需要 20 擊殺數才能使用蚵仔煎
    */
-  public isOysterOmeletteUnlocked(): boolean {
-    return this.isUnlocked;
+  public canConsume(): boolean {
+    return this.killCount >= this.consumeThreshold;
   }
 
   /**
-   * Get progress string for UI (e.g., "7/10" or "已解鎖")
+   * Consume kill count for oyster omelet
+   * SPEC § 2.3.8: 蚵仔煎消耗 20 個擊殺數
+   * @returns true if consumption successful, false if not enough kills
+   */
+  public consume(): boolean {
+    if (!this.canConsume()) {
+      return false;
+    }
+
+    this.killCount -= this.consumeThreshold;
+
+    // Publish consumption event
+    if (this.eventQueue) {
+      this.eventQueue.publish(EventType.KillCounterConsumed, {
+        consumed: this.consumeThreshold,
+        remaining: this.killCount,
+      });
+    }
+
+    return true;
+  }
+
+  /**
+   * Get progress string for UI (e.g., "7/20")
    */
   public getProgressString(): string {
-    if (this.isUnlocked) {
-      return "已解鎖";
-    }
-    return `${this.killCount}/${this.unlockThreshold}`;
+    return `${this.killCount}/${this.consumeThreshold}`;
   }
 
   /**
@@ -104,20 +123,7 @@ export class KillCounterSystem implements ISystem {
    * Only count kills from bullet hits, not from box blocking
    */
   private onEnemyDeath(): void {
-    // Increment kill count (SPEC § 2.3.8)
-    // Note: Box System will need to use a different event or flag
-    // to distinguish box kills from bullet kills
     this.killCount++;
-
-    // Check if unlock threshold reached
-    if (!this.isUnlocked && this.killCount >= this.unlockThreshold) {
-      this.isUnlocked = true;
-
-      // Publish KillCounterUnlocked event (SPEC § 2.3.6)
-      if (this.eventQueue) {
-        this.eventQueue.publish(EventType.KillCounterUnlocked, {});
-      }
-    }
   }
 
   /**
@@ -125,6 +131,5 @@ export class KillCounterSystem implements ISystem {
    */
   public reset(): void {
     this.killCount = 0;
-    this.isUnlocked = false;
   }
 }

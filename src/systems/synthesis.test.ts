@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { SynthesisSystem } from "./synthesis";
 import { InputSystem } from "./input";
 import { BoothSystem } from "./booth";
+import { KillCounterSystem } from "./kill-counter";
 import { EventQueue, EventType } from "./event-queue";
 import type { FoodType } from "../entities/booth";
 
@@ -14,21 +15,27 @@ describe("SynthesisSystem", () => {
   let synthesisSystem: SynthesisSystem;
   let inputSystem: InputSystem;
   let boothSystem: BoothSystem;
+  let killCounterSystem: KillCounterSystem;
   let eventQueue: EventQueue;
 
   beforeEach(() => {
     synthesisSystem = new SynthesisSystem();
     inputSystem = new InputSystem();
     boothSystem = new BoothSystem();
+    killCounterSystem = new KillCounterSystem();
     eventQueue = new EventQueue();
 
     synthesisSystem.setInputSystem(inputSystem);
     synthesisSystem.setBoothSystem(boothSystem);
     synthesisSystem.setEventQueue(eventQueue);
+    synthesisSystem.setKillCounterSystem(killCounterSystem);
+
+    killCounterSystem.setEventQueue(eventQueue);
 
     synthesisSystem.initialize();
     inputSystem.initialize();
     boothSystem.initialize();
+    killCounterSystem.initialize();
     eventQueue.initialize();
   });
 
@@ -111,9 +118,16 @@ describe("SynthesisSystem", () => {
       expect(recipeId).toBe("4");
     });
 
-    it("SY-05: 按鍵 5 + 擊殺計數已解鎖 → 觸發蚵仔煎", () => {
-      // Unlock kill counter
-      eventQueue.publish(EventType.KillCounterUnlocked, {});
+    it("SY-05: 按鍵 5 + 擊殺數 ≥ 20 → 觸發蚵仔煎", () => {
+      // Accumulate 20 kills
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.canConsume()).toBe(true);
 
       let recipeId = "";
       eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
@@ -158,16 +172,28 @@ describe("SynthesisSystem", () => {
       expect(boothSystem.getFoodCount(2)).toBe(0);
     });
 
-    it("SY-08: 蚵仔煎不消耗食材", () => {
-      eventQueue.publish(EventType.KillCounterUnlocked, {});
+    it("SY-08: 蚵仔煎不消耗食材，但消耗擊殺數", () => {
+      // Accumulate 25 kills
+      for (let i = 0; i < 25; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(25);
 
       const event = new KeyboardEvent("keydown", { key: "5" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 
+      // Food unchanged
       expect(boothSystem.getFoodCount(1)).toBe(0);
       expect(boothSystem.getFoodCount(2)).toBe(0);
       expect(boothSystem.getFoodCount(3)).toBe(0);
+
+      // Kill count consumed
+      expect(killCounterSystem.getKillCount()).toBe(5); // 25 - 20 = 5
     });
   });
 
@@ -204,7 +230,15 @@ describe("SynthesisSystem", () => {
       expect(synthesisTriggered).toBe(false);
     });
 
-    it("SY-11: 按鍵 5 + 未解鎖擊殺計數 → 無反應", () => {
+    it("SY-11: 按鍵 5 + 擊殺數不足 (< 20) → 無反應", () => {
+      // Only 15 kills
+      for (let i = 0; i < 15; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
       let synthesisTriggered = false;
       eventQueue.subscribe(EventType.SynthesisTriggered, () => {
         synthesisTriggered = true;
@@ -215,6 +249,7 @@ describe("SynthesisSystem", () => {
       synthesisSystem.update();
 
       expect(synthesisTriggered).toBe(false);
+      expect(killCounterSystem.getKillCount()).toBe(15); // Unchanged
     });
 
     it("SY-12: 按鍵 6 (無效配方) → 無反應", () => {
@@ -231,13 +266,61 @@ describe("SynthesisSystem", () => {
     });
   });
 
-  describe("KillCounterUnlocked Event", () => {
-    it("should unlock oyster omelette when event is received", () => {
-      expect(synthesisSystem.isOysterOmeletteUnlocked()).toBe(false);
+  describe("Kill Counter Integration", () => {
+    it("canUseOysterOmelet 正確反映擊殺數狀態", () => {
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(false);
 
-      eventQueue.publish(EventType.KillCounterUnlocked, {});
+      // Accumulate 20 kills
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
 
-      expect(synthesisSystem.isOysterOmeletteUnlocked()).toBe(true);
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(true);
+
+      // Use oyster omelet
+      const event = new KeyboardEvent("keydown", { key: "5" });
+      window.dispatchEvent(event);
+      synthesisSystem.update();
+
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(false);
+    });
+
+    it("蚵仔煎可重複使用（累積足夠擊殺數後）", () => {
+      let triggerCount = 0;
+      eventQueue.subscribe(EventType.SynthesisTriggered, () => {
+        triggerCount++;
+      });
+
+      // First 20 kills
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      // First use
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      expect(triggerCount).toBe(1);
+      expect(killCounterSystem.getKillCount()).toBe(0);
+
+      // Another 20 kills
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-2nd-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      // Second use
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      expect(triggerCount).toBe(2);
+      expect(killCounterSystem.getKillCount()).toBe(0);
     });
   });
 });

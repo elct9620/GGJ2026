@@ -426,9 +426,9 @@ export class GameScene {
     boothSystem: BoothSystem,
     killCounterSystem: KillCounterSystem,
   ): boolean {
-    // Special check: 蚵仔煎
+    // Special check: 蚵仔煎 (SPEC § 2.3.8: 需要 20 擊殺數)
     if (recipe.requiresKillCounter) {
-      return killCounterSystem.isOysterOmeletteUnlocked();
+      return killCounterSystem.canConsume();
     }
 
     // Food requirements check

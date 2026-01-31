@@ -9,6 +9,7 @@ import type { BoothSystem } from "./booth";
 import type { InputSystem } from "./input";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import type { KillCounterSystem } from "./kill-counter";
 import { type FoodType, getBoothIdForFood } from "../entities/booth";
 import { type Recipe, RECIPES } from "../values/recipes";
 
@@ -20,6 +21,7 @@ import { type Recipe, RECIPES } from "../values/recipes";
  * - 監聽數字鍵 1-5
  * - 檢查食材是否滿足配方
  * - 消耗攤位食材
+ * - 蚵仔煎消耗擊殺數（SPEC § 2.3.8）
  * - 發佈 SynthesisTriggered 事件
  */
 export class SynthesisSystem implements ISystem {
@@ -30,23 +32,13 @@ export class SynthesisSystem implements ISystem {
   private inputSystem: InputSystem | null = null;
   private boothSystem: BoothSystem | null = null;
   private eventQueue: EventQueue | null = null;
-
-  // Kill counter unlock state
-  private isKillCounterUnlocked = false;
+  private killCounterSystem: KillCounterSystem | null = null;
 
   /**
    * Initialize synthesis system
    */
   public initialize(): void {
-    this.isKillCounterUnlocked = false;
-
-    // Subscribe to KillCounterUnlocked event
-    if (this.eventQueue) {
-      this.eventQueue.subscribe(
-        EventType.KillCounterUnlocked,
-        this.onKillCounterUnlocked.bind(this),
-      );
-    }
+    // No initialization needed
   }
 
   /**
@@ -69,6 +61,7 @@ export class SynthesisSystem implements ISystem {
     this.inputSystem = null;
     this.boothSystem = null;
     this.eventQueue = null;
+    this.killCounterSystem = null;
   }
 
   /**
@@ -93,6 +86,13 @@ export class SynthesisSystem implements ISystem {
   }
 
   /**
+   * Set KillCounterSystem reference
+   */
+  public setKillCounterSystem(killCounterSystem: KillCounterSystem): void {
+    this.killCounterSystem = killCounterSystem;
+  }
+
+  /**
    * Attempt to synthesize special bullet
    * SPEC § 2.3.3: 按鍵觸發檢查食材並消耗
    */
@@ -103,15 +103,23 @@ export class SynthesisSystem implements ISystem {
     if (!recipe) return;
 
     // Check kill counter requirement (蚵仔煎)
-    if (recipe.requiresKillCounter && !this.isKillCounterUnlocked) {
-      // UI should show "未解鎖" feedback
-      return;
+    // SPEC § 2.3.8: 蚵仔煎需要消耗 20 擊殺數
+    if (recipe.requiresKillCounter) {
+      if (!this.killCounterSystem || !this.killCounterSystem.canConsume()) {
+        // UI should show "擊殺數不足" feedback
+        return;
+      }
     }
 
     // Check food requirements
     if (!this.checkFoodRequirements(recipe)) {
       // UI should show "庫存不足" feedback
       return;
+    }
+
+    // Consume kill counter for oyster omelet (SPEC § 2.3.8)
+    if (recipe.requiresKillCounter && this.killCounterSystem) {
+      this.killCounterSystem.consume();
     }
 
     // Consume food from booths
@@ -161,16 +169,10 @@ export class SynthesisSystem implements ISystem {
   }
 
   /**
-   * Handle KillCounterUnlocked event
+   * Check if oyster omelet is available (for UI)
+   * SPEC § 2.3.8: 檢查是否有足夠擊殺數
    */
-  private onKillCounterUnlocked(): void {
-    this.isKillCounterUnlocked = true;
-  }
-
-  /**
-   * Check if kill counter is unlocked (for UI)
-   */
-  public isOysterOmeletteUnlocked(): boolean {
-    return this.isKillCounterUnlocked;
+  public canUseOysterOmelet(): boolean {
+    return this.killCounterSystem?.canConsume() ?? false;
   }
 }

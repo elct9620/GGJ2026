@@ -1,6 +1,6 @@
 /**
  * Kill Counter System Tests
- * SPEC § 2.3.8
+ * SPEC § 2.3.8 / testing.md § 2.10
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -20,13 +20,8 @@ describe("KillCounterSystem", () => {
     eventQueue.initialize();
   });
 
-  describe("Kill Counting", () => {
-    it("KC-01: 初始計數器為 0", () => {
-      expect(killCounterSystem.getKillCount()).toBe(0);
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(false);
-    });
-
-    it("KC-02: 擊殺 1 隻敵人 → 計數器 = 1", () => {
+  describe("2.10.1 Kill Counter", () => {
+    it("KC-01: 擊殺 1 隻餓鬼 → killCount = 1", () => {
       eventQueue.publish(EventType.EnemyDeath, {
         enemyId: "enemy-1",
         position: { x: 500, y: 540 },
@@ -35,7 +30,7 @@ describe("KillCounterSystem", () => {
       expect(killCounterSystem.getKillCount()).toBe(1);
     });
 
-    it("KC-03: 擊殺 5 隻敵人 → 計數器 = 5", () => {
+    it("KC-02: 擊殺 5 隻餓鬼 → killCount = 5", () => {
       for (let i = 0; i < 5; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
@@ -46,51 +41,60 @@ describe("KillCounterSystem", () => {
       expect(killCounterSystem.getKillCount()).toBe(5);
     });
 
-    it("KC-04: 擊殺 10 隻敵人 → 計數器 = 10，觸發解鎖", () => {
-      let unlockEventFired = false;
-      eventQueue.subscribe(EventType.KillCounterUnlocked, () => {
-        unlockEventFired = true;
-      });
+    it("KC-03: 敵人被寶箱消滅 → killCount 不變（需 Box System 傳遞不同事件）", () => {
+      // Note: Box System should NOT publish EnemyDeath event for box kills
+      // This test documents expected behavior - box kills use different mechanism
+      expect(killCounterSystem.getKillCount()).toBe(0);
 
-      for (let i = 0; i < 10; i++) {
-        eventQueue.publish(EventType.EnemyDeath, {
-          enemyId: `enemy-${i}`,
-          position: { x: 500, y: 540 },
-        });
-      }
-
-      expect(killCounterSystem.getKillCount()).toBe(10);
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(true);
-      expect(unlockEventFired).toBe(true);
-    });
-
-    it("KC-05: 已解鎖後繼續擊殺 → 計數器繼續累積", () => {
-      // Unlock first
-      for (let i = 0; i < 10; i++) {
-        eventQueue.publish(EventType.EnemyDeath, {
-          enemyId: `enemy-${i}`,
-          position: { x: 500, y: 540 },
-        });
-      }
-
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(true);
-
-      // Continue killing
+      // Only bullet kills trigger EnemyDeath
       eventQueue.publish(EventType.EnemyDeath, {
-        enemyId: "enemy-11",
+        enemyId: "enemy-1",
         position: { x: 500, y: 540 },
       });
 
-      expect(killCounterSystem.getKillCount()).toBe(11);
+      expect(killCounterSystem.getKillCount()).toBe(1);
     });
 
-    it("KC-06: 解鎖事件只發佈一次", () => {
-      let unlockEventCount = 0;
-      eventQueue.subscribe(EventType.KillCounterUnlocked, () => {
-        unlockEventCount++;
+    it("KC-04: 敵人到達底線 → killCount 不變（不計入擊殺）", () => {
+      // EnemyReachedEnd is different from EnemyDeath
+      eventQueue.publish(EventType.EnemyReachedEnd, {
+        enemyId: "enemy-1",
       });
 
-      // Kill 15 enemies (past threshold)
+      expect(killCounterSystem.getKillCount()).toBe(0);
+    });
+
+    it("KC-05: 跨回合擊殺累計 → killCount 持續累加", () => {
+      // Wave 1: kill 5
+      for (let i = 0; i < 5; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-w1-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(5);
+
+      // Wave 2: kill 3 more
+      for (let i = 0; i < 3; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-w2-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(8);
+    });
+  });
+
+  describe("2.10.2 Oyster Omelet Consumption", () => {
+    it("KC-06: 遊戲開始（0 擊殺）→ canConsume = false", () => {
+      expect(killCounterSystem.getKillCount()).toBe(0);
+      expect(killCounterSystem.canConsume()).toBe(false);
+      expect(killCounterSystem.getProgressString()).toBe("0/20");
+    });
+
+    it("KC-07: 擊殺 15 隻 → canConsume = false (15/20)", () => {
       for (let i = 0; i < 15; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
@@ -98,12 +102,66 @@ describe("KillCounterSystem", () => {
         });
       }
 
-      expect(unlockEventCount).toBe(1); // Only fired once at threshold
+      expect(killCounterSystem.getKillCount()).toBe(15);
+      expect(killCounterSystem.canConsume()).toBe(false);
+      expect(killCounterSystem.getProgressString()).toBe("15/20");
     });
-  });
 
-  describe("Progress Display", () => {
-    it("KC-07: 未解鎖時顯示進度 (7/10)", () => {
+    it("KC-08: 擊殺 20 隻 + consume → 消耗成功，剩餘 0", () => {
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(20);
+      expect(killCounterSystem.canConsume()).toBe(true);
+
+      const result = killCounterSystem.consume();
+
+      expect(result).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(0);
+      expect(killCounterSystem.getProgressString()).toBe("0/20");
+    });
+
+    it("KC-09: 擊殺 25 隻 + consume → 消耗成功，剩餘 5", () => {
+      for (let i = 0; i < 25; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.canConsume()).toBe(true);
+
+      const result = killCounterSystem.consume();
+
+      expect(result).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(5);
+      expect(killCounterSystem.getProgressString()).toBe("5/20");
+    });
+
+    it("KC-10: 擊殺 40 隻 + consume 兩次 → 第二次成功，剩餘 0", () => {
+      for (let i = 0; i < 40; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      // First consume
+      expect(killCounterSystem.consume()).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(20);
+
+      // Second consume
+      expect(killCounterSystem.consume()).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(0);
+    });
+
+    it("KC-11: UI 顯示可用狀態 (X/20)", () => {
+      expect(killCounterSystem.getProgressString()).toBe("0/20");
+
       for (let i = 0; i < 7; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
@@ -111,85 +169,179 @@ describe("KillCounterSystem", () => {
         });
       }
 
-      expect(killCounterSystem.getProgressString()).toBe("7/10");
-    });
+      expect(killCounterSystem.getProgressString()).toBe("7/20");
 
-    it("KC-08: 解鎖後顯示「已解鎖」", () => {
-      for (let i = 0; i < 10; i++) {
+      for (let i = 7; i < 20; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
           position: { x: 500, y: 540 },
         });
       }
 
-      expect(killCounterSystem.getProgressString()).toBe("已解鎖");
-    });
-
-    it("KC-09: 初始狀態顯示 (0/10)", () => {
-      expect(killCounterSystem.getProgressString()).toBe("0/10");
+      expect(killCounterSystem.getProgressString()).toBe("20/20");
+      expect(killCounterSystem.canConsume()).toBe(true);
     });
   });
 
-  describe("Reset", () => {
-    it("KC-10: Reset 後計數器歸零", () => {
-      for (let i = 0; i < 10; i++) {
+  describe("2.10.3 Quick Eat Effect on Oyster Omelet", () => {
+    // Note: Quick Eat effect is handled by Upgrade System / Combat System
+    // These tests document expected behavior at KillCounter level
+
+    it("KC-12: 快吃升級不改變消耗門檻（仍為 20）", () => {
+      expect(killCounterSystem.getConsumeThreshold()).toBe(20);
+      // Quick Eat increases damage, not consumption reduction
+    });
+
+    it("KC-13: 擊殺 15 隻 + 選「快吃」+ consume → 消耗失敗（15<20）", () => {
+      for (let i = 0; i < 15; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
           position: { x: 500, y: 540 },
         });
       }
 
-      expect(killCounterSystem.getKillCount()).toBe(10);
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(true);
+      // Quick Eat upgrade applied (simulated - doesn't affect threshold)
+      expect(killCounterSystem.canConsume()).toBe(false);
+      expect(killCounterSystem.consume()).toBe(false);
+      expect(killCounterSystem.getKillCount()).toBe(15); // Unchanged
+    });
+
+    it("KC-14: 擊殺 25 隻 + 選「快吃」+ consume → 消耗成功", () => {
+      for (let i = 0; i < 25; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.consume()).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(5);
+    });
+
+    // KC-15 ~ KC-17: Damage calculations are tested in Combat System tests
+  });
+
+  describe("2.10.4 Integration Tests", () => {
+    it("KC-18: 消耗成功時發佈 KillCounterConsumed 事件", () => {
+      let eventFired = false;
+      let eventData: { consumed: number; remaining: number } | null = null;
+
+      eventQueue.subscribe(EventType.KillCounterConsumed, (data) => {
+        eventFired = true;
+        eventData = data;
+      });
+
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      killCounterSystem.consume();
+
+      expect(eventFired).toBe(true);
+      expect(eventData).toEqual({ consumed: 20, remaining: 0 });
+    });
+
+    it("KC-19: 重新開始遊戲（reset）→ killCount = 0", () => {
+      for (let i = 0; i < 15; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(15);
 
       killCounterSystem.reset();
 
       expect(killCounterSystem.getKillCount()).toBe(0);
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(false);
-      expect(killCounterSystem.getProgressString()).toBe("0/10");
+      expect(killCounterSystem.canConsume()).toBe(false);
+      expect(killCounterSystem.getProgressString()).toBe("0/20");
+    });
+
+    it("KC-20: 寶箱消滅不計入（使用 EnemyDeath 事件以外的機制）", () => {
+      // Kill 19 enemies with bullets
+      for (let i = 0; i < 19; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      // Box destroys 1 enemy (no EnemyDeath event)
+      // Box System should use a different mechanism
+
+      expect(killCounterSystem.getKillCount()).toBe(19);
+      expect(killCounterSystem.canConsume()).toBe(false);
+    });
+
+    it("KC-22: 擊殺 25 + consume + 擊殺 3 + consume → 第二次失敗（8<20）", () => {
+      // Kill 25
+      for (let i = 0; i < 25; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      // First consume: 25 - 20 = 5
+      expect(killCounterSystem.consume()).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(5);
+
+      // Kill 3 more: 5 + 3 = 8
+      for (let i = 0; i < 3; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-extra-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(8);
+
+      // Second consume: 8 < 20, should fail
+      expect(killCounterSystem.canConsume()).toBe(false);
+      expect(killCounterSystem.consume()).toBe(false);
+      expect(killCounterSystem.getKillCount()).toBe(8); // Unchanged
     });
   });
 
-  describe("Unlock Threshold", () => {
-    it("KC-11: 門檻值為 10", () => {
-      expect(killCounterSystem.getUnlockThreshold()).toBe(10);
+  describe("Consume Threshold", () => {
+    it("消耗門檻值為 20", () => {
+      expect(killCounterSystem.getConsumeThreshold()).toBe(20);
     });
 
-    it("KC-12: 擊殺 9 隻敵人 → 未解鎖", () => {
-      for (let i = 0; i < 9; i++) {
+    it("擊殺 19 隻敵人 → canConsume = false", () => {
+      for (let i = 0; i < 19; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
           position: { x: 500, y: 540 },
         });
       }
 
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(false);
+      expect(killCounterSystem.canConsume()).toBe(false);
     });
 
-    it("KC-13: 擊殺第 10 隻敵人瞬間解鎖", () => {
-      let unlockEventFired = false;
-      eventQueue.subscribe(EventType.KillCounterUnlocked, () => {
-        unlockEventFired = true;
-      });
-
-      // Kill 9 enemies
-      for (let i = 0; i < 9; i++) {
+    it("擊殺第 20 隻敵人瞬間 → canConsume = true", () => {
+      // Kill 19 enemies
+      for (let i = 0; i < 19; i++) {
         eventQueue.publish(EventType.EnemyDeath, {
           enemyId: `enemy-${i}`,
           position: { x: 500, y: 540 },
         });
       }
 
-      expect(unlockEventFired).toBe(false);
+      expect(killCounterSystem.canConsume()).toBe(false);
 
-      // Kill 10th enemy
+      // Kill 20th enemy
       eventQueue.publish(EventType.EnemyDeath, {
-        enemyId: "enemy-10",
+        enemyId: "enemy-20",
         position: { x: 500, y: 540 },
       });
 
-      expect(unlockEventFired).toBe(true);
-      expect(killCounterSystem.isOysterOmeletteUnlocked()).toBe(true);
+      expect(killCounterSystem.canConsume()).toBe(true);
+      expect(killCounterSystem.getKillCount()).toBe(20);
     });
   });
 });
