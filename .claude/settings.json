@@ -1,4 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:coverage:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm prettier:*)",
+      "WebSearch"
+    ]
+  },
   "enabledPlugins": {
     "rubric@claudekit": true,
     "git@claudekit": true,
