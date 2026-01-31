@@ -7,13 +7,14 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Player } from "../entities/player";
 import type { Bullet } from "../entities/bullet";
-import type { Enemy } from "../entities/enemy";
+import { Enemy, EnemyType, isEliteType } from "../entities/enemy";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
 import { RECIPE_BUFF_MAPPING } from "../values/recipes";
 import { SpecialBulletType } from "../values/special-bullet";
-import { COMBAT_CONFIG } from "../config";
+import { Damage } from "../values/damage";
+import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 
 // Re-export for backwards compatibility
@@ -205,44 +206,266 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Check bullet-enemy collisions (SPEC § 2.3.2, § 4.2.5)
-   * 使用 AABB 碰撞檢測
+   * 使用 AABB 碰撞檢測，根據當前 Buff 分派至對應處理器
    */
   private checkCollisions(): void {
+    switch (this.currentBuff) {
+      case SpecialBulletType.NightMarket:
+        this.handleNightMarketCollision();
+        break;
+      case SpecialBulletType.StinkyTofu:
+        this.handleStinkyTofuCollision();
+        break;
+      case SpecialBulletType.BloodCake:
+        this.handleBloodCakeCollision();
+        break;
+      case SpecialBulletType.OysterOmelette:
+        this.handleOysterOmeletteCollision();
+        break;
+      default:
+        this.handleNormalCollision();
+    }
+  }
+
+  /**
+   * Normal bullet collision (SPEC § 2.6.3)
+   * Damage: 1, consumed on hit
+   */
+  private handleNormalCollision(): void {
     for (const bullet of this.bullets) {
       if (!bullet.active) continue;
 
       for (const enemy of this.enemies) {
         if (!enemy.active) continue;
 
-        // AABB collision detection (SPEC § 4.2.5)
-        if (
-          checkAABBCollision(
-            bullet.position,
-            bullet.collisionBox,
-            enemy.position,
-            enemy.collisionBox,
-          )
-        ) {
-          // Hit detected
-          const died = enemy.takeDamage(bullet.damage);
+        if (this.checkBulletEnemyCollision(bullet, enemy)) {
+          this.applyDamageAndPublishDeath(enemy, bullet.damage);
+          bullet.active = false;
+          break;
+        }
+      }
+    }
+  }
 
-          if (died) {
-            // Publish EnemyDeath event (SPEC § 2.3.6)
-            if (this.eventQueue) {
-              this.eventQueue.publish(EventType.EnemyDeath, {
-                enemyId: enemy.id,
-                position: { x: enemy.position.x, y: enemy.position.y },
-              });
-            }
-          }
+  /**
+   * StinkyTofu (臭豆腐) - 貫穿效果 (SPEC § 2.3.3)
+   * Damage: 2, pierces 1 enemy
+   */
+  private handleStinkyTofuCollision(): void {
+    const damage = RECIPE_CONFIG.stinkyTofu.baseDamage;
+    const maxPierceCount = RECIPE_CONFIG.stinkyTofu.pierceCount;
 
-          // Consume bullet (unless piercing buff active)
-          if (this.currentBuff !== SpecialBulletType.StinkyTofu) {
+    for (const bullet of this.bullets) {
+      if (!bullet.active) continue;
+
+      let pierceCount = 0;
+      for (const enemy of this.enemies) {
+        if (!enemy.active) continue;
+
+        if (this.checkBulletEnemyCollision(bullet, enemy)) {
+          this.applyDamageAndPublishDeath(enemy, damage);
+          pierceCount++;
+
+          // Consume bullet after piercing through max enemies
+          if (pierceCount > maxPierceCount) {
             bullet.active = false;
             break;
           }
         }
       }
+    }
+  }
+
+  /**
+   * OysterOmelette (蚵仔煎) - 百分比傷害 (SPEC § 2.3.3)
+   * Boss: 10% HP, Elite: 50% HP, Ghost: 70% HP
+   */
+  private handleOysterOmeletteCollision(): void {
+    for (const bullet of this.bullets) {
+      if (!bullet.active) continue;
+
+      for (const enemy of this.enemies) {
+        if (!enemy.active) continue;
+
+        if (this.checkBulletEnemyCollision(bullet, enemy)) {
+          const percentDamage = this.calculatePercentDamage(enemy);
+          this.applyDamageAndPublishDeath(enemy, percentDamage.toNumber());
+          bullet.active = false;
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * BloodCake (豬血糕) - 追蹤 + 減速 (SPEC § 2.3.3)
+   * Damage: 2, tracks nearest enemy, applies -10% speed debuff on hit
+   */
+  private handleBloodCakeCollision(): void {
+    const damage = RECIPE_CONFIG.bloodCake.baseDamage;
+    const slowPercent = RECIPE_CONFIG.bloodCake.slowEffect;
+
+    for (const bullet of this.bullets) {
+      if (!bullet.active) continue;
+
+      for (const enemy of this.enemies) {
+        if (!enemy.active) continue;
+
+        if (this.checkBulletEnemyCollision(bullet, enemy)) {
+          this.applyDamageAndPublishDeath(enemy, damage);
+
+          // Apply slow debuff if enemy survived
+          if (enemy.active) {
+            enemy.applySlowDebuff(slowPercent);
+          }
+
+          bullet.active = false;
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * NightMarket (夜市總匯) - 連鎖攻擊 (SPEC § 2.3.3)
+   * Damage: 2, chains 5 targets, -20% damage per hit
+   */
+  private handleNightMarketCollision(): void {
+    const baseDamage = RECIPE_CONFIG.nightMarket.baseDamage;
+    const chainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
+    const damageDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
+    const chainRange = 300; // Maximum chain distance in pixels
+
+    for (const bullet of this.bullets) {
+      if (!bullet.active) continue;
+
+      for (const enemy of this.enemies) {
+        if (!enemy.active) continue;
+
+        if (this.checkBulletEnemyCollision(bullet, enemy)) {
+          // Start chain attack from first hit
+          this.performChainAttack(
+            enemy,
+            baseDamage,
+            chainTargets,
+            damageDecay,
+            chainRange,
+          );
+          bullet.active = false;
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Perform chain attack for NightMarket buff
+   * @param firstTarget First enemy hit
+   * @param baseDamage Starting damage
+   * @param maxTargets Maximum targets to chain
+   * @param decayRate Damage decay per hit (0.2 = -20%)
+   * @param maxRange Maximum chain distance
+   */
+  private performChainAttack(
+    firstTarget: Enemy,
+    baseDamage: number,
+    maxTargets: number,
+    decayRate: number,
+    maxRange: number,
+  ): void {
+    const hitEnemies = new Set<string>();
+    let currentTarget: Enemy | null = firstTarget;
+    let currentDamage = baseDamage;
+
+    for (let i = 0; i < maxTargets && currentTarget !== null; i++) {
+      // Apply damage to current target
+      this.applyDamageAndPublishDeath(currentTarget, Math.round(currentDamage));
+      hitEnemies.add(currentTarget.id);
+
+      // Apply damage decay for next hit
+      currentDamage = currentDamage * (1 - decayRate);
+
+      // Find next closest enemy within range
+      currentTarget = this.findClosestEnemy(
+        currentTarget.position,
+        hitEnemies,
+        maxRange,
+      );
+    }
+  }
+
+  /**
+   * Find closest active enemy to a position
+   * @param position Reference position
+   * @param excludeIds Set of enemy IDs to exclude
+   * @param maxRange Maximum distance (optional)
+   */
+  private findClosestEnemy(
+    position: { x: number; y: number },
+    excludeIds: Set<string>,
+    maxRange?: number,
+  ): Enemy | null {
+    let closest: Enemy | null = null;
+    let closestDistance = maxRange ?? Infinity;
+
+    for (const enemy of this.enemies) {
+      if (!enemy.active || excludeIds.has(enemy.id)) continue;
+
+      const dx = enemy.position.x - position.x;
+      const dy = enemy.position.y - position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < closestDistance) {
+        closest = enemy;
+        closestDistance = distance;
+      }
+    }
+
+    return closest;
+  }
+
+  /**
+   * Calculate percentage damage based on enemy type (SPEC § 2.3.3)
+   */
+  private calculatePercentDamage(enemy: Enemy): Damage {
+    const { bossDamagePercent, eliteDamagePercent, ghostDamagePercent } =
+      RECIPE_CONFIG.oysterOmelet;
+
+    let percentage: number;
+    if (enemy.type === EnemyType.Boss) {
+      percentage = bossDamagePercent;
+    } else if (isEliteType(enemy.type)) {
+      percentage = eliteDamagePercent;
+    } else {
+      percentage = ghostDamagePercent;
+    }
+
+    return Damage.fromPercentage(enemy.maxHealth, percentage);
+  }
+
+  /**
+   * Check AABB collision between bullet and enemy
+   */
+  private checkBulletEnemyCollision(bullet: Bullet, enemy: Enemy): boolean {
+    return checkAABBCollision(
+      bullet.position,
+      bullet.collisionBox,
+      enemy.position,
+      enemy.collisionBox,
+    );
+  }
+
+  /**
+   * Apply damage to enemy and publish death event if killed
+   */
+  private applyDamageAndPublishDeath(enemy: Enemy, damage: number): void {
+    const died = enemy.takeDamage(damage);
+
+    if (died && this.eventQueue) {
+      this.eventQueue.publish(EventType.EnemyDeath, {
+        enemyId: enemy.id,
+        position: { x: enemy.position.x, y: enemy.position.y },
+      });
     }
   }
 

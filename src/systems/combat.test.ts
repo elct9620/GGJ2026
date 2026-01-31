@@ -208,8 +208,10 @@ describe("CombatSystem", () => {
     it("CS-14: 臭豆腐 Buff + 按 Space → 貫穿子彈", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "2" });
 
+      // Place enemies far apart so only one is hit per frame
+      // Enemy collision box is 256×256, so 600px apart ensures no overlap
       const enemy1 = new Enemy(EnemyType.Ghost, new Vector(500, 540));
-      const enemy2 = new Enemy(EnemyType.Ghost, new Vector(520, 540));
+      const enemy2 = new Enemy(EnemyType.Ghost, new Vector(1100, 540));
       enemies.push(enemy1, enemy2);
 
       const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
@@ -217,29 +219,135 @@ describe("CombatSystem", () => {
 
       combatSystem.update(0.016);
 
-      // Bullet should remain active after hitting first enemy
+      // Bullet should remain active after hitting first enemy (piercing 1)
       expect(bullet.active).toBe(true);
+      // First enemy should be dead (1 HP ghost)
+      expect(enemy1.active).toBe(false);
+      // Second enemy should be unharmed
+      expect(enemy2.active).toBe(true);
     });
 
     it("CS-15: 珍珠奶茶 Buff + 按 Space → 散射多個子彈", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "3" });
 
       expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BubbleTea);
-      // Note: Scatter logic requires implementing multi-bullet spawn
+      // Note: Scatter logic is implemented in GameScene.spawnBubbleTeaBullets()
+      // CombatSystem only manages buff state, bullet spawning is in GameScene
     });
 
-    it("CS-16: 豬血糕 Buff + 按 Space → 追蹤子彈", () => {
+    it("CS-16: 豬血糕 Buff + 按 Space → 追蹤子彈 + 減速效果", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
-
       expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
-      // Note: Homing logic requires implementing bullet tracking
+
+      // Create enemy with more HP to survive (Elite has 2 HP, BloodCake damage is 2)
+      const enemy = new Enemy(EnemyType.Boss, new Vector(500, 540));
+      enemies.push(enemy);
+      const initialSpeed = enemy.speed;
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Bullet should be consumed after hit
+      expect(bullet.active).toBe(false);
+      // Enemy should have reduced speed due to slow debuff
+      expect(enemy.speed).toBeLessThan(initialSpeed);
     });
 
     it("CS-17: 夜市總匯 Buff + 擊中第 1 隻敵人 → 閃電連鎖", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "1" });
-
       expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.NightMarket);
-      // Note: Lightning chain logic requires implementing chain attack
+
+      // Create multiple enemies in chain range (300px)
+      const enemy1 = new Enemy(EnemyType.Ghost, new Vector(500, 540));
+      const enemy2 = new Enemy(EnemyType.Ghost, new Vector(700, 540));
+      const enemy3 = new Enemy(EnemyType.Ghost, new Vector(900, 540));
+      enemies.push(enemy1, enemy2, enemy3);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Bullet should be consumed
+      expect(bullet.active).toBe(false);
+      // First enemy hit directly
+      expect(enemy1.active).toBe(false);
+      // Chain should hit subsequent enemies within range
+      expect(enemy2.active).toBe(false);
+      expect(enemy3.active).toBe(false);
+    });
+
+    it("CS-17b: 夜市總匯連鎖傷害衰減", () => {
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "1" });
+
+      // Create elite enemies to test damage decay (Elite has 2 HP)
+      const enemy1 = new Enemy(EnemyType.RedGhost, new Vector(500, 540));
+      const enemy2 = new Enemy(EnemyType.RedGhost, new Vector(700, 540));
+      enemies.push(enemy1, enemy2);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // First enemy takes full damage (2), should die (2 HP)
+      expect(enemy1.active).toBe(false);
+      // Second enemy takes decayed damage (2 × 0.8 = 1.6 → 2), should also die
+      expect(enemy2.active).toBe(false);
+    });
+
+    it("CS-13b: 蚵仔煎 Boss 傷害 = 10% HP", () => {
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "5" });
+      expect(combatSystem.getCurrentBuff()).toBe(
+        SpecialBulletType.OysterOmelette,
+      );
+
+      // Boss has 10 HP
+      const boss = new Enemy(EnemyType.Boss, new Vector(500, 540));
+      enemies.push(boss);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Boss should take 10% of max HP (10 × 0.1 = 1)
+      expect(boss.health).toBe(9);
+      expect(bullet.active).toBe(false);
+    });
+
+    it("CS-13c: 蚵仔煎 Elite 傷害 = 50% HP", () => {
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "5" });
+
+      // Elite has 2 HP
+      const elite = new Enemy(EnemyType.RedGhost, new Vector(500, 540));
+      enemies.push(elite);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Elite should take 50% of max HP (2 × 0.5 = 1)
+      expect(elite.health).toBe(1);
+    });
+
+    it("CS-13d: 蚵仔煎 Ghost 傷害 = 70% HP", () => {
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "5" });
+
+      // Ghost has 1 HP
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(500, 540));
+      enemies.push(ghost);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Ghost should take 70% of max HP (1 × 0.7 = 1, ceiling)
+      expect(ghost.active).toBe(false);
     });
 
     it("CS-18: Buff 結束（2 秒後）+ 按 Space → 普通子彈", () => {

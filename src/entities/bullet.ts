@@ -5,6 +5,7 @@ import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { BULLET_CONFIG } from "../config";
+import type { Enemy } from "./enemy";
 
 /**
  * Bullet entity fired by player
@@ -18,6 +19,10 @@ export class Bullet extends Entity {
 
   // Value Object
   private _damage: Damage = Damage.normal();
+
+  // Tracking bullet properties (SPEC § 2.3.3 - 豬血糕)
+  public isTracking: boolean = false;
+  public trackingTarget: Enemy | null = null;
 
   // Backward compatible getter/setter
   public get damage(): number {
@@ -67,6 +72,11 @@ export class Bullet extends Entity {
   public update(deltaTime: number): void {
     if (!this.active) return;
 
+    // Handle tracking bullet behavior (SPEC § 2.3.3 - 豬血糕)
+    if (this.isTracking && this.trackingTarget?.active) {
+      this.updateTrackingDirection();
+    }
+
     // Move bullet based on velocity
     const displacement = this.velocity.multiply(deltaTime);
     this.position = this.position.add(displacement);
@@ -78,6 +88,19 @@ export class Bullet extends Entity {
     }
 
     this.updateSpritePosition();
+  }
+
+  /**
+   * Update velocity to track target (SPEC § 2.3.3)
+   * Recalculates direction toward tracking target each frame
+   */
+  private updateTrackingDirection(): void {
+    if (!this.trackingTarget) return;
+
+    const direction = this.trackingTarget.position.subtract(this.position);
+    if (direction.magnitude() > 0) {
+      this.velocity = direction.normalize().multiply(this.speed);
+    }
   }
 
   /**
@@ -103,6 +126,17 @@ export class Bullet extends Entity {
     this.position = position;
     this.velocity = direction.normalize().multiply(this.speed);
     this._damage = Damage.normal();
+    this.isTracking = false;
+    this.trackingTarget = null;
     this.updateSpritePosition();
+  }
+
+  /**
+   * Enable tracking mode for this bullet (SPEC § 2.3.3 - 豬血糕)
+   * @param target Enemy to track
+   */
+  public setTracking(target: Enemy): void {
+    this.isTracking = true;
+    this.trackingTarget = target;
   }
 }

@@ -38,11 +38,16 @@ export function isEliteType(type: EnemyType): boolean {
 export class Enemy extends Entity {
   public position: Vector;
   public readonly type: EnemyType;
-  public readonly speed: number; // px/s
+  public readonly baseSpeed!: number; // px/s (original speed, assigned in constructor)
   public sprite: Container;
 
   // Value Object
   private _health: Health;
+
+  // Slow debuff system (SPEC § 2.3.3 - 豬血糕效果)
+  private speedMultiplier: number = 1.0;
+  private slowDuration: number = 0;
+  private readonly slowEffectDuration: number = 3; // seconds
 
   // Backward compatible getters
   public get health(): number {
@@ -65,6 +70,13 @@ export class Enemy extends Entity {
   private enemySprite: Sprite;
   private healthBarContainer: Graphics | null = null;
 
+  /**
+   * Current effective speed (base speed × multiplier)
+   */
+  public get speed(): number {
+    return this.baseSpeed * this.speedMultiplier;
+  }
+
   constructor(type: EnemyType, initialPosition: Vector) {
     super();
     this.type = type;
@@ -73,15 +85,15 @@ export class Enemy extends Entity {
     // Set stats based on enemy type (SPEC § 2.6.2)
     if (type === EnemyType.Ghost) {
       this._health = Health.ghost();
-      this.speed = ENEMY_CONFIG.ghost.speed;
+      this.baseSpeed = ENEMY_CONFIG.ghost.speed;
     } else if (isEliteType(type)) {
       // Elite enemies: Red/Green/Blue Ghost
       this._health = Health.elite();
-      this.speed = ENEMY_CONFIG.elite.speed;
+      this.baseSpeed = ENEMY_CONFIG.elite.speed;
     } else {
       // Boss
       this._health = Health.boss();
-      this.speed = ENEMY_CONFIG.boss.speed;
+      this.baseSpeed = ENEMY_CONFIG.boss.speed;
     }
 
     this.sprite = new Container();
@@ -141,11 +153,30 @@ export class Enemy extends Entity {
   public update(deltaTime: number): void {
     if (!this.active) return;
 
-    // Move left
+    // Update slow debuff duration
+    if (this.slowDuration > 0) {
+      this.slowDuration -= deltaTime;
+      if (this.slowDuration <= 0) {
+        this.slowDuration = 0;
+        this.speedMultiplier = 1.0;
+      }
+    }
+
+    // Move left (using effective speed = baseSpeed × speedMultiplier)
     const displacement = new Vector(-this.speed * deltaTime, 0);
     this.position = this.position.add(displacement);
 
     this.updateSpritePosition();
+  }
+
+  /**
+   * Apply slow debuff to enemy (SPEC § 2.3.3 - 豬血糕效果)
+   * @param slowPercent Speed reduction percentage (0.1 = -10%)
+   */
+  public applySlowDebuff(slowPercent: number): void {
+    // Stack slow effects (multiplicative)
+    this.speedMultiplier = this.speedMultiplier * (1 - slowPercent);
+    this.slowDuration = this.slowEffectDuration;
   }
 
   /**
@@ -254,6 +285,10 @@ export class Enemy extends Entity {
     // Note: Cannot change readonly type after construction
     // This would need to be handled by creating separate pools per type
     this.position = position;
+
+    // Reset slow debuff
+    this.speedMultiplier = 1.0;
+    this.slowDuration = 0;
 
     if (type === EnemyType.Ghost) {
       this._health = Health.ghost();
