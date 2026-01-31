@@ -1,6 +1,6 @@
 import { Container, Text, Graphics } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
-import { GameStats } from "../core/game-state";
+import type { GameStats } from "../core/game-state";
 
 /**
  * Game Over Screen

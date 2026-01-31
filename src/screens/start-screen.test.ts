@@ -3,7 +3,7 @@ import { StartScreen } from "./start-screen";
 
 describe("StartScreen", () => {
   let startScreen: StartScreen;
-  let onStartMock: ReturnType<typeof vi.fn>;
+  let onStartMock: () => void;
 
   beforeEach(() => {
     onStartMock = vi.fn();

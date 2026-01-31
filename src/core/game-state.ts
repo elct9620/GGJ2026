@@ -3,11 +3,13 @@
  * Spec: § 2.4.2 User Journey, § 2.8.2 Defeat Condition
  */
 
-export enum GameState {
-  START = "START",
-  PLAYING = "PLAYING",
-  GAME_OVER = "GAME_OVER",
-}
+export const GameState = {
+  START: "START",
+  PLAYING: "PLAYING",
+  GAME_OVER: "GAME_OVER",
+} as const;
+
+export type GameState = (typeof GameState)[keyof typeof GameState];
 
 /**
  * Game statistics tracked during gameplay

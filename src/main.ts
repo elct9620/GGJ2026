@@ -7,7 +7,8 @@ import {
 import { GameLoop } from "./core/game-loop";
 import { GameScene } from "./game-scene";
 import { createBackground } from "./core/background";
-import { GameState, GameStats } from "./core/game-state";
+import { GameState } from "./core/game-state";
+import type { GameStats } from "./core/game-state";
 import { StartScreen } from "./screens/start-screen";
 import { GameOverScreen } from "./screens/game-over-screen";
 
@@ -37,7 +38,7 @@ async function main() {
   attachGameContainers(layers.game, gameContainers);
 
   // Game state management (Spec: § 2.4.2, § 2.8.2)
-  let currentState = GameState.START;
+  let currentState: GameState = GameState.START;
   let gameScene: GameScene | null = null;
 
   // Create screens

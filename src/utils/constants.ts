@@ -7,6 +7,9 @@ export const CANVAS_CONFIG = {
   antialias: true,
 } as const;
 
+export const CANVAS_WIDTH = 1920;
+export const CANVAS_HEIGHT = 1080;
+
 export const LAYERS = {
   BACKGROUND: 0,
   GAME: 1,

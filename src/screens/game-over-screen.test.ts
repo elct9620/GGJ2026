@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GameOverScreen } from "./game-over-screen";
-import { GameStats } from "../core/game-state";
+import type { GameStats } from "../core/game-state";
 
 describe("GameOverScreen", () => {
   let gameOverScreen: GameOverScreen;
-  let onRestartMock: ReturnType<typeof vi.fn>;
+  let onRestartMock: () => void;
 
   beforeEach(() => {
     onRestartMock = vi.fn();

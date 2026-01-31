@@ -7,7 +7,7 @@ import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { Vector } from "./values/vector";
-import { GameStats } from "./core/game-state";
+import type { GameStats } from "./core/game-state";
 
 /**
  * Main game scene managing all game entities and systems
