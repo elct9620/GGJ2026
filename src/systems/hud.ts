@@ -3,6 +3,15 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
 
 /**
+ * Recipe status for HUD display
+ */
+export interface RecipeStatus {
+  key: string; // "1"-"5"
+  name: string; // Recipe name in Chinese
+  available: boolean; // Whether the recipe can be synthesized
+}
+
+/**
  * HUD (Heads-Up Display) system for game UI
  * Spec: § 2.7.3 HUD Layout
  */
@@ -19,8 +28,11 @@ export class HUDSystem implements ISystem {
 
   // Bottom HUD elements
   private ammoText: Text;
-  private synthesisText: Text;
   private reloadText: Text;
+  private foodStockText: Text;
+  private killCountText: Text;
+  private buffStatusText: Text;
+  private recipesDisplay: Graphics;
 
   constructor() {
     this.topHUD = new Container();
@@ -31,8 +43,15 @@ export class HUDSystem implements ISystem {
     this.healthDisplay = new Graphics();
 
     this.ammoText = this.createText("Ammo: 6/6", 20, 1020);
-    this.synthesisText = this.createText("Synthesis: 0/3", 200, 1020);
-    this.reloadText = this.createText("", 400, 1020);
+    this.reloadText = this.createText("", 200, 1020);
+    this.foodStockText = this.createText(
+      "Pearl:0 Tofu:0 BloodCake:0",
+      400,
+      1020,
+    );
+    this.killCountText = this.createText("Kills: 0", 700, 1020);
+    this.buffStatusText = this.createText("", 900, 1020);
+    this.recipesDisplay = new Graphics();
 
     this.setupHUD();
   }
@@ -82,10 +101,14 @@ export class HUDSystem implements ISystem {
     this.topHUD.addChild(this.healthDisplay);
     this.updateHealthDisplay(5); // Initial health
 
-    // Bottom HUD (§ 2.7.3 - Ammo, Synthesis Slot)
+    // Bottom HUD (§ 2.7.3 - Ammo, Food Stock, Kill Count, Buff Status, Recipes)
     this.bottomHUD.addChild(this.ammoText);
-    this.bottomHUD.addChild(this.synthesisText);
     this.bottomHUD.addChild(this.reloadText);
+    this.bottomHUD.addChild(this.foodStockText);
+    this.bottomHUD.addChild(this.killCountText);
+    this.bottomHUD.addChild(this.buffStatusText);
+    this.bottomHUD.addChild(this.recipesDisplay);
+    this.setupRecipeIndicators();
   }
 
   /**
@@ -136,10 +159,76 @@ export class HUDSystem implements ISystem {
   }
 
   /**
-   * Update synthesis slot display
+   * Update food stock display with colored text
    */
-  public updateSynthesis(count: number): void {
-    this.synthesisText.text = `Synthesis: ${count}/3`;
+  public updateFoodStock(pearl: number, tofu: number, bloodCake: number): void {
+    this.foodStockText.text = `Pearl:${pearl} Tofu:${tofu} BloodCake:${bloodCake}`;
+  }
+
+  /**
+   * Update kill count display
+   */
+  public updateKillCount(count: number): void {
+    this.killCountText.text = `Kills: ${count}`;
+  }
+
+  /**
+   * Update buff status display
+   */
+  public updateBuffStatus(buffName: string, timeLeft: number): void {
+    this.buffStatusText.text = `Buff: ${buffName} (${timeLeft.toFixed(1)}s)`;
+  }
+
+  /**
+   * Clear buff status display
+   */
+  public clearBuffStatus(): void {
+    this.buffStatusText.text = "";
+  }
+
+  /**
+   * Setup recipe indicators (5 circles for keys 1-5)
+   */
+  private setupRecipeIndicators(): void {
+    const startX = 1400;
+    const startY = 1020;
+    const radius = 15;
+    const spacing = 40;
+
+    for (let i = 0; i < 5; i++) {
+      const x = startX + i * spacing;
+      // Draw initial gray circles
+      this.recipesDisplay.circle(x, startY, radius);
+      this.recipesDisplay.fill(0x7f8c8d); // Gray (unavailable)
+
+      // Add key label
+      const keyLabel = this.createText(`${i + 1}`, x - 5, startY + 20);
+      this.bottomHUD.addChild(keyLabel);
+    }
+  }
+
+  /**
+   * Update recipe availability indicators
+   */
+  public updateRecipeAvailability(recipes: RecipeStatus[]): void {
+    this.recipesDisplay.clear();
+
+    const startX = 1400;
+    const startY = 1020;
+    const radius = 15;
+    const spacing = 40;
+
+    for (let i = 0; i < recipes.length && i < 5; i++) {
+      const x = startX + i * spacing;
+      const recipe = recipes[i];
+
+      this.recipesDisplay.circle(x, startY, radius);
+      if (recipe.available) {
+        this.recipesDisplay.fill(0x27ae60); // Green (available)
+      } else {
+        this.recipesDisplay.fill(0x7f8c8d); // Gray (unavailable)
+      }
+    }
   }
 
   /**

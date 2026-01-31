@@ -4,10 +4,10 @@ import { Enemy, EnemyType, FoodType } from "./entities/enemy";
 import { Bullet } from "./entities/bullet";
 import { Food } from "./entities/food";
 import { InputSystem } from "./systems/input";
-import { HUDSystem } from "./systems/hud";
+import { HUDSystem, type RecipeStatus } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { BoxSystem } from "./systems/box";
-import { CombatSystem } from "./systems/combat";
+import { CombatSystem, SpecialBulletType } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
@@ -302,11 +302,127 @@ export class GameScene {
 
   private updateHUD(): void {
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
+    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+    const killCounterSystem =
+      this.systemManager.get<KillCounterSystem>("KillCounterSystem");
+    const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
+
+    // Top HUD
     hudSystem.updateEnemyCount(this.enemies.length);
     hudSystem.updateHealthDisplay(this.player.health);
+
+    // Bottom HUD
     hudSystem.updateAmmo(this.player.ammo, this.player.maxAmmo);
-    // Synthesis slot removed - Buff display handled by Combat/HUD systems
     hudSystem.updateReload(this.player.isReloading, this.player.reloadTimer);
+
+    // Food stock display (SPEC § 2.7.3)
+    hudSystem.updateFoodStock(
+      boothSystem.getFoodCount(1), // Pearl
+      boothSystem.getFoodCount(2), // Tofu
+      boothSystem.getFoodCount(3), // BloodCake
+    );
+
+    // Kill count display
+    hudSystem.updateKillCount(killCounterSystem.getKillCount());
+
+    // Buff status display
+    if (combatSystem.isBuffActive()) {
+      const buffName = this.getBuffDisplayName(combatSystem.getCurrentBuff());
+      const timeLeft = combatSystem.getBuffTimer() / 1000; // ms → s
+      hudSystem.updateBuffStatus(buffName, timeLeft);
+    } else {
+      hudSystem.clearBuffStatus();
+    }
+
+    // Recipe availability display
+    const recipes = this.getRecipeStatuses(boothSystem, killCounterSystem);
+    hudSystem.updateRecipeAvailability(recipes);
+  }
+
+  /**
+   * Get display name for buff type
+   */
+  private getBuffDisplayName(buffType: SpecialBulletType): string {
+    const nameMap: Record<SpecialBulletType, string> = {
+      [SpecialBulletType.NightMarket]: "夜市總匯",
+      [SpecialBulletType.StinkyTofu]: "臭豆腐",
+      [SpecialBulletType.BubbleTea]: "珍珠奶茶",
+      [SpecialBulletType.BloodCake]: "豬血糕",
+      [SpecialBulletType.OysterOmelette]: "蚵仔煎",
+      [SpecialBulletType.None]: "",
+    };
+    return nameMap[buffType] || "";
+  }
+
+  /**
+   * Get recipe availability statuses for HUD display
+   */
+  private getRecipeStatuses(
+    boothSystem: BoothSystem,
+    killCounterSystem: KillCounterSystem,
+  ): RecipeStatus[] {
+    // Recipe definitions (SPEC § 2.3.3)
+    const recipes = [
+      {
+        key: "1",
+        name: "夜市總匯",
+        requirements: { Pearl: 1, Tofu: 1, BloodCake: 1 },
+      },
+      { key: "2", name: "臭豆腐", requirements: { Tofu: 3 } },
+      { key: "3", name: "珍珠奶茶", requirements: { Pearl: 3 } },
+      { key: "4", name: "豬血糕", requirements: { BloodCake: 3 } },
+      { key: "5", name: "蚵仔煎", requirements: {}, requiresKillCounter: true },
+    ];
+
+    return recipes.map((recipe) => ({
+      key: recipe.key,
+      name: recipe.name,
+      available: this.checkRecipeAvailability(
+        recipe,
+        boothSystem,
+        killCounterSystem,
+      ),
+    }));
+  }
+
+  /**
+   * Check if a recipe can be synthesized
+   */
+  private checkRecipeAvailability(
+    recipe: {
+      requirements: Partial<Record<FoodType, number>>;
+      requiresKillCounter?: boolean;
+    },
+    boothSystem: BoothSystem,
+    killCounterSystem: KillCounterSystem,
+  ): boolean {
+    // Special check: 蚵仔煎
+    if (recipe.requiresKillCounter) {
+      return killCounterSystem.isOysterOmeletteUnlocked();
+    }
+
+    // Food requirements check
+    for (const [foodType, required] of Object.entries(recipe.requirements)) {
+      if (required === undefined) continue;
+      const boothId = this.getFoodBoothId(foodType as FoodType);
+      const available = boothSystem.getFoodCount(boothId);
+      if (available < required) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Map FoodType to Booth ID (1-indexed, SPEC § 2.3.1)
+   */
+  private getFoodBoothId(foodType: FoodType): number {
+    const mapping: Record<FoodType, number> = {
+      Pearl: 1,
+      Tofu: 2,
+      BloodCake: 3,
+    };
+    return mapping[foodType];
   }
 
   /**
