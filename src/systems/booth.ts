@@ -96,6 +96,15 @@ export class BoothSystem {
   public getFoodCount(boothNumber: number): number {
     return this.booths.get(boothNumber)?.count ?? 0;
   }
+
+  /**
+   * Reset all booths to empty state
+   */
+  public reset(): void {
+    for (const [_id, booth] of this.booths) {
+      booth.reset();
+    }
+  }
 }
 
 /**
@@ -246,5 +255,13 @@ class Booth {
       this.graphics.rect(itemX, itemY, itemSize, itemSize);
       this.graphics.fill(this.getBoothColor());
     }
+  }
+
+  /**
+   * Reset booth to empty state
+   */
+  public reset(): void {
+    this.count = 0;
+    this.updateVisuals();
   }
 }

@@ -7,6 +7,7 @@ import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { Vector } from "./values/vector";
+import type { GameStats } from "./core/game-state";
 
 /**
  * Main game scene managing all game entities and systems
@@ -39,6 +40,16 @@ export class GameScene {
   private readonly shootCooldownTime: number = 0.2; // 200ms between shots
   private isWaveTransitioning: boolean = false; // Prevent multiple wave spawns
 
+  // Game statistics (Spec: § 2.8.2)
+  private stats: GameStats = {
+    wavesSurvived: 0,
+    enemiesDefeated: 0,
+    specialBulletsUsed: 0,
+  };
+
+  // Game over callback
+  private onGameOver: ((stats: GameStats) => void) | null = null;
+
   constructor(
     playerContainer: Container,
     enemiesContainer: Container,
@@ -46,6 +57,7 @@ export class GameScene {
     foodsContainer: Container,
     boothContainer: Container,
     uiLayer: Container,
+    onGameOver?: (stats: GameStats) => void,
   ) {
     this.playerContainer = playerContainer;
     this.enemiesContainer = enemiesContainer;
@@ -53,6 +65,7 @@ export class GameScene {
     this.foodsContainer = foodsContainer;
     this.boothContainer = boothContainer;
     this.uiLayer = uiLayer;
+    this.onGameOver = onGameOver || null;
 
     // Initialize systems
     this.inputSystem = new InputSystem();
@@ -219,6 +232,9 @@ export class GameScene {
             // Enemy died, drop food
             const foodType = enemy.dropFood();
             this.spawnFood(foodType, enemy.position);
+
+            // Track statistics (Spec: § 2.8.2)
+            this.stats.enemiesDefeated++;
           }
 
           // Bullet is consumed (not piercing in prototype)
@@ -281,6 +297,9 @@ export class GameScene {
       // Set flag to prevent multiple wave spawns
       this.isWaveTransitioning = true;
 
+      // Update statistics - track waves survived (Spec: § 2.8.2)
+      this.stats.wavesSurvived = this.currentWave;
+
       // Wait a moment before spawning next wave
       // TODO: Replace with upgrade system (SPEC § 2.3.4)
       setTimeout(() => {
@@ -289,9 +308,54 @@ export class GameScene {
       }, 2000);
     }
 
-    // Check game over
-    if (this.player.health <= 0) {
-      console.log("Game Over! Survived", this.currentWave, "waves");
+    // Check game over (Spec: § 2.8.2)
+    if (this.player.health <= 0 && this.onGameOver) {
+      this.onGameOver(this.stats);
     }
+  }
+
+  /**
+   * Reset game scene for restart
+   * Clears all entities and resets to wave 1
+   */
+  public reset(): void {
+    // Clear all entities
+    this.enemies.forEach((enemy) => {
+      this.enemiesContainer.removeChild(enemy.sprite);
+    });
+    this.bullets.forEach((bullet) => {
+      this.bulletsContainer.removeChild(bullet.sprite);
+    });
+    this.foods.forEach((food) => {
+      this.foodsContainer.removeChild(food.sprite);
+    });
+
+    this.enemies = [];
+    this.bullets = [];
+    this.foods = [];
+
+    // Reset player
+    this.playerContainer.removeChild(this.player.sprite);
+    this.player = new Player(new Vector(960, 540));
+    this.playerContainer.addChild(this.player.sprite);
+
+    // Reset booth system
+    this.boothSystem.reset();
+
+    // Reset game state
+    this.currentWave = 1;
+    this.synthesisSlot = [];
+    this.shootCooldown = 0;
+    this.isWaveTransitioning = false;
+
+    // Reset statistics
+    this.stats = {
+      wavesSurvived: 0,
+      enemiesDefeated: 0,
+      specialBulletsUsed: 0,
+    };
+
+    // Spawn initial wave
+    this.spawnWave(1);
   }
 }
