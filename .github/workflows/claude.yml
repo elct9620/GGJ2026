@@ -33,15 +33,39 @@ jobs:
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
+        timeout-minutes: 30
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          use_commit_signing: true
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
 
+          plugin_marketplaces: |
+            https://github.com/elct9620/claudekit.git
+
+          plugins: |
+            git@claudekit
+            spec@claudekit
+            rubric@claudekit
+
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
+          track_progress: true
+          prompt: |
+            Use Traditional Chinese (Taiwan) when updating or replying to the user.
+
+            According to issue types to use skills process the task:
+            - The `/apply-design` to update SPEC.md and `docs/*.md` only when user requests update game design.
+            - The `/align-design` to update code and content files to align with SPEC.md when user requests align design.
+            - The `/refactor` to improve code quality without changing functionality when user requests refactor.
+
+            **ENSURE ONLY WORK RELATED SCOPE BASED ON THE SKILL INSTRUCTION.**
+
+            Progress Tracking:
+            Follow the progress tracking instructions strictly.
+
+          claude_args: "--allowed-tools Bash, Skill"
 
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
