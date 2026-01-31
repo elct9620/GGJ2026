@@ -37,6 +37,7 @@ export class GameScene {
   private synthesisSlot: FoodType[] = [];
   private shootCooldown: number = 0;
   private readonly shootCooldownTime: number = 0.2; // 200ms between shots
+  private isWaveTransitioning: boolean = false; // Prevent multiple wave spawns
 
   constructor(
     playerContainer: Container,
@@ -271,10 +272,20 @@ export class GameScene {
 
   private checkWaveCompletion(): void {
     // Check if all enemies are defeated
-    if (this.enemies.length === 0 && this.player.health > 0) {
+    // SPEC § 2.3.5: Wave progression should happen once per wave completion
+    if (
+      this.enemies.length === 0 &&
+      this.player.health > 0 &&
+      !this.isWaveTransitioning
+    ) {
+      // Set flag to prevent multiple wave spawns
+      this.isWaveTransitioning = true;
+
       // Wait a moment before spawning next wave
+      // TODO: Replace with upgrade system (SPEC § 2.3.4)
       setTimeout(() => {
         this.spawnWave(this.currentWave + 1);
+        this.isWaveTransitioning = false;
       }, 2000);
     }
 
