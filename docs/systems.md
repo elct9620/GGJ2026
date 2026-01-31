@@ -374,38 +374,38 @@ class CollisionSystem implements System {
 
 ```typescript
 class BoothSystem implements System {
-  process(gameState: GameState): void {
-    const input = gameState.input.keys;
+  private booths: Map<number, Booth> = new Map();
 
-    // 儲存食材（由 Collision System 設定 food.active = false）
-    for (const food of gameState.foods) {
-      if (!food.active) {
-        const booth = this.findBoothByType(gameState, food.type);
-        if (booth && booth.count < 6) {
-          booth.count++;
+  // 儲存食材（自動收集後觸發）
+  public storeFood(foodType: FoodType): boolean {
+    for (const [id, booth] of this.booths) {
+      if (booth.foodType === foodType) {
+        const success = booth.addFood();
+        if (success && this.eventQueue) {
+          this.eventQueue.publish(EventType.FoodStored, {
+            boothId: String(id),
+            foodType,
+          });
         }
+        return success;
       }
     }
-
-    // 提取食材
-    if (input.digit1) this.retrieveFood(gameState, 0); // 攤位 1（珍珠）
-    if (input.digit2) this.retrieveFood(gameState, 1); // 攤位 2（豆腐）
-    if (input.digit3) this.retrieveFood(gameState, 2); // 攤位 3（米血）
+    return false;
   }
 
-  private retrieveFood(gameState: GameState, boothIndex: number): void {
-    const booth = gameState.booths[boothIndex];
-    const synthesis = gameState.synthesis;
-
-    // 檢查攤位是否有食材、合成槽是否已滿
-    if (
-      booth.count > 0 &&
-      synthesis.slots.filter((s) => s !== null).length < 3
-    ) {
-      booth.count--;
-      const emptySlot = synthesis.slots.findIndex((s) => s === null);
-      synthesis.slots[emptySlot] = booth.type;
+  // 提取食材（供 Synthesis System 呼叫）
+  public retrieveFood(boothNumber: number): FoodType | null {
+    const booth = this.booths.get(boothNumber);
+    if (booth && booth.removeFood()) {
+      if (this.eventQueue) {
+        this.eventQueue.publish(EventType.FoodConsumed, {
+          boothId: String(boothNumber),
+          amount: 1,
+        });
+      }
+      return booth.foodType;
     }
+    return null;
   }
 
   private findBoothByType(
@@ -419,13 +419,14 @@ class BoothSystem implements System {
 
 ### Dependencies
 
-- **Reads**: `gameState.foods`, `gameState.booths`, `gameState.synthesis.slots`, `gameState.input`
-- **Writes**: `gameState.booths[].count`, `gameState.synthesis.slots`
+- **Reads**: `gameState.foods`, `gameState.booths`, `gameState.input`
+- **Writes**: `gameState.booths[].count`
 
 ### Notes
 
-- 攤位滿時（6/6）無法儲存食材
-- 合成槽滿時（3/3）無法提取食材
+- 攤位滿時（6/6）無法儲存食材（食材遺失）
+- Booth ID 使用 1-indexed（1=Pearl, 2=Tofu, 3=BloodCake）
+- 透過 EventQueue 發布 FoodStored/FoodConsumed 事件
 
 ---
 
@@ -433,14 +434,30 @@ class BoothSystem implements System {
 
 ### Purpose
 
-處理合成槽和 Buff 計時。
+處理按鍵觸發合成和 Buff 計時。
 
 ### Implementation
 
-**合成與 Buff 邏輯**：
+**按鍵觸發合成邏輯**（SPEC § 2.3.3）：
 
 ```typescript
 class SynthesisSystem implements System {
+  // 5 種合成配方對應按鍵 1-5
+  private recipes: Map<number, Recipe> = new Map([
+    [1, { key: 1, name: "NightMarket", ingredients: [Pearl, Tofu, BloodCake] }],
+    [2, { key: 2, name: "StinkyTofu", ingredients: [Tofu, Tofu, Tofu] }],
+    [3, { key: 3, name: "BubbleTea", ingredients: [Pearl, Pearl, Pearl] }],
+    [
+      4,
+      {
+        key: 4,
+        name: "BloodCake",
+        ingredients: [BloodCake, BloodCake, BloodCake],
+      },
+    ],
+    [5, { key: 5, name: "OysterOmelette", ingredients: [Pearl, Tofu, Tofu] }], // 需解鎖
+  ]);
+
   process(gameState: GameState): void {
     const synthesis = gameState.synthesis;
     const deltaTime = gameState.deltaTime;
@@ -453,35 +470,47 @@ class SynthesisSystem implements System {
         synthesis.buffTimeRemaining = 0;
       }
     }
-
-    // 自動合成（放入第 3 個食材時觸發）
-    const filledSlots = synthesis.slots.filter((s) => s !== null).length;
-    if (filledSlots === 3) {
-      const recipe = this.findRecipe(synthesis.slots);
-      if (recipe) {
-        synthesis.activeBuff = recipe.bulletType;
-        synthesis.buffTimeRemaining = recipe.duration; // 2 秒（夜市總匯除外）
-      }
-      // 清空合成槽
-      synthesis.slots = [null, null, null];
-    }
   }
 
-  private findRecipe(slots: Array<string | null>): Recipe | null {
-    // 根據食材組合查找配方（參見 SPEC.md § 2.3.3）
+  // 按鍵觸發合成（由 Input System 呼叫）
+  public trySynthesize(recipeKey: number): boolean {
+    const recipe = this.recipes.get(recipeKey);
+    if (!recipe) return false;
+
+    // 檢查食材是否足夠
+    if (!this.hasIngredients(recipe.ingredients)) {
+      return false;
+    }
+
+    // 消耗食材
+    this.consumeIngredients(recipe.ingredients);
+
+    // 啟動 Buff
+    this.activeBuff = recipe.bulletType;
+    this.buffTimeRemaining = 2; // 2 秒
+
+    // 發布合成事件
+    this.eventQueue.publish(EventType.SynthesisTriggered, {
+      recipeKey,
+      recipeName: recipe.name,
+    });
+
+    return true;
   }
 }
 ```
 
 ### Dependencies
 
-- **Reads**: `gameState.synthesis`, `gameState.deltaTime`
-- **Writes**: `gameState.synthesis.activeBuff`, `gameState.synthesis.buffTimeRemaining`, `gameState.synthesis.slots`
+- **Reads**: `gameState.synthesis`, `gameState.deltaTime`, `gameState.booths`
+- **Writes**: `gameState.synthesis.activeBuff`, `gameState.synthesis.buffTimeRemaining`, `gameState.booths[].count`
 
 ### Notes
 
 - 合成配方參見 SPEC.md § 2.3.3 Synthesis Recipes
-- 夜市總匯持續時間可能與其他特殊子彈不同（需確認）
+- 按鍵 1-5 直接觸發對應配方合成
+- 蚵仔煎（按鍵 5）需擊殺 10 隻敵人後解鎖
+- Buff 持續時間：2 秒（受升級系統影響）
 
 ---
 
@@ -640,10 +669,10 @@ Bullet System (reads: bullets, enemies)
     ↓ (writes: bullets[].position)
 Collision System (reads: bullets, enemies, player, foods, booths)
     ↓ (writes: enemies[].health, bullets[].active, foods, booths[].count)
-Booth System (reads: foods, booths, synthesis.slots, input)
-    ↓ (writes: booths[].count, synthesis.slots)
-Synthesis System (reads: synthesis)
-    ↓ (writes: synthesis.activeBuff, synthesis.slots)
+Booth System (reads: foods, booths, input)
+    ↓ (writes: booths[].count)
+Synthesis System (reads: synthesis, booths)
+    ↓ (writes: synthesis.activeBuff, booths[].count)
 Wave System (reads: enemies, wave)
     ↓ (writes: wave.*, enemies)
 Cleanup System (reads: bullets, enemies, foods)

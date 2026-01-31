@@ -126,7 +126,7 @@ export class BoothSystem implements ISystem {
   }
 
   /**
-   * Retrieve food from booth to synthesis slot
+   * Retrieve food from booth for synthesis
    * Returns true if successful, false if booth is empty
    */
   public retrieveFood(boothNumber: number): FoodType | null {
