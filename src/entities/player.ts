@@ -2,6 +2,7 @@ import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import { Container, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
+import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 
 /**
  * Player entity with keyboard controls and shooting capability
@@ -23,9 +24,6 @@ export class Player extends Entity {
   private playerSprite: Sprite;
   private dirHintSprite: Sprite;
 
-  // Visual size (256×256) vs collision size (24×24)
-  private readonly visualSize: number = 256;
-
   constructor(initialPosition: Vector) {
     super();
     this.position = initialPosition;
@@ -44,10 +42,9 @@ export class Player extends Entity {
   private createPlayerSprite(): Sprite {
     const sprite = new Sprite(getTexture(AssetKeys.player));
 
-    // Asset size is 256×256, scale down for game balance
-    const scale = 0.5; // 128×128 visual size
-    sprite.width = this.visualSize * scale;
-    sprite.height = this.visualSize * scale;
+    // Asset size is 256×256, use full size per SPEC § 2.7.2
+    sprite.width = LAYOUT.PLAYER_SIZE;
+    sprite.height = LAYOUT.PLAYER_SIZE;
 
     // Set anchor to center for proper positioning
     sprite.anchor.set(0.5, 0.5);
@@ -58,10 +55,9 @@ export class Player extends Entity {
   private createDirHintSprite(): Sprite {
     const sprite = new Sprite(getTexture(AssetKeys.playerDirHint));
 
-    // Asset size is 100×256, scale proportionally
-    const scale = 0.3;
-    sprite.width = 100 * scale;
-    sprite.height = 256 * scale;
+    // Asset size is 100×256, use full size proportional to player
+    sprite.width = 100;
+    sprite.height = 256;
 
     // Position to the right of player
     sprite.anchor.set(0, 0.5);
@@ -82,12 +78,18 @@ export class Player extends Entity {
     const newPosition = this.position.add(displacement);
 
     // Apply boundary constraints (SPEC § 2.7.2)
-    // Left boundary: x = 384 (booth area right side)
+    // Left boundary: x = 340 (booth area right side)
     // Right boundary: x = 1920
-    // Top boundary: y = 0
-    // Bottom boundary: y = 1080
-    const clampedX = Math.max(384, Math.min(1920, newPosition.x));
-    const clampedY = Math.max(0, Math.min(1080, newPosition.y));
+    // Top boundary: y = 86 (below top HUD)
+    // Bottom boundary: y = 954 (above bottom HUD)
+    const clampedX = Math.max(
+      LAYOUT.BASELINE_X,
+      Math.min(CANVAS_WIDTH, newPosition.x),
+    );
+    const clampedY = Math.max(
+      LAYOUT.GAME_AREA_Y,
+      Math.min(LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT, newPosition.y),
+    );
 
     this.position = new Vector(clampedX, clampedY);
     this.updateSpritePosition();

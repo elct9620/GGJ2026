@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, Text } from "pixi.js";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
 import { getTexture, AssetKeys } from "../core/assets";
+import { CANVAS_HEIGHT, LAYOUT } from "../utils/constants";
 
 /**
  * Recipe status for HUD display
@@ -42,8 +43,11 @@ export class HUDSystem implements ISystem {
     this.topHUD = new Container();
     this.bottomHUD = new Container();
 
-    this.waveText = this.createText("Wave: 1", 20, 20);
-    this.enemyCountText = this.createText("Enemies: 0", 200, 20);
+    // Top HUD text elements (SPEC § 2.7.3: 86px height)
+    // Vertically center text within 86px (86 - 20) / 2 ≈ 33
+    const topHudY = 33;
+    this.waveText = this.createText("Wave: 1", 20, topHudY);
+    this.enemyCountText = this.createText("Enemies: 0", 200, topHudY);
     this.healthDisplay = new Graphics();
 
     // Create bottom UI base sprites
@@ -52,7 +56,7 @@ export class HUDSystem implements ISystem {
     this.keyBindSprite = this.createKeyBindSprite();
 
     // Bottom HUD text elements (positioned relative to base sprites)
-    const bottomY = 1080 - 126;
+    const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
     this.ammoText = this.createText("Ammo: 6/6", 570, bottomY + 50);
     this.reloadText = this.createText("", 750, bottomY + 50);
     this.foodStockText = this.createText(
@@ -70,24 +74,24 @@ export class HUDSystem implements ISystem {
   private createUpgradeBaseSprite(): Sprite {
     const sprite = new Sprite(getTexture(AssetKeys.upgradeBase));
     sprite.width = 550;
-    sprite.height = 126;
-    sprite.position.set(0, 1080 - 126);
+    sprite.height = LAYOUT.BOTTOM_HUD_HEIGHT;
+    sprite.position.set(0, CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT);
     return sprite;
   }
 
   private createBulletClassBaseSprite(): Sprite {
     const sprite = new Sprite(getTexture(AssetKeys.bulletClassBase));
     sprite.width = 820;
-    sprite.height = 126;
-    sprite.position.set(550, 1080 - 126);
+    sprite.height = LAYOUT.BOTTOM_HUD_HEIGHT;
+    sprite.position.set(550, CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT);
     return sprite;
   }
 
   private createKeyBindSprite(): Sprite {
     const sprite = new Sprite(getTexture(AssetKeys.keyBind));
     sprite.width = 550;
-    sprite.height = 126;
-    sprite.position.set(1370, 1080 - 126);
+    sprite.height = LAYOUT.BOTTOM_HUD_HEIGHT;
+    sprite.position.set(1370, CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT);
     return sprite;
   }
 
@@ -167,6 +171,7 @@ export class HUDSystem implements ISystem {
 
   /**
    * Update health display (hearts)
+   * SPEC § 2.7.3: 86px height top HUD
    */
   public updateHealthDisplay(health: number): void {
     this.healthDisplay.clear();
@@ -174,7 +179,8 @@ export class HUDSystem implements ISystem {
     const heartSize = 20;
     const heartSpacing = 25;
     const startX = 400;
-    const startY = 20;
+    // Vertically center within 86px top HUD
+    const startY = (LAYOUT.TOP_HUD_HEIGHT - heartSize) / 2;
 
     for (let i = 0; i < 5; i++) {
       const x = startX + i * heartSpacing;
@@ -230,7 +236,7 @@ export class HUDSystem implements ISystem {
    * Setup recipe indicators (5 circles for keys 1-5)
    */
   private setupRecipeIndicators(): void {
-    const bottomY = 1080 - 126;
+    const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
     const startX = 1400;
     const startY = bottomY + 60;
     const radius = 15;
@@ -254,7 +260,7 @@ export class HUDSystem implements ISystem {
   public updateRecipeAvailability(recipes: RecipeStatus[]): void {
     this.recipesDisplay.clear();
 
-    const bottomY = 1080 - 126;
+    const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
     const startX = 1400;
     const startY = bottomY + 60;
     const radius = 15;

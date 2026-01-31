@@ -5,6 +5,7 @@ import type { ISystem } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { getTexture, AssetKeys } from "../core/assets";
+import { LAYOUT } from "../utils/constants";
 
 /**
  * Booth system for storing food ingredients
@@ -16,11 +17,25 @@ export class BoothSystem implements ISystem {
 
   private booths: Map<number, Booth> = new Map();
   private container: Container;
+  private backgroundSprite: Sprite | null = null;
   private eventQueue: EventQueue | null = null;
 
   constructor() {
     this.container = new Container();
+    this.initializeBackground();
     this.initializeBooths();
+  }
+
+  /**
+   * Initialize stalls background sprite
+   * SPEC § 2.7.2: 340×868 positioned at (0, 86)
+   */
+  private initializeBackground(): void {
+    this.backgroundSprite = new Sprite(getTexture(AssetKeys.stalls));
+    this.backgroundSprite.position.set(0, LAYOUT.GAME_AREA_Y);
+    this.backgroundSprite.width = LAYOUT.BOOTH_AREA_WIDTH;
+    this.backgroundSprite.height = LAYOUT.BOOTH_AREA_HEIGHT;
+    this.container.addChild(this.backgroundSprite);
   }
 
   /**
@@ -61,13 +76,14 @@ export class BoothSystem implements ISystem {
     // Booth 2: Tofu (豆腐)
     // Booth 3: Blood Cake (米血)
 
-    // New layout: 128×256 sprites aligned to right of booth area
-    // X position: 384 - 128 = 256 (right-aligned to baseline)
-    // Start Y: (1080 - 768) / 2 = 156 (vertically centered)
-    const boothWidth = 128;
-    const boothHeight = 256;
-    const startX = 384 - boothWidth; // 256
-    const startY = (1080 - boothHeight * 3) / 2; // 156
+    // Layout based on ui_rough_pixelSpec.png (SPEC § 2.7.2)
+    // X position: right-aligned within 340px booth area (340 - 128 = 212)
+    // Y position: vertically centered within 868px game area (86 + (868 - 768) / 2 = 136)
+    const boothWidth = LAYOUT.BOOTH_WIDTH;
+    const boothHeight = LAYOUT.BOOTH_HEIGHT;
+    const startX = LAYOUT.BOOTH_AREA_WIDTH - boothWidth; // 212
+    const startY =
+      LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - boothHeight * 3) / 2; // 136
 
     this.booths.set(
       1,

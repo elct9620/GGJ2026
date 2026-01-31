@@ -8,6 +8,11 @@ import { BoxSystem } from "./box";
 import { EventQueue, EventType } from "./event-queue";
 import { Enemy, EnemyType } from "../entities/enemy";
 import { Vector } from "../values/vector";
+import { LAYOUT } from "../utils/constants";
+
+// Box position based on LAYOUT constants (SPEC § 2.7.2)
+const BOX_X = LAYOUT.BASELINE_X; // 340
+const BOX_Y = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT / 2; // 520
 
 describe("BoxSystem", () => {
   let boxSystem: BoxSystem;
@@ -137,8 +142,8 @@ describe("BoxSystem", () => {
         });
       }
 
-      // Spawn enemy near box (x=384, y=540)
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(390, 540));
+      // Spawn enemy near box
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
       enemies.push(enemy);
 
       boxSystem.update();
@@ -156,7 +161,7 @@ describe("BoxSystem", () => {
       });
 
       // Spawn enemy near box
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(390, 540));
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
       enemies.push(enemy);
 
       boxSystem.update();
@@ -173,7 +178,7 @@ describe("BoxSystem", () => {
       });
 
       // Spawn enemy far from box
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(500, 540));
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 200, BOX_Y));
       enemies.push(enemy);
 
       boxSystem.update();
@@ -185,7 +190,7 @@ describe("BoxSystem", () => {
 
     it("BX-11: 無寶箱時敵人不受影響", () => {
       // No box spawned
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(390, 540));
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
       enemies.push(enemy);
 
       boxSystem.update();
@@ -204,9 +209,13 @@ describe("BoxSystem", () => {
       }
 
       // Spawn 3 enemies near box
-      enemies.push(new Enemy(EnemyType.Ghost, new Vector(390, 540)));
-      enemies.push(new Enemy(EnemyType.Ghost, new Vector(390, 545)));
-      enemies.push(new Enemy(EnemyType.Ghost, new Vector(390, 535)));
+      enemies.push(new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y)));
+      enemies.push(
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y + 5)),
+      );
+      enemies.push(
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y - 5)),
+      );
 
       boxSystem.update();
 
@@ -222,7 +231,7 @@ describe("BoxSystem", () => {
         foodType: "Pearl",
       });
 
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(390, 540));
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
       enemy.active = false;
       enemies.push(enemy);
 
@@ -309,7 +318,7 @@ describe("BoxSystem", () => {
         foodType: "Pearl",
       });
 
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(390, 540));
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
       enemies.push(enemy);
 
       boxSystem.update();

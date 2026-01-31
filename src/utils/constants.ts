@@ -15,3 +15,28 @@ export const LAYERS = {
   GAME: 1,
   UI: 2,
 } as const;
+
+/**
+ * Layout constants based on ui_rough_pixelSpec.png
+ * SPEC § 2.7.2 Main Scene Layout
+ */
+export const LAYOUT = {
+  // HUD
+  TOP_HUD_HEIGHT: 86,
+  BOTTOM_HUD_HEIGHT: 126,
+
+  // Booth area
+  BOOTH_AREA_WIDTH: 340,
+  BOOTH_AREA_HEIGHT: 868,
+
+  // Game area
+  GAME_AREA_Y: 86,
+  GAME_AREA_HEIGHT: 868,
+  BASELINE_X: 340,
+
+  // Entity sizes
+  PLAYER_SIZE: 256,
+  ENEMY_SIZE: 256,
+  BOOTH_WIDTH: 128,
+  BOOTH_HEIGHT: 256,
+} as const;

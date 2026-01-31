@@ -2,6 +2,7 @@ import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import { Container, Graphics, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
+import { LAYOUT } from "../utils/constants";
 
 export const EnemyType = {
   Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2)
@@ -67,11 +68,10 @@ export class Enemy extends Entity {
   private createSprite(): Sprite {
     const sprite = new Sprite(getTexture(AssetKeys.monster));
 
-    // Asset size is 256×256
-    // Ghost: smaller scale, Boss: larger scale
-    const scale = this.type === EnemyType.Ghost ? 0.25 : 0.4;
-    sprite.width = 256 * scale;
-    sprite.height = 256 * scale;
+    // Asset size is 256×256, use full size per SPEC § 2.7.2
+    // Both Ghost and Boss use 256×256, Boss has purple tint
+    sprite.width = LAYOUT.ENEMY_SIZE;
+    sprite.height = LAYOUT.ENEMY_SIZE;
 
     // Set anchor to center
     sprite.anchor.set(0.5, 0.5);
@@ -121,11 +121,11 @@ export class Enemy extends Entity {
   }
 
   /**
-   * Check if enemy has reached the baseline (x = 384)
-   * Spec: § 2.8.2 - enemies reaching baseline cause player damage
+   * Check if enemy has reached the baseline (x = 340)
+   * Spec: § 2.7.2 / § 2.8.2 - enemies reaching baseline cause player damage
    */
   public hasReachedBaseline(): boolean {
-    return this.position.x <= 384;
+    return this.position.x <= LAYOUT.BASELINE_X;
   }
 
   /**

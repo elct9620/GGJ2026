@@ -9,6 +9,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { Enemy } from "../entities/enemy";
 import { Graphics } from "pixi.js";
+import { LAYOUT } from "../utils/constants";
 
 /**
  * Box System
@@ -34,9 +35,9 @@ export class BoxSystem implements ISystem {
   private totalFoodCount = 0;
   private boxExists = false;
 
-  // Box position (SPEC § 2.3.7: x=384, y=540 center)
-  private readonly boxX = 384;
-  private readonly boxY = 540;
+  // Box position (SPEC § 2.7.2: x=340 baseline, y=center of game area)
+  private readonly boxX = LAYOUT.BASELINE_X;
+  private readonly boxY = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT / 2;
   private readonly boxWidth = 40;
   private readonly boxHeight = 40;
 
