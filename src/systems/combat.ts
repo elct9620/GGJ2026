@@ -21,6 +21,12 @@ import { DependencyKeys } from "../core/systems/dependency-keys";
 export { SpecialBulletType } from "../values/special-bullet";
 
 /**
+ * 碰撞效果處理器類型
+ * 只負責傷害計算與效果應用，不管迴圈邏輯
+ */
+type HitEffect = (bullet: Bullet, enemy: Enemy) => void;
+
+/**
  * Combat System
  * SPEC § 2.3.2: 玩家透過射擊擊敗敵人
  *
@@ -228,10 +234,10 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
-   * Normal bullet collision (SPEC § 2.6.3)
-   * Damage: 1, consumed on hit
+   * 通用碰撞處理：擊中第一個敵人後停止
+   * 4 個 handler (Normal, OysterOmelette, BloodCake, NightMarket) 共用此迴圈
    */
-  private handleNormalCollision(): void {
+  private processFirstHitCollision(effect: HitEffect): void {
     for (const bullet of this.bullets) {
       if (!bullet.active) continue;
 
@@ -239,12 +245,22 @@ export class CombatSystem extends InjectableSystem {
         if (!enemy.active) continue;
 
         if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          this.applyDamageAndPublishDeath(enemy, bullet.damage);
+          effect(bullet, enemy);
           bullet.active = false;
           break;
         }
       }
     }
+  }
+
+  /**
+   * Normal bullet collision (SPEC § 2.6.3)
+   * Damage: 1, consumed on hit
+   */
+  private handleNormalCollision(): void {
+    this.processFirstHitCollision((bullet, enemy) => {
+      this.applyDamageAndPublishDeath(enemy, bullet.damage);
+    });
   }
 
   /**
@@ -281,20 +297,10 @@ export class CombatSystem extends InjectableSystem {
    * Boss: 10% HP, Elite: 50% HP, Ghost: 70% HP
    */
   private handleOysterOmeletteCollision(): void {
-    for (const bullet of this.bullets) {
-      if (!bullet.active) continue;
-
-      for (const enemy of this.enemies) {
-        if (!enemy.active) continue;
-
-        if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          const percentDamage = this.calculatePercentDamage(enemy);
-          this.applyDamageAndPublishDeath(enemy, percentDamage.toNumber());
-          bullet.active = false;
-          break;
-        }
-      }
-    }
+    this.processFirstHitCollision((_bullet, enemy) => {
+      const percentDamage = this.calculatePercentDamage(enemy);
+      this.applyDamageAndPublishDeath(enemy, percentDamage.toNumber());
+    });
   }
 
   /**
@@ -305,25 +311,14 @@ export class CombatSystem extends InjectableSystem {
     const damage = RECIPE_CONFIG.bloodCake.baseDamage;
     const slowPercent = RECIPE_CONFIG.bloodCake.slowEffect;
 
-    for (const bullet of this.bullets) {
-      if (!bullet.active) continue;
+    this.processFirstHitCollision((_bullet, enemy) => {
+      this.applyDamageAndPublishDeath(enemy, damage);
 
-      for (const enemy of this.enemies) {
-        if (!enemy.active) continue;
-
-        if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          this.applyDamageAndPublishDeath(enemy, damage);
-
-          // Apply slow debuff if enemy survived
-          if (enemy.active) {
-            enemy.applySlowDebuff(slowPercent);
-          }
-
-          bullet.active = false;
-          break;
-        }
+      // Apply slow debuff if enemy survived
+      if (enemy.active) {
+        enemy.applySlowDebuff(slowPercent);
       }
-    }
+    });
   }
 
   /**
@@ -336,26 +331,16 @@ export class CombatSystem extends InjectableSystem {
     const damageDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
     const chainRange = 300; // Maximum chain distance in pixels
 
-    for (const bullet of this.bullets) {
-      if (!bullet.active) continue;
-
-      for (const enemy of this.enemies) {
-        if (!enemy.active) continue;
-
-        if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          // Start chain attack from first hit
-          this.performChainAttack(
-            enemy,
-            baseDamage,
-            chainTargets,
-            damageDecay,
-            chainRange,
-          );
-          bullet.active = false;
-          break;
-        }
-      }
-    }
+    this.processFirstHitCollision((_bullet, enemy) => {
+      // Start chain attack from first hit
+      this.performChainAttack(
+        enemy,
+        baseDamage,
+        chainTargets,
+        damageDecay,
+        chainRange,
+      );
+    });
   }
 
   /**
