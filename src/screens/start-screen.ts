@@ -15,6 +15,7 @@ export class StartScreen {
   constructor(onStart: () => void) {
     this.onStart = onStart;
     this.container = new Container();
+    this.container.visible = false; // Initially hidden
     this.setupUI();
   }
 
@@ -42,7 +43,7 @@ export class StartScreen {
 
     // Subtitle (Theme)
     const subtitle = new Text({
-      text: 'Global Game Jam 2026 - 主題：「Mask」',
+      text: "Global Game Jam 2026 - 主題：「Mask」",
       style: {
         fontFamily: "Arial",
         fontSize: 24,

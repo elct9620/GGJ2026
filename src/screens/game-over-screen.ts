@@ -17,6 +17,7 @@ export class GameOverScreen {
   constructor(onRestart: () => void) {
     this.onRestart = onRestart;
     this.container = new Container();
+    this.container.visible = false; // Initially hidden
     this.setupUI();
   }
 
