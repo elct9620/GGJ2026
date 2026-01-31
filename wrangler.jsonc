@@ -1,0 +1,7 @@
+{
+  "name": "global-game-jam-2026",
+  "compatibility_date": "2025-11-28",
+  "assets": {
+    "directory": "./dist",
+  },
+}
