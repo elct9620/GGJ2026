@@ -396,7 +396,7 @@ abstract class Entity {
 - **效能**：整數 ID 比 UUID 更高效，適合高頻建立/銷毀場景
 - **一致性**：所有遊戲實體使用統一的基礎架構
 
-**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.8 Entity Tests。
+**測試案例**：參見 [docs/testing.md](docs/testing.md) § 2.8 Entity Tests。
 
 ## 2.6 Game Entities
 
@@ -417,7 +417,7 @@ abstract class Entity {
 - 拾取掉落食材（碰撞檢測）
 - 死亡條件：生命值歸零
 
-**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.6 Player Tests。
+**測試案例**：參見 [docs/testing.md](docs/testing.md) § 2.6 Player Tests。
 
 ### 2.6.2 Enemies
 
@@ -444,7 +444,7 @@ abstract class Entity {
 - 被子彈擊中扣除生命值
 - 生命值歸零時死亡並掉落食材
 
-**測試案例**：參見 [Testing Specification](docs/testing.md) § 2.7 Enemy Tests。
+**測試案例**：參見 [docs/testing.md](docs/testing.md) § 2.7 Enemy Tests。
 
 ### 2.6.3 Bullets
 
