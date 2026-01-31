@@ -455,7 +455,7 @@ class SynthesisSystem implements System {
         ingredients: [BloodCake, BloodCake, BloodCake],
       },
     ],
-    [5, { key: 5, name: "OysterOmelette", ingredients: [Pearl, Tofu, Tofu] }], // 需解鎖
+    [5, { key: 5, name: "OysterOmelette", requiresKillCounter: true }], // 需 20 擊殺數
   ]);
 
   process(gameState: GameState): void {
@@ -509,7 +509,7 @@ class SynthesisSystem implements System {
 
 - 合成配方參見 SPEC.md § 2.3.3 Synthesis Recipes
 - 按鍵 1-5 直接觸發對應配方合成
-- 蚵仔煎（按鍵 5）需擊殺 10 隻敵人後解鎖
+- 蚵仔煎（按鍵 5）需擊殺 20 隻敵人後解鎖
 - Buff 持續時間：2 秒（受升級系統影響）
 
 ---
