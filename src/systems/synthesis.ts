@@ -9,17 +9,8 @@ import type { BoothSystem } from "./booth";
 import type { InputSystem } from "./input";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
-import type { FoodType } from "../entities/enemy";
-
-/**
- * Recipe configuration (SPEC § 2.3.3)
- */
-interface Recipe {
-  id: string;
-  name: string;
-  foodRequirements: Partial<Record<FoodType, number>>;
-  requiresKillCounter?: boolean;
-}
+import { type FoodType, getBoothIdForFood } from "../entities/enemy";
+import { type Recipe, RECIPES } from "../values/recipes";
 
 /**
  * Synthesis System
@@ -42,36 +33,6 @@ export class SynthesisSystem implements ISystem {
 
   // Kill counter unlock state
   private isKillCounterUnlocked = false;
-
-  // Recipe definitions (SPEC § 2.3.3)
-  private readonly recipes: Record<string, Recipe> = {
-    "1": {
-      id: "1",
-      name: "夜市總匯",
-      foodRequirements: { Pearl: 1, Tofu: 1, BloodCake: 1 },
-    },
-    "2": {
-      id: "2",
-      name: "臭豆腐",
-      foodRequirements: { Tofu: 3 },
-    },
-    "3": {
-      id: "3",
-      name: "珍珠奶茶",
-      foodRequirements: { Pearl: 3 },
-    },
-    "4": {
-      id: "4",
-      name: "豬血糕",
-      foodRequirements: { BloodCake: 3 },
-    },
-    "5": {
-      id: "5",
-      name: "蚵仔煎",
-      foodRequirements: {},
-      requiresKillCounter: true,
-    },
-  };
 
   /**
    * Initialize synthesis system
@@ -138,7 +99,7 @@ export class SynthesisSystem implements ISystem {
   private trySynthesize(recipeId: string): void {
     if (!this.boothSystem || !this.eventQueue) return;
 
-    const recipe = this.recipes[recipeId];
+    const recipe = RECIPES[recipeId];
     if (!recipe) return;
 
     // Check kill counter requirement (蚵仔煎)
@@ -172,7 +133,7 @@ export class SynthesisSystem implements ISystem {
     for (const [foodType, required] of Object.entries(
       recipe.foodRequirements,
     )) {
-      const boothId = this.getFoodBoothId(foodType as FoodType);
+      const boothId = getBoothIdForFood(foodType as FoodType);
       const available = this.boothSystem.getFoodCount(boothId);
 
       if (available < required) {
@@ -191,27 +152,11 @@ export class SynthesisSystem implements ISystem {
     if (!this.boothSystem) return;
 
     for (const [foodType, amount] of Object.entries(recipe.foodRequirements)) {
-      const boothId = this.getFoodBoothId(foodType as FoodType);
+      const boothId = getBoothIdForFood(foodType as FoodType);
 
       for (let i = 0; i < amount; i++) {
         this.boothSystem.retrieveFood(boothId);
       }
-    }
-  }
-
-  /**
-   * Map food type to booth ID (1-indexed per SPEC § 2.3.1)
-   */
-  private getFoodBoothId(foodType: FoodType): number {
-    switch (foodType) {
-      case "Pearl":
-        return 1;
-      case "Tofu":
-        return 2;
-      case "BloodCake":
-        return 3;
-      default:
-        return 1;
     }
   }
 

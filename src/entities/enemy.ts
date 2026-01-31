@@ -21,6 +21,18 @@ export const FoodType = {
 export type FoodType = (typeof FoodType)[keyof typeof FoodType];
 
 /**
+ * Map FoodType to Booth ID (1-indexed per SPEC § 2.3.1)
+ */
+export function getBoothIdForFood(foodType: FoodType): number {
+  const mapping: Record<FoodType, number> = {
+    Pearl: 1,
+    Tofu: 2,
+    BloodCake: 3,
+  };
+  return mapping[foodType];
+}
+
+/**
  * Enemy entity (Ghost or Boss)
  * Spec: § 2.6.2 Enemies
  */
