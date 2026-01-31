@@ -209,8 +209,9 @@ export class BoothSystem extends InjectableSystem {
 /**
  * Individual booth for storing one food type
  * Uses DropItemPool_*.png sprites at x=340 (baseline)
+ * Exported for testing purposes
  */
-class Booth {
+export class Booth {
   public readonly id: BoothId;
   public readonly foodType: FoodType;
   public count: number = 0;

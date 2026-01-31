@@ -40,3 +40,23 @@ export const LAYOUT = {
   BOOTH_WIDTH: 128,
   BOOTH_HEIGHT: 256,
 } as const;
+
+/**
+ * Calculate valid movement boundaries for an entity within the game area
+ * Accounts for entity size (center-based positioning)
+ * @param entitySize The size of the entity (width/height assumed equal)
+ */
+export function getEntityBounds(entitySize: number): {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+} {
+  const halfSize = entitySize / 2;
+  return {
+    minX: LAYOUT.BASELINE_X + halfSize,
+    maxX: CANVAS_WIDTH - halfSize,
+    minY: LAYOUT.GAME_AREA_Y + halfSize,
+    maxY: LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT - halfSize,
+  };
+}

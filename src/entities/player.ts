@@ -5,7 +5,7 @@ import { Ammo } from "../values/ammo";
 import type { CollisionBox } from "../values/collision";
 import { Container, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
-import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
+import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
 
 /**
@@ -113,25 +113,15 @@ export class Player extends Entity {
     const displacement = direction.normalize().multiply(this.speed * deltaTime);
     const newPosition = this.position.add(displacement);
 
-    // Player position is center-based (anchor 0.5, 0.5), so account for half size
-    const halfSize = LAYOUT.PLAYER_SIZE / 2; // 128 px
-
-    // Apply boundary constraints (SPEC § 2.7.2)
-    // Boundaries are adjusted by half player size to keep entire sprite within game area
-    // Left boundary: x = 340 + 128 = 468 (booth area + half player)
-    // Right boundary: x = 1920 - 128 = 1792 (canvas width - half player)
-    // Top boundary: y = 86 + 128 = 214 (below top HUD + half player)
-    // Bottom boundary: y = 954 - 128 = 826 (above bottom HUD - half player)
+    // Apply boundary constraints using centralized bounds calculation
+    const bounds = getEntityBounds(LAYOUT.PLAYER_SIZE);
     const clampedX = Math.max(
-      LAYOUT.BASELINE_X + halfSize,
-      Math.min(CANVAS_WIDTH - halfSize, newPosition.x),
+      bounds.minX,
+      Math.min(bounds.maxX, newPosition.x),
     );
     const clampedY = Math.max(
-      LAYOUT.GAME_AREA_Y + halfSize,
-      Math.min(
-        LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT - halfSize,
-        newPosition.y,
-      ),
+      bounds.minY,
+      Math.min(bounds.maxY, newPosition.y),
     );
 
     this.position = new Vector(clampedX, clampedY);

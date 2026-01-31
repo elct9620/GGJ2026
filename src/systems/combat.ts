@@ -27,6 +27,12 @@ export { SpecialBulletType } from "../values/special-bullet";
 type HitEffect = (bullet: Bullet, enemy: Enemy) => void;
 
 /**
+ * 貫穿效果處理器回傳值
+ * 用於決定是否繼續貫穿
+ */
+type PierceHitResult = { consumed: boolean };
+
+/**
  * Combat System
  * SPEC § 2.3.2: 玩家透過射擊擊敗敵人
  *
@@ -238,16 +244,37 @@ export class CombatSystem extends InjectableSystem {
    * 4 個 handler (Normal, OysterOmelette, BloodCake, NightMarket) 共用此迴圈
    */
   private processFirstHitCollision(effect: HitEffect): void {
+    this.processPierceCollision(1, (bullet, enemy) => {
+      effect(bullet, enemy);
+      return { consumed: true };
+    });
+  }
+
+  /**
+   * 貫穿碰撞處理：子彈可穿透多個敵人
+   * @param maxPierceCount 最大貫穿次數（1 = 第一次命中後消耗）
+   * @param effect 每次命中時的效果處理器，回傳 consumed 決定是否消耗子彈
+   */
+  private processPierceCollision(
+    maxPierceCount: number,
+    effect: (bullet: Bullet, enemy: Enemy) => PierceHitResult,
+  ): void {
     for (const bullet of this.bullets) {
       if (!bullet.active) continue;
 
+      let pierceCount = 0;
       for (const enemy of this.enemies) {
         if (!enemy.active) continue;
 
         if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          effect(bullet, enemy);
-          bullet.active = false;
-          break;
+          const result = effect(bullet, enemy);
+          pierceCount++;
+
+          // 當效果要求消耗或達到最大貫穿次數時，停止此子彈
+          if (result.consumed || pierceCount >= maxPierceCount) {
+            bullet.active = false;
+            break;
+          }
         }
       }
     }
@@ -265,31 +292,17 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * StinkyTofu (臭豆腐) - 貫穿效果 (SPEC § 2.3.3)
-   * Damage: 2, pierces 1 enemy
+   * Damage: 2, pierces 1 enemy (hits up to pierceCount + 1 enemies)
    */
   private handleStinkyTofuCollision(): void {
     const damage = RECIPE_CONFIG.stinkyTofu.baseDamage;
-    const maxPierceCount = RECIPE_CONFIG.stinkyTofu.pierceCount;
+    // pierceCount = 1 means hit first + pierce through 1 more = 2 total hits
+    const totalHits = RECIPE_CONFIG.stinkyTofu.pierceCount + 1;
 
-    for (const bullet of this.bullets) {
-      if (!bullet.active) continue;
-
-      let pierceCount = 0;
-      for (const enemy of this.enemies) {
-        if (!enemy.active) continue;
-
-        if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          this.applyDamageAndPublishDeath(enemy, damage);
-          pierceCount++;
-
-          // Consume bullet after piercing through max enemies
-          if (pierceCount > maxPierceCount) {
-            bullet.active = false;
-            break;
-          }
-        }
-      }
-    }
+    this.processPierceCollision(totalHits, (_bullet, enemy) => {
+      this.applyDamageAndPublishDeath(enemy, damage);
+      return { consumed: false }; // Never consume early, let pierce count handle it
+    });
   }
 
   /**
