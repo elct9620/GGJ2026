@@ -11,6 +11,7 @@ import { CombatSystem, SpecialBulletType } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
+import { UpgradeSystem } from "./systems/upgrade";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -77,6 +78,7 @@ export class GameScene {
     const synthesisSystem = new SynthesisSystem();
     const killCounterSystem = new KillCounterSystem();
     const waveSystem = new WaveSystem();
+    const upgradeSystem = new UpgradeSystem();
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
@@ -84,22 +86,30 @@ export class GameScene {
     this.systemManager.register(synthesisSystem);
     this.systemManager.register(killCounterSystem);
     this.systemManager.register(waveSystem);
+    this.systemManager.register(upgradeSystem);
     this.systemManager.register(new HUDSystem());
     this.systemManager.register(boothSystem);
     this.systemManager.register(boxSystem);
+
+    // Set system dependencies (before initialize)
+    waveSystem.setEventQueue(eventQueue);
+    upgradeSystem.setEventQueue(eventQueue);
+    upgradeSystem.setBoothSystem(boothSystem);
+
     this.systemManager.initialize();
 
     // Subscribe to EnemyDeath event for food drops
     eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
 
+    // Subscribe to WaveStart for HUD updates
+    eventQueue.subscribe(EventType.WaveStart, this.onWaveStart.bind(this));
+
     // Subscribe to WaveComplete for next wave (SPEC § 2.3.5)
+    // TODO: Add upgrade UI before enabling upgrade system
     eventQueue.subscribe(
       EventType.WaveComplete,
       this.onWaveComplete.bind(this),
     );
-
-    // Subscribe to WaveStart for HUD updates
-    eventQueue.subscribe(EventType.WaveStart, this.onWaveStart.bind(this));
 
     // Initialize player at center of playable area
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
@@ -233,6 +243,10 @@ export class GameScene {
         enemy.active = false;
         this.enemiesContainer.removeChild(enemy.sprite);
         this.enemies.splice(i, 1);
+
+        // Publish EnemyReachedEnd event for Wave System (SPEC § 2.3.6)
+        const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
+        eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: enemy.id });
       }
     }
   }
@@ -436,13 +450,14 @@ export class GameScene {
 
   /**
    * Handle wave completion event (SPEC § 2.3.6)
-   * Start next wave
+   * Start next wave directly (upgrade system disabled until UI implemented)
    */
   private onWaveComplete(data: { waveNumber: number }): void {
     // Update statistics - track waves survived (Spec: § 2.8.2)
     this.stats.wavesSurvived = data.waveNumber;
 
-    // Start next wave (SPEC § 2.3.5)
+    // Start next wave directly (SPEC § 2.3.5)
+    // TODO: Enable upgrade selection when UI is ready
     const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
     waveSystem.startWave(data.waveNumber + 1);
   }
