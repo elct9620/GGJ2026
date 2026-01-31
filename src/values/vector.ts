@@ -48,10 +48,7 @@ export class Vector {
       }
       throw new RangeError("Parameter must be finite");
     }
-    return new Vector(
-      Math.round(this.x * scalar),
-      Math.round(this.y * scalar)
-    );
+    return new Vector(Math.round(this.x * scalar), Math.round(this.y * scalar));
   }
 
   /**
@@ -63,10 +60,7 @@ export class Vector {
     if (mag === 0) {
       return new Vector(0, 0); // 優雅降級
     }
-    return new Vector(
-      Math.round(this.x / mag),
-      Math.round(this.y / mag)
-    );
+    return new Vector(Math.round(this.x / mag), Math.round(this.y / mag));
   }
 
   /**

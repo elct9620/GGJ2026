@@ -1,9 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { Container } from "pixi.js";
-import {
-  createGameContainers,
-  attachGameContainers,
-} from "./game-containers";
+import { createGameContainers, attachGameContainers } from "./game-containers";
 
 describe("GameContainers", () => {
   describe("createGameContainers", () => {
