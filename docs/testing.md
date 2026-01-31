@@ -32,16 +32,16 @@
 
 ### 2.1.1 Store Food
 
-| Test ID | Input                        | Expected Output | Accept Criteria        |
-| ------- | ---------------------------- | --------------- | ---------------------- |
-| BS-01   | 空攤位 + 儲存珍珠            | 攤位數量 = 1    | 攤位顯示珍珠 ×1        |
-| BS-02   | 攤位 5/6 + 儲存珍珠          | 攤位數量 = 6    | 攤位顯示珍珠 ×6        |
-| BS-03   | 攤位 6/6 + 儲存珍珠          | 攤位數量 = 6    | 儲存失敗，攤位仍為 6/6 |
-| BS-04   | 珍珠攤位 + 儲存豆腐          | 儲存失敗        | 豆腐不進入珍珠攤位     |
-| BS-05   | 攤位 0/6 + 連續儲存 3 個食材 | 攤位數量 = 3    | 攤位顯示食材 ×3        |
-| BS-06   | 3 種攤位同時儲存不同食材     | 各攤位數量 = 1  | 每種食材進入對應攤位   |
-| BS-07   | 玩家碰觸掉落食材             | 食材自動拾取    | 食材消失，攤位 +1      |
-| BS-08   | 玩家遠離掉落食材             | 無效果          | 食材保持在原位         |
+| Test ID | Input                        | Expected Output | Accept Criteria            |
+| ------- | ---------------------------- | --------------- | -------------------------- |
+| BS-01   | 空攤位 + 儲存珍珠            | 攤位數量 = 1    | 攤位顯示珍珠 ×1            |
+| BS-02   | 攤位 5/6 + 儲存珍珠          | 攤位數量 = 6    | 攤位顯示珍珠 ×6            |
+| BS-03   | 攤位 6/6 + 儲存珍珠          | 攤位數量 = 6    | 食材消失，攤位仍為 6/6     |
+| BS-04   | 珍珠攤位 + 儲存豆腐          | 儲存失敗        | 豆腐不進入珍珠攤位         |
+| BS-05   | 攤位 0/6 + 連續儲存 3 個食材 | 攤位數量 = 3    | 攤位顯示食材 ×3            |
+| BS-06   | 3 種攤位同時儲存不同食材     | 各攤位數量 = 1  | 每種食材進入對應攤位       |
+| BS-07   | 敵人死亡掉落珍珠             | 攤位數量 = 1    | 食材自動進入攤位，珍珠 +1  |
+| BS-08   | 攤位 6/6 + 敵人死亡掉落珍珠  | 攤位數量 = 6    | 食材消失（丟失），攤位不變 |
 
 ### 2.1.2 Retrieve Food
 
@@ -208,20 +208,19 @@
 
 ### 2.6.2 Collision
 
-| Test ID | Input                                 | Expected Output   | Accept Criteria   |
-| ------- | ------------------------------------- | ----------------- | ----------------- |
-| PL-10   | 玩家 (500, 500) + 食材 (500, 500)     | 食材消失，攤位 +1 | 自動拾取          |
-| PL-11   | 玩家中心 (500, 500) + 敵人 (512, 500) | 無碰撞            | 距離 > 24，無效果 |
-| PL-12   | 玩家中心 (500, 500) + 敵人 (510, 500) | 無碰撞（穿透）    | 玩家不受傷        |
-| PL-13   | 碰撞箱測試                            | 24×24 px          | 碰撞箱大小正確    |
+| Test ID | Input                                 | Expected Output | Accept Criteria    |
+| ------- | ------------------------------------- | --------------- | ------------------ |
+| PL-10   | 玩家中心 (500, 500) + 敵人 (512, 500) | 無碰撞          | 距離 > 24，無效果  |
+| PL-11   | 玩家中心 (500, 500) + 敵人 (510, 500) | 無碰撞（穿透）  | 玩家不受傷         |
+| PL-12   | 碰撞箱測試                            | 24×24 px        | 碰撞箱大小正確     |
 
 ### 2.6.3 Health
 
 | Test ID | Input                 | Expected Output  | Accept Criteria  |
 | ------- | --------------------- | ---------------- | ---------------- |
-| PL-14   | 生命 5 + 敵人到達底線 | 生命 4           | 扣 1 條生命      |
-| PL-15   | 生命 1 + 敵人到達底線 | 生命 0，遊戲結束 | 觸發遊戲結束畫面 |
-| PL-16   | 遊戲結束畫面          | 顯示存活回合數   | 統計資訊正確     |
+| PL-13   | 生命 5 + 敵人到達底線 | 生命 4           | 扣 1 條生命      |
+| PL-14   | 生命 1 + 敵人到達底線 | 生命 0，遊戲結束 | 觸發遊戲結束畫面 |
+| PL-15   | 遊戲結束畫面          | 顯示存活回合數   | 統計資訊正確     |
 
 ## 2.7 Enemy Tests
 
@@ -371,99 +370,6 @@
 | ET-19   | Bullet 繼承 Entity | Bullet.id 存在且唯一 | 繼承 Entity 屬性 |
 | ET-20   | Food 繼承 Entity   | Food.id 存在且唯一   | 繼承 Entity 屬性 |
 | ET-21   | 不同類型的 Entity  | 所有 id 必定不同     | 全域 ID 唯一性   |
-
-## 2.10 System Architecture Tests
-
-### 2.10.1 System Interface
-
-| Test ID | Input                      | Expected Output            | Accept Criteria |
-| ------- | -------------------------- | -------------------------- | --------------- |
-| SY-01   | System.process(gameState)  | GameState 已更新           | 系統執行成功    |
-| SY-02   | System.process(null)       | 拋出錯誤                   | 錯誤處理正確    |
-| SY-03   | System.process(emptyState) | GameState 無變更或優雅降級 | 空狀態處理正確  |
-
-### 2.10.2 GameState Structure
-
-| Test ID | Input                           | Expected Output               | Accept Criteria  |
-| ------- | ------------------------------- | ----------------------------- | ---------------- |
-| SY-04   | 建立 GameState                  | 所有屬性正確初始化            | 結構完整         |
-| SY-05   | gameState.deltaTime = 0.016     | deltaTime 更新                | 時間記錄正確     |
-| SY-06   | gameState.deltaTime = 2.0       | 拋出警告或限制為最大值（1.0） | 異常時間跳躍防護 |
-| SY-07   | gameState.enemies 只包含 active | enemies.length 正確           | 過濾停用實體     |
-| SY-08   | gameState.booths.length         | 固定為 3                      | 攤位數量恆定     |
-
-### 2.10.3 System Execution Order
-
-| Test ID | Input                             | Expected Output                | Accept Criteria |
-| ------- | --------------------------------- | ------------------------------ | --------------- |
-| SY-09   | 系統按順序執行（Input → Cleanup） | 每個系統依序呼叫 process()     | 執行順序正確    |
-| SY-10   | Input → Player 順序               | 玩家讀取到當前幀輸入           | 輸入即時反映    |
-| SY-11   | Collision → Booth 順序            | 碰撞後食材正確儲存到攤位       | 順序依賴正確    |
-| SY-12   | Cleanup 最後執行                  | 停用實體在所有邏輯完成後才清理 | 清理時機正確    |
-
-### 2.10.4 System Communication
-
-| Test ID | Input                               | Expected Output                   | Accept Criteria     |
-| ------- | ----------------------------------- | --------------------------------- | ------------------- |
-| SY-13   | Combat 新增子彈到 gameState.bullets | Bullet System 讀取並移動子彈      | 透過 GameState 通訊 |
-| SY-14   | Collision 設定 enemy.active = false | Cleanup System 移除敵人           | 狀態變更傳遞正確    |
-| SY-15   | Synthesis 啟動 Buff                 | Combat 讀取 Buff 發射特殊子彈     | 系統間資料流正確    |
-| SY-16   | 系統 A 不持有系統 B 引用            | 所有系統只透過 GameState 存取狀態 | 解耦合設計          |
-
-### 2.10.5 Individual System Tests
-
-**Input System**:
-
-| Test ID | Input          | Expected Output                | Accept Criteria |
-| ------- | -------------- | ------------------------------ | --------------- |
-| SY-17   | 按下 W 鍵      | gameState.input.keys.w = true  | 輸入正確記錄    |
-| SY-18   | 放開 W 鍵      | gameState.input.keys.w = false | 輸入釋放正確    |
-| SY-19   | 同時按下 W + D | w = true, d = true             | 多鍵輸入支援    |
-
-**Player System**:
-
-| Test ID | Input                           | Expected Output         | Accept Criteria |
-| ------- | ------------------------------- | ----------------------- | --------------- |
-| SY-20   | input.w = true, deltaTime = 0.1 | player.position.y -= 20 | 移動計算正確    |
-| SY-21   | 玩家移動到 x = 383              | position.x 限制為 384   | 左邊界限制      |
-| SY-22   | 玩家移動到 x = 1921             | position.x 限制為 1920  | 右邊界限制      |
-| SY-23   | 玩家移動到 y = -1               | position.y 限制為 0     | 上邊界限制      |
-| SY-24   | 玩家移動到 y = 1081             | position.y 限制為 1080  | 下邊界限制      |
-
-**Combat System**:
-
-| Test ID | Input                        | Expected Output    | Accept Criteria  |
-| ------- | ---------------------------- | ------------------ | ---------------- |
-| SY-25   | input.space = true, ammo = 6 | 發射子彈，ammo = 5 | 射擊邏輯正確     |
-| SY-26   | input.space = true, ammo = 0 | 無反應             | 彈夾空時無法射擊 |
-| SY-27   | ammo = 0, 等待 3 秒          | ammo = 6           | 重裝邏輯正確     |
-| SY-28   | activeBuff = '臭豆腐', 射擊  | 發射 2 倍大子彈    | 特殊子彈生成     |
-
-**Collision System**:
-
-| Test ID | Input            | Expected Output                | Accept Criteria |
-| ------- | ---------------- | ------------------------------ | --------------- |
-| SY-29   | 子彈與敵人重疊   | enemy.health -= bullet.damage  | 碰撞傷害計算    |
-| SY-30   | 穿透子彈擊中敵人 | bullet.active 保持 true        | 穿透子彈不消失  |
-| SY-31   | 普通子彈擊中敵人 | bullet.active = false          | 普通子彈消失    |
-| SY-32   | 敵人 health = 0  | 掉落食材，enemy.active = false | 敵人死亡邏輯    |
-| SY-33   | 玩家與食材重疊   | food.active = false            | 食材拾取        |
-| SY-34   | 敵人與攤位重疊   | booth.count -= 1               | 食材偷取        |
-
-**Wave System**:
-
-| Test ID | Input                | Expected Output           | Accept Criteria   |
-| ------- | -------------------- | ------------------------- | ----------------- |
-| SY-35   | wave = 1, 開始回合   | 生成 2 隻 Ghost           | 敵人生成公式正確  |
-| SY-36   | wave = 5, 開始回合   | 生成 10 隻 Ghost + 1 Boss | Boss 生成條件正確 |
-| SY-37   | remainingEnemies = 0 | isUpgrading = true        | 回合結束觸發升級  |
-
-**Cleanup System**:
-
-| Test ID | Input                              | Expected Output  | Accept Criteria |
-| ------- | ---------------------------------- | ---------------- | --------------- |
-| SY-38   | bullets 中有 active = false 的實體 | 該實體從列表移除 | 停用實體清理    |
-| SY-39   | 所有實體都是 active = true         | 列表長度不變     | 活躍實體保留    |
 
 # 3. Integration Tests
 
