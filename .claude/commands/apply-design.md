@@ -62,7 +62,12 @@ If SPEC.md is growing large, follow the spec knowledge guidelines to split it in
         <step>6. apply `docs/*.md` updates to ensure consistency with SPEC.md</step>
         <step>7. perform self-review of specification changes for clarity, correctness, and completeness</step>
     </loop>
-    <step>8. confirm and execute specification updates</step>
+    <condition if="headless mode is active">
+        <step>8. skip confirmation step</step>
+    </condition>
+    <condition if="headless mode is not active">
+        <step>8. confirm specification updates with user</step>
+    </condition>
     <return>Updated SPEC.md and `docs/*.md` reflecting applied design</return>
 </procedure>
 

@@ -92,7 +92,13 @@ If any renaming is needed to align with the specification, ensure that all refer
         <step>9. <execute name="testing">changes made</execute></step>
         <step>10. self-review changes to ensure clarity, correctness, and completeness</step>
     </loop>
-    <step>11. confirm and execute all changes</step>
+    <condition if="headless mode is active">
+        <step>11. skip confirmation step</step>
+    </condition>
+    <condition if="headless mode is not active">
+        <step>11. confirm alignment changes with user</step>
+    </condition>
+    <step>12. apply and execute alignment changes</step>
     <return>Summary of alignment changes made</return>
 </procedure>
 
