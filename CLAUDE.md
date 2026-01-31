@@ -56,6 +56,39 @@ pnpm format:check
 
 Test files should be colocated with source files using `.test.ts` suffix.
 
+### Testing Strategy
+
+**Primary Focus: Unit Testing**
+
+This project prioritizes **unit tests** for rapid development and reliable coverage:
+
+- **Unit tests** - Test individual modules, functions, and classes in isolation
+- **Integration tests** - Only for critical system interactions (e.g., booth + synthesis)
+- **Visual/E2E tests** - Manual testing in browser (Game Jam time constraints)
+
+**WebGL Mocking Strategy:**
+
+The project uses a **custom WebGL mock** (`src/test/setup.ts`) designed for unit testing:
+
+- ✅ **Sufficient for**: Testing game logic, state management, configuration
+- ✅ **Fast**: No native dependencies, runs in Node.js environment (happy-dom)
+- ✅ **Maintainable**: Full control over mock behavior
+- ❌ **Not for**: Shader logic, visual rendering, texture operations
+
+**When to upgrade to full WebGL testing:**
+
+Consider using [vitest-webgl-canvas-mock](https://github.com/RSamaium/vitest-webgl-canvas-mock) or [headless-gl](https://github.com/stackgl/headless-gl) if:
+- Testing complex shader interactions
+- Validating WebGL-specific rendering logic
+- Encountering limitations in current mock implementation
+
+**Testing Philosophy:**
+
+- Focus on **what** the code does, not **how** it renders
+- Test state transitions, calculations, and business logic
+- Visual correctness verified through manual playtesting
+- Prioritize test execution speed (< 500ms total runtime)
+
 ## Code Architecture
 
 ### Specification-Driven Development
