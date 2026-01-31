@@ -6,6 +6,7 @@ import { Food } from "./entities/food";
 import { InputSystem } from "./systems/input";
 import { HUDSystem } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
+import { EventQueue, EventType } from "./systems/event-queue";
 import { Vector } from "./values/vector";
 import type { GameStats } from "./core/game-state";
 
@@ -24,6 +25,7 @@ export class GameScene {
   private inputSystem: InputSystem;
   private hudSystem: HUDSystem;
   private boothSystem: BoothSystem;
+  private eventQueue: EventQueue;
 
   // Containers for rendering
   private playerContainer: Container;
@@ -71,6 +73,10 @@ export class GameScene {
     this.inputSystem = new InputSystem();
     this.hudSystem = new HUDSystem();
     this.boothSystem = new BoothSystem();
+    this.eventQueue = EventQueue.getInstance();
+
+    // Subscribe to WaveComplete event
+    this.eventQueue.subscribe(EventType.WaveComplete, this.onWaveComplete.bind(this));
 
     // Initialize player at center of playable area
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
@@ -125,6 +131,9 @@ export class GameScene {
    * Main update loop
    */
   public update(deltaTime: number): void {
+    // Process event queue (SPEC § 2.3.6)
+    this.eventQueue.processQueue();
+
     this.handleInput(deltaTime);
     this.updatePlayer(deltaTime);
     this.updateEnemies(deltaTime);
@@ -300,18 +309,28 @@ export class GameScene {
       // Update statistics - track waves survived (Spec: § 2.8.2)
       this.stats.wavesSurvived = this.currentWave;
 
-      // Wait a moment before spawning next wave
+      // Publish WaveComplete event with delay (SPEC § 2.3.6)
       // TODO: Replace with upgrade system (SPEC § 2.3.4)
-      setTimeout(() => {
-        this.spawnWave(this.currentWave + 1);
-        this.isWaveTransitioning = false;
-      }, 2000);
+      this.eventQueue.publish(
+        EventType.WaveComplete,
+        { waveNumber: this.currentWave },
+        2000,
+      );
     }
 
     // Check game over (Spec: § 2.8.2)
     if (this.player.health <= 0 && this.onGameOver) {
       this.onGameOver(this.stats);
     }
+  }
+
+  /**
+   * Handle wave completion event
+   * SPEC § 2.3.6: Event handler for WaveComplete
+   */
+  private onWaveComplete(data: { waveNumber: number }): void {
+    this.spawnWave(data.waveNumber + 1);
+    this.isWaveTransitioning = false;
   }
 
   /**
