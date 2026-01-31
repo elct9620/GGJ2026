@@ -118,11 +118,11 @@ This project uses a **three-layer specification framework** (Intent → Design �
 ```
 Application.stage
 ├── Background Layer (z-index: 0)
-│   └── 攤位區域背景 (384px width, left 20%)
+│   └── 攤位區域背景 (340px width)
 ├── Game Layer (z-index: 1)
 │   ├── Booth Container
 │   │   ├── 3 booths (Pearl/Tofu/BloodCake) - BoothSystem.getContainer()
-│   │   └── Box sprite (x=384) - BoxSystem.getContainer()
+│   │   └── Box sprite (x=340) - BoxSystem.getContainer()
 │   ├── Food Drops Container (dynamic, auto-collected)
 │   ├── Player Sprite (24×24 collision box)
 │   ├── Enemies Container (Ghosts + Bosses)
@@ -162,7 +162,7 @@ interface ISystem {
 3. **Booth System**: 食材儲存與提取 (3 booths: Pearl/Tofu/BloodCake, max 6 each)
    - Publishes `FoodStored` and `FoodConsumed` events
 
-4. **Box System**: 寶箱防禦機制 (spawns at x=384, durability = total booth food)
+4. **Box System**: 寶箱防禦機制 (spawns at x=340, durability = total booth food)
    - Subscribes to `FoodStored`/`FoodConsumed` events
 
 5. **Combat System**: 射擊、重裝、Buff 管理、碰撞檢測
@@ -221,10 +221,10 @@ interface ISystem {
 ```
 
 **Critical boundaries**:
-- 攤位區域: x = 0 to 384 (left 20%)
-- 遊戲活動區: x = 384 to 1920 (right 80%)
-- 底線（敵人到達扣血）: x = 384
-- 玩家邊界: x ∈ [384, 1920], y ∈ [0, 1080]
+- 攤位區域: x = 0 to 340
+- 遊戲活動區: x = 340 to 1920
+- 底線（敵人到達扣血）: x = 340
+- 玩家邊界: x ∈ [340, 1920], y ∈ [0, 1080]
 
 ## Key Design Decisions (from SPEC.md 5.1)
 

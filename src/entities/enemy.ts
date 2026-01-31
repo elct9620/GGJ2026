@@ -86,7 +86,7 @@ export class Enemy extends Entity {
 
   /**
    * Move enemy to the left (toward baseline)
-   * Spec: § 2.6.2 - enemies move left toward x = 384
+   * Spec: § 2.6.2 / § 2.7.2 - enemies move left toward x = 340 baseline
    */
   public update(deltaTime: number): void {
     if (!this.active) return;

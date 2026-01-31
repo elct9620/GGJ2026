@@ -1,6 +1,7 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import { Graphics } from "pixi.js";
+import { LAYOUT } from "../utils/constants";
 
 /**
  * Bullet entity fired by player
@@ -51,9 +52,10 @@ export class Bullet extends Entity {
 
   /**
    * Check if bullet has left the game area
+   * SPEC § 2.7.2: baseline at x = 340
    */
   public isOffScreen(): boolean {
-    return this.position.x > 1920 || this.position.x < 384;
+    return this.position.x > 1920 || this.position.x < LAYOUT.BASELINE_X;
   }
 
   /**

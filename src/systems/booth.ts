@@ -77,11 +77,10 @@ export class BoothSystem implements ISystem {
     // Booth 3: Blood Cake (米血)
 
     // Layout based on ui_rough_pixelSpec.png (SPEC § 2.7.2)
-    // X position: right-aligned within 340px booth area (340 - 128 = 212)
-    // Y position: vertically centered within 868px game area (86 + (868 - 768) / 2 = 136)
-    const boothWidth = LAYOUT.BOOTH_WIDTH;
+    // DropItemPool position: x=340 (baseline), right side of booth area
+    // Y position: vertically centered within 868px game area
     const boothHeight = LAYOUT.BOOTH_HEIGHT;
-    const startX = LAYOUT.BOOTH_AREA_WIDTH - boothWidth; // 212
+    const startX = LAYOUT.BASELINE_X; // 340 - DropItemPool position
     const startY =
       LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - boothHeight * 3) / 2; // 136
 
@@ -187,6 +186,7 @@ export class BoothSystem implements ISystem {
 
 /**
  * Individual booth for storing one food type
+ * Uses DropItemPool_*.png sprites at x=340 (baseline)
  */
 class Booth {
   public readonly id: number;
@@ -208,7 +208,7 @@ class Booth {
     this.id = id;
     this.foodType = foodType;
 
-    // Create sprite using booth pool assets
+    // Create DropItemPool sprite
     this.sprite = this.createSprite();
     this.sprite.position.set(x, y);
 
@@ -237,7 +237,7 @@ class Booth {
   }
 
   private createSprite(): Sprite {
-    // Map booth id to corresponding pool asset
+    // Map booth id to DropItemPool asset
     let assetKey: keyof typeof AssetKeys;
     switch (this.id) {
       case 1:
@@ -254,9 +254,8 @@ class Booth {
     }
 
     const sprite = new Sprite(getTexture(AssetKeys[assetKey]));
-    // Asset size is 128×256, use as-is
-    sprite.width = 128;
-    sprite.height = 256;
+    sprite.width = LAYOUT.BOOTH_WIDTH; // 128
+    sprite.height = LAYOUT.BOOTH_HEIGHT; // 256
     return sprite;
   }
 
@@ -272,7 +271,7 @@ class Booth {
   }
 
   private setupTextPositions(x: number, y: number): void {
-    // Position texts relative to booth sprite
+    // Position texts relative to DropItemPool sprite
     this.nameText.position.set(x + 10, y + 10);
     this.countText.position.set(x + 10, y + 220);
   }

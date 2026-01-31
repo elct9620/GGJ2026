@@ -10,9 +10,16 @@ import { Enemy, EnemyType } from "../entities/enemy";
 import { Vector } from "../values/vector";
 import { LAYOUT } from "../utils/constants";
 
-// Box position based on LAYOUT constants (SPEC § 2.7.2)
-const BOX_X = LAYOUT.BASELINE_X; // 340
-const BOX_Y = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT / 2; // 520
+// Booth Pool position based on LAYOUT constants (SPEC § 2.7.2)
+// Pool area: x=340 to x=468 (128px wide), y=136 to y=904 (768px tall, 3x256)
+const POOL_X = LAYOUT.BASELINE_X; // 340
+const POOL_START_Y =
+  LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - 256 * 3) / 2; // 136
+const POOL_CENTER_Y = POOL_START_Y + (256 * 3) / 2; // 520 (center of pool area)
+
+// Test constants for enemy positioning within booth pool area
+const BOX_X = POOL_X;
+const BOX_Y = POOL_CENTER_Y;
 
 describe("BoxSystem", () => {
   let boxSystem: BoxSystem;

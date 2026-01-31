@@ -1,6 +1,9 @@
 /**
- * Box System
- * SPEC § 2.3.7: 寶箱防禦系統,與攤位食材數量同步
+ * Box System (Booth Pool Defense)
+ * SPEC § 2.3.7: 寶箱防禦系統，與攤位食材數量同步
+ *
+ * Note: Visual representation (DropItemPool_*.png) is handled by BoothSystem.
+ *       This system only handles collision detection and food consumption logic.
  */
 
 import type { ISystem } from "../core/systems/system.interface";
@@ -8,18 +11,24 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { Enemy } from "../entities/enemy";
-import { Graphics } from "pixi.js";
+import { Container } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 
 /**
- * Box System
+ * Booth Pool dimensions (matches DropItemPool sprite size)
+ * Based on ui_rough_pixelSpec.png
+ */
+const BOOTH_POOL_WIDTH = 128;
+const BOOTH_POOL_HEIGHT = 256;
+
+/**
+ * Box System (Booth Pool Defense)
  * SPEC § 2.3.7: 寶箱防禦系統
  *
  * Responsibilities:
  * - 監聽攤位食材變化（訂閱 FoodStored/FoodConsumed）
- * - 寶箱生成/消失邏輯（x=384, y=攤位中心）
- * - 敵人碰撞檢測（優先於攤位偷取）
- * - 同步耐久度顯示（耐久度 = 攤位食材總數）
+ * - 敵人碰撞檢測（在 Booth Pool 區域 x=340~468）
+ * - 碰撞時消耗食材並消滅敵人（不掉落）
  */
 export class BoxSystem implements ISystem {
   public readonly name = "BoxSystem";
@@ -35,15 +44,14 @@ export class BoxSystem implements ISystem {
   private totalFoodCount = 0;
   private boxExists = false;
 
-  // Box position (SPEC § 2.7.2: x=340 baseline, y=center of game area)
-  private readonly boxX = LAYOUT.BASELINE_X;
-  private readonly boxY = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT / 2;
-  private readonly boxWidth = 40;
-  private readonly boxHeight = 40;
+  // Booth Pool collision area (SPEC § 2.7.2)
+  // Area: x=340 to x=468, y=136 to y=904
+  private readonly poolX = LAYOUT.BASELINE_X;
+  private readonly poolStartY =
+    LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - BOOTH_POOL_HEIGHT * 3) / 2;
 
-  // Visual representation
-  private boxSprite: Graphics | null = null;
-  private container: Graphics = new Graphics();
+  // Empty container (no visual elements - handled by BoothSystem)
+  private container: Container = new Container();
 
   /**
    * Initialize box system
@@ -66,23 +74,28 @@ export class BoxSystem implements ISystem {
   }
 
   /**
-   * Update box system - check enemy collisions
+   * Update box system - check enemy collisions with booth pool area
    */
   public update(): void {
     if (!this.boxExists || !this.eventQueue) return;
 
-    // Check enemy collisions with box (SPEC § 2.3.7)
+    // Check enemy collisions with booth pool area (SPEC § 2.3.7)
+    // Pool area: x from poolX to poolX + BOOTH_POOL_WIDTH
+    //            y from poolStartY to poolStartY + BOOTH_POOL_HEIGHT * 3
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
 
-      const dx = enemy.position.x - this.boxX;
-      const dy = enemy.position.y - this.boxY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const enemyX = enemy.position.x;
+      const enemyY = enemy.position.y;
 
-      // Collision threshold (box radius + enemy radius)
-      const collisionDistance = this.boxWidth / 2 + 20; // Enemy approx 20px radius
+      // Check if enemy is within booth pool area (AABB collision)
+      const inPoolX =
+        enemyX >= this.poolX && enemyX <= this.poolX + BOOTH_POOL_WIDTH;
+      const inPoolY =
+        enemyY >= this.poolStartY &&
+        enemyY <= this.poolStartY + BOOTH_POOL_HEIGHT * 3;
 
-      if (distance < collisionDistance) {
+      if (inPoolX && inPoolY) {
         // Consume 1 food from booth
         this.totalFoodCount = Math.max(0, this.totalFoodCount - 1);
 
@@ -96,9 +109,7 @@ export class BoxSystem implements ISystem {
 
         // Update box state
         if (this.totalFoodCount === 0) {
-          this.despawnBox();
-        } else {
-          this.updateBoxVisual();
+          this.boxExists = false;
         }
 
         break; // Only one collision per frame
@@ -112,7 +123,7 @@ export class BoxSystem implements ISystem {
   public destroy(): void {
     this.eventQueue = null;
     this.enemies = [];
-    this.despawnBox();
+    this.boxExists = false;
   }
 
   /**
@@ -132,7 +143,7 @@ export class BoxSystem implements ISystem {
   /**
    * Get box container for rendering
    */
-  public getContainer(): Graphics {
+  public getContainer(): Container {
     return this.container;
   }
 
@@ -158,8 +169,6 @@ export class BoxSystem implements ISystem {
 
     if (!this.boxExists) {
       this.spawnBox();
-    } else {
-      this.updateBoxVisual();
     }
   }
 
@@ -170,64 +179,17 @@ export class BoxSystem implements ISystem {
     this.totalFoodCount = Math.max(0, this.totalFoodCount - 1);
 
     if (this.totalFoodCount === 0) {
-      this.despawnBox();
-    } else {
-      this.updateBoxVisual();
+      this.boxExists = false;
     }
   }
 
   /**
-   * Spawn box at booth entrance (SPEC § 2.3.7)
+   * Activate booth pool defense (SPEC § 2.3.7)
+   * Called when first food is stored
    */
   private spawnBox(): void {
     if (this.boxExists) return;
-
     this.boxExists = true;
-    this.boxSprite = new Graphics();
-    this.updateBoxVisual();
-    this.container.addChild(this.boxSprite);
-  }
-
-  /**
-   * Despawn box when food count reaches zero (SPEC § 2.3.7)
-   */
-  private despawnBox(): void {
-    if (!this.boxExists || !this.boxSprite) return;
-
-    this.boxExists = false;
-    this.container.removeChild(this.boxSprite);
-    this.boxSprite = null;
-  }
-
-  /**
-   * Update box visual with durability indicator
-   */
-  private updateBoxVisual(): void {
-    if (!this.boxSprite) return;
-
-    this.boxSprite.clear();
-
-    // Draw box (brown rectangle)
-    this.boxSprite.rect(
-      this.boxX - this.boxWidth / 2,
-      this.boxY - this.boxHeight / 2,
-      this.boxWidth,
-      this.boxHeight,
-    );
-    this.boxSprite.fill({ color: 0x8b4513 });
-
-    // Draw durability text
-    // (For simplicity, using a colored overlay - full text rendering requires pixi.js Text)
-    const durabilityRatio = this.totalFoodCount / 18; // Max 18 food (6+6+6)
-    const healthBarWidth = this.boxWidth * durabilityRatio;
-
-    this.boxSprite.rect(
-      this.boxX - this.boxWidth / 2,
-      this.boxY - this.boxHeight / 2 - 5,
-      healthBarWidth,
-      3,
-    );
-    this.boxSprite.fill({ color: 0x00ff00 });
   }
 
   /**
@@ -235,6 +197,6 @@ export class BoxSystem implements ISystem {
    */
   public reset(): void {
     this.totalFoodCount = 0;
-    this.despawnBox();
+    this.boxExists = false;
   }
 }
