@@ -9,6 +9,7 @@ import { BoothSystem } from "./systems/booth";
 import { CombatSystem } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
+import { WaveSystem } from "./systems/wave";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -36,9 +37,7 @@ export class GameScene {
   private boothContainer: Container;
   private uiLayer: Container;
 
-  // Game state
-  private currentWave: number = 1;
-  private isWaveTransitioning: boolean = false; // Prevent multiple wave spawns
+  // Game state (now managed by Wave System)
 
   // Game statistics (Spec: § 2.8.2)
   private stats: GameStats = {
@@ -75,24 +74,29 @@ export class GameScene {
     const combatSystem = new CombatSystem();
     const synthesisSystem = new SynthesisSystem();
     const killCounterSystem = new KillCounterSystem();
+    const waveSystem = new WaveSystem();
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
     this.systemManager.register(combatSystem);
     this.systemManager.register(synthesisSystem);
     this.systemManager.register(killCounterSystem);
+    this.systemManager.register(waveSystem);
     this.systemManager.register(new HUDSystem());
     this.systemManager.register(boothSystem);
     this.systemManager.initialize();
 
-    // Subscribe to WaveComplete event
+    // Subscribe to EnemyDeath event for food drops
+    eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
+
+    // Subscribe to WaveComplete for next wave (SPEC § 2.3.5)
     eventQueue.subscribe(
       EventType.WaveComplete,
       this.onWaveComplete.bind(this),
     );
 
-    // Subscribe to EnemyDeath event for food drops
-    eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
+    // Subscribe to WaveStart for HUD updates
+    eventQueue.subscribe(EventType.WaveStart, this.onWaveStart.bind(this));
 
     // Initialize player at center of playable area
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
@@ -120,42 +124,27 @@ export class GameScene {
     this.uiLayer.addChild(hudSystem.getTopHUD());
     this.uiLayer.addChild(hudSystem.getBottomHUD());
 
-    // Spawn initial enemies for wave 1
-    this.spawnWave(1);
+    // Start wave 1 (SPEC § 2.3.5)
+    waveSystem.startWave(1);
   }
 
   /**
-   * Spawn enemies for a wave
-   * Spec: § 2.3.5 Wave System
+   * Spawn enemy (callback from Wave System)
+   * SPEC § 2.3.5: Wave System calls this to create enemies
    */
-  private spawnWave(waveNumber: number): void {
-    this.currentWave = waveNumber;
+  private spawnEnemy(type: "Ghost" | "Boss", x: number, y: number): void {
+    const enemyType = type === "Boss" ? EnemyType.Boss : EnemyType.Ghost;
+    const enemy = new Enemy(enemyType, new Vector(x, y));
+    this.enemies.push(enemy);
+    this.enemiesContainer.addChild(enemy.sprite);
+  }
 
-    // Enemy count = wave number × 2 (SPEC § 2.3.5)
-    const enemyCount = waveNumber * 2;
-
-    for (let i = 0; i < enemyCount; i++) {
-      // Spawn enemies from right side, with vertical spacing
-      const yPosition = 100 + (i * 900) / enemyCount;
-      const xPosition = 1920 + 50 + i * 100; // Stagger spawn positions
-
-      const enemy = new Enemy(
-        EnemyType.Ghost,
-        new Vector(xPosition, yPosition),
-      );
-      this.enemies.push(enemy);
-      this.enemiesContainer.addChild(enemy.sprite);
-    }
-
-    // Spawn boss every 5 waves (SPEC § 2.3.5)
-    if (waveNumber % 5 === 0) {
-      const boss = new Enemy(EnemyType.Boss, new Vector(2000, 540));
-      this.enemies.push(boss);
-      this.enemiesContainer.addChild(boss.sprite);
-    }
-
+  /**
+   * Handle WaveStart event (SPEC § 2.3.6)
+   */
+  private onWaveStart(data: { waveNumber: number }): void {
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
-    hudSystem.updateWave(waveNumber);
+    hudSystem.updateWave(data.waveNumber);
     hudSystem.updateEnemyCount(this.enemies.length);
   }
 
@@ -165,6 +154,7 @@ export class GameScene {
   public update(deltaTime: number): void {
     // Update all systems (EventQueue will process first due to priority)
     // Combat System handles: shooting, collisions, buff management
+    // Wave System handles: enemy spawning, wave progression
     this.systemManager.update(deltaTime);
 
     this.handleInput(deltaTime);
@@ -172,8 +162,8 @@ export class GameScene {
     this.updateEnemies(deltaTime);
     this.updateBullets(deltaTime);
     this.updateHUD();
-    this.checkWaveCompletion();
     this.checkFoodCollection(); // Auto-collect dropped food
+    this.checkGameOver(); // Check game over condition
   }
 
   private handleInput(deltaTime: number): void {
@@ -303,43 +293,26 @@ export class GameScene {
     hudSystem.updateReload(this.player.isReloading, this.player.reloadTimer);
   }
 
-  private checkWaveCompletion(): void {
-    // Check if all enemies are defeated
-    // SPEC § 2.3.5: Wave progression should happen once per wave completion
-    if (
-      this.enemies.length === 0 &&
-      this.player.health > 0 &&
-      !this.isWaveTransitioning
-    ) {
-      // Set flag to prevent multiple wave spawns
-      this.isWaveTransitioning = true;
-
-      // Update statistics - track waves survived (Spec: § 2.8.2)
-      this.stats.wavesSurvived = this.currentWave;
-
-      // Publish WaveComplete event with delay (SPEC § 2.3.6)
-      // TODO: Replace with upgrade system (SPEC § 2.3.4)
-      const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
-      eventQueue.publish(
-        EventType.WaveComplete,
-        { waveNumber: this.currentWave },
-        2000,
-      );
-    }
-
-    // Check game over (Spec: § 2.8.2)
+  /**
+   * Check game over condition (Spec: § 2.8.2)
+   */
+  private checkGameOver(): void {
     if (this.player.health <= 0 && this.onGameOver) {
       this.onGameOver(this.stats);
     }
   }
 
   /**
-   * Handle wave completion event
-   * SPEC § 2.3.6: Event handler for WaveComplete
+   * Handle wave completion event (SPEC § 2.3.6)
+   * Start next wave
    */
   private onWaveComplete(data: { waveNumber: number }): void {
-    this.spawnWave(data.waveNumber + 1);
-    this.isWaveTransitioning = false;
+    // Update statistics - track waves survived (Spec: § 2.8.2)
+    this.stats.wavesSurvived = data.waveNumber;
+
+    // Start next wave (SPEC § 2.3.5)
+    const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
+    waveSystem.startWave(data.waveNumber + 1);
   }
 
   /**
@@ -371,9 +344,9 @@ export class GameScene {
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
     boothSystem.reset();
 
-    // Reset game state
-    this.currentWave = 1;
-    this.isWaveTransitioning = false;
+    // Reset wave system and start wave 1
+    const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");
+    waveSystem.reset();
 
     // Reset statistics
     this.stats = {
@@ -382,7 +355,7 @@ export class GameScene {
       specialBulletsUsed: 0,
     };
 
-    // Spawn initial wave
-    this.spawnWave(1);
+    // Start wave 1
+    waveSystem.startWave(1);
   }
 }
