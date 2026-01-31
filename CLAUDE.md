@@ -16,6 +16,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Deployment**: Cloudflare Pages (via wrangler)
 - **Package Manager**: pnpm
 
+## Coding Standards
+
+- Use discriminated unions in TypeScript for variant types
+- Prefer SOLID principles and modular design
+- Prefer Design Patterns (e.g., Object Pool for bullets/enemies)
+- Prefer Dependency Injection for system dependencies
+
 ## Development Commands
 
 ```bash
