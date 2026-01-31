@@ -104,6 +104,7 @@ export class Player extends Entity {
   /**
    * Move the player based on input direction
    * Constrains movement within game boundaries (SPEC § 2.7.2)
+   * Player position is center-based, so boundaries account for half the player size
    */
   public move(direction: Vector, deltaTime: number): void {
     if (!this.active) return;
@@ -112,18 +113,25 @@ export class Player extends Entity {
     const displacement = direction.normalize().multiply(this.speed * deltaTime);
     const newPosition = this.position.add(displacement);
 
+    // Player position is center-based (anchor 0.5, 0.5), so account for half size
+    const halfSize = LAYOUT.PLAYER_SIZE / 2; // 128 px
+
     // Apply boundary constraints (SPEC § 2.7.2)
-    // Left boundary: x = 340 (booth area right side)
-    // Right boundary: x = 1920
-    // Top boundary: y = 86 (below top HUD)
-    // Bottom boundary: y = 954 (above bottom HUD)
+    // Boundaries are adjusted by half player size to keep entire sprite within game area
+    // Left boundary: x = 340 + 128 = 468 (booth area + half player)
+    // Right boundary: x = 1920 - 128 = 1792 (canvas width - half player)
+    // Top boundary: y = 86 + 128 = 214 (below top HUD + half player)
+    // Bottom boundary: y = 954 - 128 = 826 (above bottom HUD - half player)
     const clampedX = Math.max(
-      LAYOUT.BASELINE_X,
-      Math.min(CANVAS_WIDTH, newPosition.x),
+      LAYOUT.BASELINE_X + halfSize,
+      Math.min(CANVAS_WIDTH - halfSize, newPosition.x),
     );
     const clampedY = Math.max(
-      LAYOUT.GAME_AREA_Y,
-      Math.min(LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT, newPosition.y),
+      LAYOUT.GAME_AREA_Y + halfSize,
+      Math.min(
+        LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT - halfSize,
+        newPosition.y,
+      ),
     );
 
     this.position = new Vector(clampedX, clampedY);

@@ -25,12 +25,13 @@ describe("Player", () => {
       expect(player.position.y).toBe(300);
     });
 
-    it("PL-02: 玩家 (500, 500) + 按 A 1 秒 → 玩家 (300, 500) 向左移動 200 px", () => {
+    it("PL-02: 玩家 (500, 500) + 按 A 1 秒 → 向左移動但受左邊界限制", () => {
       const direction = new Vector(-1, 0); // Left
       player.move(direction, 1);
 
-      // 300 is clamped to BASELINE_X (340)
-      expect(player.position.x).toBe(340);
+      // 500 - 200 = 300, but clamped to BASELINE_X + halfSize (340 + 128 = 468)
+      const halfSize = LAYOUT.PLAYER_SIZE / 2;
+      expect(player.position.x).toBe(LAYOUT.BASELINE_X + halfSize);
       expect(player.position.y).toBe(500);
     });
 
@@ -50,42 +51,51 @@ describe("Player", () => {
       expect(player.position.y).toBe(500);
     });
 
-    it("PL-05: 玩家 (384, 500) + 按 A → 碰到左邊界停止 (x = 340)", () => {
-      player = new Player(new Vector(384, 500));
+    it("PL-05: 玩家碰到左邊界停止（考慮玩家大小）", () => {
+      // Player position is center-based, so left boundary = BASELINE_X + halfSize
+      const halfSize = LAYOUT.PLAYER_SIZE / 2; // 128
+      player = new Player(new Vector(500, 500));
       const direction = new Vector(-1, 0); // Left
       player.move(direction, 1); // Move left for 1 second (200 px)
 
-      // Should be clamped to BASELINE_X (340)
-      expect(player.position.x).toBe(LAYOUT.BASELINE_X);
+      // Should be clamped to BASELINE_X + halfSize (340 + 128 = 468)
+      expect(player.position.x).toBe(LAYOUT.BASELINE_X + halfSize);
       expect(player.position.y).toBe(500);
     });
 
-    it("PL-06: 玩家 (1920, 500) + 按 D → 碰到右邊界停止 (x = 1920)", () => {
+    it("PL-06: 玩家碰到右邊界停止（考慮玩家大小）", () => {
+      // Player position is center-based, so right boundary = CANVAS_WIDTH - halfSize
+      const halfSize = LAYOUT.PLAYER_SIZE / 2; // 128
       player = new Player(new Vector(1800, 500));
       const direction = new Vector(1, 0); // Right
       player.move(direction, 1);
 
-      // Should be clamped to CANVAS_WIDTH (1920)
-      expect(player.position.x).toBe(CANVAS_WIDTH);
+      // Should be clamped to CANVAS_WIDTH - halfSize (1920 - 128 = 1792)
+      expect(player.position.x).toBe(CANVAS_WIDTH - halfSize);
       expect(player.position.y).toBe(500);
     });
 
-    it("PL-07: 玩家 (500, 86) + 按 W → 碰到上邊界停止", () => {
-      player = new Player(new Vector(500, 100));
+    it("PL-07: 玩家碰到上邊界停止（考慮玩家大小）", () => {
+      // Player position is center-based, so top boundary = GAME_AREA_Y + halfSize
+      const halfSize = LAYOUT.PLAYER_SIZE / 2; // 128
+      player = new Player(new Vector(500, 300));
       const direction = new Vector(0, -1); // Up
       player.move(direction, 1);
 
-      // Should be clamped to GAME_AREA_Y (86)
+      // Should be clamped to GAME_AREA_Y + halfSize (86 + 128 = 214)
       expect(player.position.x).toBe(500);
-      expect(player.position.y).toBe(LAYOUT.GAME_AREA_Y);
+      expect(player.position.y).toBe(LAYOUT.GAME_AREA_Y + halfSize);
     });
 
-    it("PL-08: 玩家 (500, 954) + 按 S → 碰到下邊界停止", () => {
-      player = new Player(new Vector(500, 900));
+    it("PL-08: 玩家碰到下邊界停止（考慮玩家大小）", () => {
+      // Player position is center-based, so bottom boundary = GAME_AREA_Y + GAME_AREA_HEIGHT - halfSize
+      const halfSize = LAYOUT.PLAYER_SIZE / 2; // 128
+      player = new Player(new Vector(500, 800));
       const direction = new Vector(0, 1); // Down
       player.move(direction, 1);
 
-      const bottomBoundary = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT;
+      const bottomBoundary =
+        LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT - halfSize; // 954 - 128 = 826
       expect(player.position.x).toBe(500);
       expect(player.position.y).toBe(bottomBoundary);
     });

@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { WaveSystem } from "./wave";
 import { EventQueue, EventType } from "./event-queue";
 import { WAVE_CONFIG } from "../config";
+import { LAYOUT } from "../utils/constants";
 
 /**
  * Helper function to simulate time passing and spawn all enemies
@@ -178,12 +179,20 @@ describe("WaveSystem", () => {
       expect(waveSystem.isBossSpawnPending()).toBe(false);
     });
 
-    it("WS-19: Y 座標為隨機值", () => {
+    it("WS-19: Y 座標為遊戲區域內的隨機值（考慮敵人大小，避開 HUD）", () => {
       waveSystem.startWave(3);
       simulateFullWaveSpawn(waveSystem, 3);
 
-      // Check Y positions are within valid range
-      expect(spawnedEnemies.every((e) => e.y >= 0 && e.y <= 1080)).toBe(true);
+      // SPEC § 2.3.5 / § 2.7.2: Y should be within game area, accounting for enemy size
+      // Enemy position is center-based, so boundaries account for half the enemy size (128 px)
+      const halfSize = LAYOUT.ENEMY_SIZE / 2; // 128
+      const minY = LAYOUT.GAME_AREA_Y + halfSize; // 86 + 128 = 214
+      const maxY = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT - halfSize; // 954 - 128 = 826
+
+      // Check Y positions are within valid range (enemy sprite fully visible in game area)
+      expect(spawnedEnemies.every((e) => e.y >= minY && e.y <= maxY)).toBe(
+        true,
+      );
 
       // Check Y positions are not all the same (random)
       const yPositions = spawnedEnemies.map((e) => e.y);

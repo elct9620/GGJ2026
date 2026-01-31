@@ -9,7 +9,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { WAVE_CONFIG, ENEMY_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
-import { CANVAS_HEIGHT } from "../utils/constants";
+import { LAYOUT } from "../utils/constants";
 
 /**
  * Enemy spawn callback type
@@ -257,11 +257,20 @@ export class WaveSystem extends InjectableSystem {
   }
 
   /**
-   * Get random Y position within canvas height
-   * SPEC § 2.3.5: Y = random 0~1080
+   * Get random Y position within game area
+   * SPEC § 2.3.5 / § 2.7.2: Y position accounts for enemy size (256×256 px)
+   * Enemy position is center-based, so boundaries account for half the enemy size
    */
   private getRandomYPosition(): number {
-    return Math.random() * CANVAS_HEIGHT;
+    // Enemy position is center-based, account for half size (128 px)
+    const halfSize = LAYOUT.ENEMY_SIZE / 2;
+
+    // Valid Y range: (86 + 128) to (954 - 128) = 214 to 826
+    const minY = LAYOUT.GAME_AREA_Y + halfSize;
+    const maxY = LAYOUT.GAME_AREA_Y + LAYOUT.GAME_AREA_HEIGHT - halfSize;
+    const range = maxY - minY;
+
+    return minY + Math.random() * range;
   }
 
   /**
