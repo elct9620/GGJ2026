@@ -1,0 +1,186 @@
+name: Refactor Code
+description: Improve code structure, readability, and maintainability
+title: "[Refactor] "
+labels: ["refactor", "improvement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Refactor Code
+
+        使用此表單來重構程式碼，改善結構、可讀性和可維護性。
+
+        **此表單適用於：**
+        - 程式碼結構需要改善
+        - 發現重複或混亂的程式碼
+        - 想要提升程式碼品質
+        - 準備新功能前的清理工作
+
+        **你需要描述：**
+        - 哪些程式碼需要重構
+        - 目前遇到的問題或痛點
+        - 期望達成的改善目標
+
+        **Claude 會自動：**
+        - 遵循專案慣例和最佳實踐
+        - 保持測試通過
+        - 進行漸進式的小步改善
+        - 維持程式碼功能不變
+
+  - type: input
+    id: claude_command
+    attributes:
+      label: Claude Command
+      description: 此欄位告訴 Claude Code 要執行的命令（請勿修改）
+      value: "/refactor"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: refactor_scope
+    attributes:
+      label: 重構範圍
+      description: 選擇要重構的範圍
+      options:
+        - 單一檔案或函式
+        - 特定模組或系統
+        - 多個相關元件
+        - 全專案架構調整
+    validations:
+      required: true
+
+  - type: textarea
+    id: target_code
+    attributes:
+      label: 目標程式碼
+      description: 指定要重構的程式碼位置或範圍
+      placeholder: |
+        請指定要重構的程式碼：
+
+        **檔案路徑：**
+        - src/systems/GravitySystem.ts
+        - src/entities/Bird.ts
+
+        **或特定函式/類別：**
+        - GravitySystem.update() 方法
+        - Bird 類別的初始化邏輯
+
+        **或描述範圍：**
+        - 所有物理相關的系統
+        - 實體管理的程式碼
+    validations:
+      required: true
+
+  - type: dropdown
+    id: refactor_goal
+    attributes:
+      label: 重構目標
+      description: 選擇主要的重構目標
+      options:
+        - 改善可讀性
+        - 消除重複程式碼
+        - 簡化複雜邏輯
+        - 改善架構設計
+        - 提升效能
+        - 增加可測試性
+        - 遵循專案慣例
+      multiple: true
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_issues
+    attributes:
+      label: 目前問題
+      description: 描述目前程式碼的問題或需要改善的地方
+      placeholder: |
+        請描述目前遇到的問題：
+
+        **程式碼問題：**
+        - 函式太長，難以理解
+        - 有重複的邏輯散落在多處
+        - 類別職責不清楚
+        - 測試難以撰寫
+
+        **具體範例：**
+        - update() 函式有 200 行，做了太多事情
+        - Bird 和 Pipe 都有相同的碰撞檢測邏輯
+        - GravitySystem 同時處理重力和跳躍
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_outcome
+    attributes:
+      label: 期望結果（選填）
+      description: 描述重構後期望達成的狀態
+      placeholder: |
+        重構後期望：
+
+        - 函式職責單一，每個不超過 30 行
+        - 碰撞檢測邏輯統一在 CollisionSystem
+        - 每個系統只負責一件事
+        - 測試覆蓋率提升到 80%
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      description: 此重構工作的優先度
+      options:
+        - 高（嚴重影響開發）
+        - 中（逐步改善）
+        - 低（有時間再處理）
+      default: 1
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: 限制條件
+      description: 選擇重構時需要遵守的限制
+      options:
+        - label: 保持現有 API 不變（避免破壞性變更）
+        - label: 保持測試全部通過
+        - label: 遵循專案既有慣例
+        - label: 保持效能不降低
+        - label: 小步重構，逐步改善
+
+  - type: input
+    id: related_issues
+    attributes:
+      label: 相關 Issues（選填）
+      description: 引用相關的 issues
+      placeholder: "#123, #456"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 額外資訊（選填）
+      description: 任何其他有助於重構工作的資訊、參考資料或範例
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ## Claude 命令
+
+        此 issue 會觸發：`/refactor`
+
+        ## 重構原則
+
+        Claude 會遵循以下原則進行重構：
+        - **漸進式**：小步改善，每次變更都能通過測試
+        - **慣例優先**：研究並遵循專案既有的程式碼慣例
+        - **務實**：使用最簡單可行的解決方案
+        - **簡潔**：避免過度工程，保持程式碼清晰
+
+        ## 後續步驟
+
+        提交此 issue 後：
+        1. 在留言中加入 `@claude` 觸發重構流程
+        2. Claude 會分析目標程式碼和專案慣例
+        3. Claude 會進行漸進式重構
+        4. 每次變更都會確保測試通過
+        5. 你會收到重構摘要和改善說明
+        6. 如需調整，可以繼續在此 issue 中討論

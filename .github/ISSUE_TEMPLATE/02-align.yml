@@ -1,0 +1,147 @@
+name: Align Code to Design
+description: Align codebase implementation to match the specification
+title: "[Align] "
+labels: ["align", "design"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Align Code to Design
+
+        使用此表單來讓程式碼實作符合設計規格（SPEC.md）。
+
+        **此表單適用於：**
+        - 程式碼與規格不一致時
+        - 規格更新後需要同步程式碼
+        - 發現實作偏離設計時
+
+        **你需要描述：**
+        - 哪個部分的規格需要對齊
+        - 目前程式碼與規格的差異（如果已知）
+        - 期望的對齊結果
+
+        **Claude 會自動：**
+        - 分析規格與程式碼的差異
+        - 修改程式碼以符合規格
+        - 確保測試通過
+        - 保持程式碼品質
+
+  - type: input
+    id: claude_command
+    attributes:
+      label: Claude Command
+      description: 此欄位告訴 Claude Code 要執行的命令（請勿修改）
+      value: "/align-design"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: align_scope
+    attributes:
+      label: 對齊範圍
+      description: 選擇要對齊的範圍
+      options:
+        - 特定功能或系統
+        - 整個模組
+        - 全專案檢查
+    validations:
+      required: true
+
+  - type: input
+    id: target_component
+    attributes:
+      label: 目標元件
+      description: 指定要對齊的元件、系統或功能名稱
+      placeholder: "例如：重力系統、碰撞偵測、玩家控制器"
+    validations:
+      required: true
+
+  - type: textarea
+    id: spec_reference
+    attributes:
+      label: 規格參考
+      description: 引用相關的規格內容（SPEC.md 的章節、段落或內容）
+      placeholder: |
+        請提供相關的規格內容或指出規格位置：
+
+        例如：
+        - SPEC.md 第 3.2 節「重力系統」
+        - 或直接貼上規格內容：
+          ```
+          重力系統應該：
+          - 每幀對鳥類施加向下的加速度
+          - 重力加速度為 980 pixels/s²
+          ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_issue
+    attributes:
+      label: 目前問題（選填）
+      description: 描述目前程式碼與規格的差異或不一致之處
+      placeholder: |
+        如果你已經發現差異，請描述：
+
+        **目前實作：**
+        - 程式碼目前如何運作？
+
+        **與規格的差異：**
+        - 哪裡不符合規格？
+        - 有什麼具體的錯誤或問題？
+
+        如果不確定差異在哪，可以留空，讓 Claude 自動分析。
+
+  - type: textarea
+    id: affected_files
+    attributes:
+      label: 相關檔案（選填）
+      description: 列出可能需要修改的檔案路徑
+      placeholder: |
+        例如：
+        - src/systems/GravitySystem.ts
+        - src/entities/Bird.ts
+        - tests/systems/GravitySystem.test.ts
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      description: 此對齊工作的優先度
+      options:
+        - 高（影響核心功能）
+        - 中（一般功能）
+        - 低（優化或改進）
+      default: 1
+
+  - type: input
+    id: related_issues
+    attributes:
+      label: 相關 Issues（選填）
+      description: 引用相關的 issues
+      placeholder: "#123, #456"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 額外資訊（選填）
+      description: 任何其他有助於對齊工作的資訊
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ## Claude 命令
+
+        此 issue 會觸發：`/align-design`
+
+        ## 後續步驟
+
+        提交此 issue 後：
+        1. 在留言中加入 `@claude` 觸發對齊流程
+        2. Claude 會分析規格與程式碼的差異
+        3. Claude 會修改程式碼以符合規格
+        4. Claude 會確保測試通過
+        5. 你會收到變更摘要和對齊結果
+        6. 如需調整，可以繼續在此 issue 中討論

@@ -1,0 +1,122 @@
+name: Apply Game Design
+description: Convert game design ideas into formal specifications
+title: "[Apply Design] "
+labels: ["design", "apply"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Apply Game Design
+
+        提供你的遊戲設計描述，Claude 會將其轉換為正式的規格文件。
+
+        **此表單適用於：**
+        - 新增遊戲功能或機制的設計
+        - 更新現有設計的某個部分
+        - 將設計想法正式化為規格
+
+        **你只需要描述：**
+        - 想要實現的遊戲玩法或功能
+        - 玩家的體驗和互動方式
+        - 期望的行為和結果
+
+        **Claude 會自動處理：**
+        - 將設計轉換為正式規格（SPEC.md）
+        - 確保設計符合專案架構
+        - 產生相關的技術細節
+
+  - type: input
+    id: claude_command
+    attributes:
+      label: Claude Command
+      description: 此欄位告訴 Claude Code 要執行的命令（請勿修改）
+      value: "/apply-design"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: design_type
+    attributes:
+      label: 設計類型
+      description: 選擇你要進行的操作類型
+      options:
+        - 新增功能設計
+        - 更新現有設計
+        - 修正設計內容
+    validations:
+      required: true
+
+  - type: input
+    id: design_scope
+    attributes:
+      label: 設計範圍
+      description: 簡短描述這個設計涵蓋的範圍（例如：「鳥類物理系統」、「碰撞偵測機制」）
+      placeholder: "例如：重力與跳躍系統"
+    validations:
+      required: true
+
+  - type: textarea
+    id: design_description
+    attributes:
+      label: 設計描述
+      description: 詳細說明你的遊戲設計。專注於「想要什麼」而不是「如何實現」。
+      placeholder: |
+        請描述你的遊戲設計：
+
+        **核心玩法：**
+        - 玩家可以做什麼？
+        - 遊戲如何回應玩家的操作？
+
+        **視覺與回饋：**
+        - 應該有什麼視覺效果？
+        - 需要什麼音效或回饋？
+
+        **遊戲狀態：**
+        - 遊戲狀態如何改變？
+        - 有哪些規則和限制？
+
+        **範例：**
+        - 「鳥類持續受重力影響往下掉落」
+        - 「玩家點擊時，鳥類向上跳躍並播放音效」
+        - 「碰到障礙物時遊戲結束」
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference_spec
+    attributes:
+      label: 參考規格（選填）
+      description: 如果是更新現有設計，請提供相關的規格章節或內容
+      placeholder: |
+        例如：SPEC.md 的某個章節內容，或現有設計文件的連結
+
+  - type: input
+    id: related_issues
+    attributes:
+      label: 相關 Issues（選填）
+      description: 引用相關的 issues 以提供更多脈絡
+      placeholder: "#123, #456"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: 額外資訊（選填）
+      description: 任何其他有助於理解設計的資訊、限制或範例
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ## Claude 命令
+
+        此 issue 會觸發：`/apply-design`
+
+        ## 後續步驟
+
+        提交此 issue 後：
+        1. 在留言中加入 `@claude` 觸發設計套用流程
+        2. Claude 會分析你的設計描述
+        3. Claude 會將設計轉換為正式規格並更新 SPEC.md
+        4. 你會收到更新內容的摘要
+        5. 如需進一步調整，可以繼續在此 issue 中與 Claude 討論
