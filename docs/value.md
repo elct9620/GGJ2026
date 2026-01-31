@@ -2,6 +2,35 @@
 
 本文件定義遊戲中使用的值物件（Value Objects）的完整規格。
 
+## 設計原則
+
+Value Objects 遵循以下原則：
+
+1. **不可變性 (Immutable)**：所有屬性皆為 `readonly`，操作返回新實例
+2. **相等性由值決定**：相同值的兩個實例應視為相等
+3. **無副作用**：方法不改變內部狀態，只返回新值
+4. **自我驗證**：建構時驗證輸入，確保物件始終有效
+
+## Value Objects 總覽
+
+| Value Object      | 檔案                           | 用途                                |
+| ----------------- | ------------------------------ | ----------------------------------- |
+| Vector            | `src/values/vector.ts`         | 不可變 2D 座標/方向                 |
+| CollisionBox      | `src/values/collision.ts`      | 碰撞箱尺寸介面                      |
+| Damage            | `src/values/damage.ts`         | 傷害值封裝                          |
+| Health            | `src/values/health.ts`         | 血量管理（current/max）             |
+| Ammo              | `src/values/ammo.ts`           | 彈藥管理（current/max）             |
+| Recipe            | `src/values/recipes.ts`        | 食譜配方定義                        |
+| SpecialBulletType | `src/values/special-bullet.ts` | 特殊子彈類型（Discriminated Union） |
+
+## Barrel Export
+
+使用 `src/values/index.ts` 統一匯入：
+
+```typescript
+import { Damage, Health, Ammo, Vector } from "../values";
+```
+
 # 1. Vector
 
 ## 1.1 Purpose
@@ -354,3 +383,469 @@ class Vector {
 - 所有操作時間複雜度 O(1)
 - 不使用額外記憶體分配（除返回新 Vector 實例）
 - 適合在每幀執行大量計算（60 FPS 目標）
+
+# 2. Damage
+
+## 2.1 Purpose
+
+封裝傷害計算邏輯，支援基礎傷害、百分比傷害和傷害加成。
+
+## 2.2 Properties
+
+```typescript
+class Damage {
+  public readonly value: number;
+}
+```
+
+| 屬性    | 型別     | 說明               |
+| ------- | -------- | ------------------ |
+| `value` | `number` | 傷害值（非負整數） |
+
+## 2.3 Factory Methods
+
+### 2.3.1 normal
+
+**用途**：建立普通子彈傷害（1 點）
+
+**簽章**：
+
+```typescript
+static normal(): Damage
+```
+
+**範例**：
+
+```typescript
+const damage = Damage.normal(); // value = 1
+```
+
+### 2.3.2 fromPercentage
+
+**用途**：從百分比計算傷害值
+
+**簽章**：
+
+```typescript
+static fromPercentage(currentHP: number, percentage: number): Damage
+```
+
+**範例**：
+
+```typescript
+const damage = Damage.fromPercentage(100, 0.2); // value = 20 (20% of 100)
+const rounded = Damage.fromPercentage(10, 0.33); // value = 4 (ceil of 3.3)
+```
+
+**邊界情況**：
+
+- `percentage` 必須在 0-1 之間
+- 結果使用 `Math.ceil` 無條件進位
+
+## 2.4 Operations
+
+### 2.4.1 multiply
+
+**用途**：傷害倍率（Buff/Upgrade）
+
+**簽章**：
+
+```typescript
+multiply(scalar: number): Damage
+```
+
+**範例**：
+
+```typescript
+const base = Damage.normal();
+const doubled = base.multiply(2); // value = 2
+```
+
+### 2.4.2 withBonus
+
+**用途**：固定傷害加成
+
+**簽章**：
+
+```typescript
+withBonus(bonus: number): Damage
+```
+
+**範例**：
+
+```typescript
+const base = Damage.normal();
+const buffed = base.withBonus(3); // value = 4
+const reduced = base.withBonus(-2); // value = 0 (clamped)
+```
+
+### 2.4.3 toNumber
+
+**用途**：轉換為數字（向後相容）
+
+**簽章**：
+
+```typescript
+toNumber(): number
+```
+
+### 2.4.4 isZero
+
+**用途**：檢查是否為零傷害
+
+**簽章**：
+
+```typescript
+isZero(): boolean
+```
+
+## 2.5 Common Use Cases
+
+```typescript
+// 子彈傷害計算
+const baseDamage = Damage.normal();
+const buffedDamage = baseDamage.multiply(2).withBonus(1); // 3 點傷害
+
+// 百分比傷害
+const percentDamage = Damage.fromPercentage(100, 0.2); // 20 點傷害
+```
+
+# 3. Health
+
+## 3.1 Purpose
+
+封裝血量管理邏輯，整合 Damage 進行傷害計算，支援 current/max 追蹤。
+
+## 3.2 Properties
+
+```typescript
+class Health {
+  public readonly current: number;
+  public readonly max: number;
+}
+```
+
+| 屬性      | 型別     | 說明     |
+| --------- | -------- | -------- |
+| `current` | `number` | 當前血量 |
+| `max`     | `number` | 最大血量 |
+
+## 3.3 Factory Methods
+
+### 3.3.1 player
+
+**用途**：建立玩家預設血量（5/5）
+
+**簽章**：
+
+```typescript
+static player(): Health
+```
+
+### 3.3.2 ghost
+
+**用途**：建立餓鬼預設血量（1/1）
+
+**簽章**：
+
+```typescript
+static ghost(): Health
+```
+
+### 3.3.3 boss
+
+**用途**：建立餓死鬼（Boss）預設血量（3/3）
+
+**簽章**：
+
+```typescript
+static boss(): Health
+```
+
+### 3.3.4 full
+
+**用途**：建立滿血狀態
+
+**簽章**：
+
+```typescript
+static full(maxHealth: number): Health
+```
+
+## 3.4 Operations
+
+### 3.4.1 takeDamage
+
+**用途**：受到傷害（使用 Damage Value Object）
+
+**簽章**：
+
+```typescript
+takeDamage(damage: Damage): Health
+```
+
+**範例**：
+
+```typescript
+const ghost = Health.ghost();
+const bullet = Damage.normal();
+const afterHit = ghost.takeDamage(bullet); // 0/1, isDead() = true
+```
+
+### 3.4.2 takeDamageAmount
+
+**用途**：受到數值傷害（向後相容）
+
+**簽章**：
+
+```typescript
+takeDamageAmount(amount: number): Health
+```
+
+### 3.4.3 heal
+
+**用途**：恢復血量
+
+**簽章**：
+
+```typescript
+heal(amount: number): Health
+```
+
+### 3.4.4 isDead
+
+**用途**：檢查是否死亡（血量歸零）
+
+**簽章**：
+
+```typescript
+isDead(): boolean
+```
+
+### 3.4.5 isFull
+
+**用途**：檢查是否滿血
+
+**簽章**：
+
+```typescript
+isFull(): boolean
+```
+
+### 3.4.6 percentage
+
+**用途**：取得血量百分比（0-1），用於 Boss 血條顯示
+
+**簽章**：
+
+```typescript
+percentage(): number
+```
+
+### 3.4.7 setMax
+
+**用途**：設定新的最大血量（按比例調整當前血量）
+
+**簽章**：
+
+```typescript
+setMax(newMax: number): Health
+```
+
+## 3.5 Common Use Cases
+
+```typescript
+// Ghost 被一發擊殺
+const ghost = Health.ghost();
+const bullet = Damage.normal();
+const dead = ghost.takeDamage(bullet);
+console.log(dead.isDead()); // true
+
+// Boss 血條顯示
+const boss = Health.boss();
+const afterHit = boss.takeDamage(Damage.normal());
+console.log(afterHit.percentage()); // 0.667 (2/3)
+```
+
+# 4. Ammo
+
+## 4.1 Purpose
+
+封裝彈藥管理邏輯，支援 current/max 追蹤、射擊消耗和重裝。
+
+## 4.2 Properties
+
+```typescript
+class Ammo {
+  public readonly current: number;
+  public readonly max: number;
+}
+```
+
+| 屬性      | 型別     | 說明     |
+| --------- | -------- | -------- |
+| `current` | `number` | 當前彈藥 |
+| `max`     | `number` | 最大彈藥 |
+
+## 4.3 Factory Methods
+
+### 4.3.1 default
+
+**用途**：建立玩家預設彈夾（6/6）
+
+**簽章**：
+
+```typescript
+static default(): Ammo
+```
+
+### 4.3.2 full
+
+**用途**：建立滿彈夾
+
+**簽章**：
+
+```typescript
+static full(maxAmmo: number): Ammo
+```
+
+## 4.4 Operations
+
+### 4.4.1 consume
+
+**用途**：消耗一發子彈
+
+**簽章**：
+
+```typescript
+consume(): Ammo
+```
+
+### 4.4.2 consumeMultiple
+
+**用途**：消耗指定數量子彈
+
+**簽章**：
+
+```typescript
+consumeMultiple(amount: number): Ammo
+```
+
+### 4.4.3 reload
+
+**用途**：重裝彈夾（填滿）
+
+**簽章**：
+
+```typescript
+reload(): Ammo
+```
+
+### 4.4.4 setMax
+
+**用途**：設定新的最大彈藥數
+
+**簽章**：
+
+```typescript
+setMax(newMax: number): Ammo
+```
+
+### 4.4.5 addMaxBonus
+
+**用途**：增加最大彈藥數（用於升級堆疊）
+
+**簽章**：
+
+```typescript
+addMaxBonus(bonus: number): Ammo
+```
+
+### 4.4.6 isEmpty
+
+**用途**：檢查是否空彈
+
+**簽章**：
+
+```typescript
+isEmpty(): boolean
+```
+
+### 4.4.7 canShoot
+
+**用途**：檢查是否可射擊
+
+**簽章**：
+
+```typescript
+canShoot(): boolean
+```
+
+### 4.4.8 isFull
+
+**用途**：檢查是否滿彈
+
+**簽章**：
+
+```typescript
+isFull(): boolean
+```
+
+## 4.5 Common Use Cases
+
+```typescript
+// 射擊與重裝
+let ammo = Ammo.default();
+for (let i = 0; i < 6; i++) {
+  ammo = ammo.consume();
+}
+console.log(ammo.isEmpty()); // true
+ammo = ammo.reload();
+console.log(ammo.isFull()); // true
+
+// 大胃王升級
+let upgraded = Ammo.default().addMaxBonus(2); // 6/8
+upgraded = upgraded.reload(); // 8/8
+```
+
+# 5. Entity 整合模式
+
+Value Objects 整合到 Entity 時採用向後相容模式：
+
+```typescript
+export class Player extends Entity {
+  // Value Object (private)
+  private _health: Health = Health.player();
+  private _ammo: Ammo = Ammo.default();
+
+  // 向後相容 getter/setter
+  public get health(): number {
+    return this._health.current;
+  }
+
+  public set health(value: number) {
+    this._health = new Health(value, this._health.max);
+  }
+
+  // Value Object accessor（新程式碼使用）
+  public get healthVO(): Health {
+    return this._health;
+  }
+
+  // 使用 Value Object 方法
+  public takeDamage(amount: number = 1): void {
+    this._health = this._health.takeDamageAmount(amount);
+    if (this._health.isDead()) {
+      this.active = false;
+    }
+  }
+}
+```
+
+## 5.1 已整合的實體
+
+| Entity | Value Objects |
+| ------ | ------------- |
+| Player | Health, Ammo  |
+| Enemy  | Health        |
+| Bullet | Damage        |

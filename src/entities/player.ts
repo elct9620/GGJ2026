@@ -1,5 +1,7 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import { Health } from "../values/health";
+import { Ammo } from "../values/ammo";
 import type { CollisionBox } from "../values/collision";
 import { Container, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
@@ -12,12 +14,44 @@ import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 export class Player extends Entity {
   public position: Vector;
   public readonly speed: number = 200; // px/s (SPEC § 2.6.1)
-  public health: number = 5; // 5 lives (SPEC § 2.6.1)
-  public ammo: number = 6; // Magazine capacity (SPEC § 2.6.1)
-  public readonly maxAmmo: number = 6;
+
+  // Value Objects
+  private _health: Health = Health.player();
+  private _ammo: Ammo = Ammo.default();
+
   public isReloading: boolean = false;
   public reloadTimer: number = 0;
   public readonly reloadTime: number = 3; // 3 seconds (SPEC § 2.3.2)
+
+  // Backward compatible getters/setters
+  public get health(): number {
+    return this._health.current;
+  }
+
+  public set health(value: number) {
+    this._health = new Health(value, this._health.max);
+  }
+
+  public get ammo(): number {
+    return this._ammo.current;
+  }
+
+  public set ammo(value: number) {
+    this._ammo = new Ammo(value, this._ammo.max);
+  }
+
+  public get maxAmmo(): number {
+    return this._ammo.max;
+  }
+
+  // Value Object accessors
+  public get healthVO(): Health {
+    return this._health;
+  }
+
+  public get ammoVO(): Ammo {
+    return this._ammo;
+  }
 
   // Visual representation
   public sprite: Container;
@@ -100,14 +134,14 @@ export class Player extends Entity {
    * Returns true if shooting was successful
    */
   public shoot(): boolean {
-    if (!this.active || this.isReloading || this.ammo <= 0) {
+    if (!this.active || this.isReloading || !this._ammo.canShoot()) {
       return false;
     }
 
-    this.ammo--;
+    this._ammo = this._ammo.consume();
 
     // Auto-reload when ammo reaches zero (SPEC § 2.3.2)
-    if (this.ammo === 0) {
+    if (this._ammo.isEmpty()) {
       this.startReload();
     }
 
@@ -132,7 +166,7 @@ export class Player extends Entity {
       this.reloadTimer -= deltaTime;
 
       if (this.reloadTimer <= 0) {
-        this.ammo = this.maxAmmo;
+        this._ammo = this._ammo.reload();
         this.isReloading = false;
         this.reloadTimer = 0;
       }
@@ -153,9 +187,9 @@ export class Player extends Entity {
    * Take damage from enemies reaching the baseline
    */
   public takeDamage(amount: number = 1): void {
-    this.health = Math.max(0, this.health - amount);
+    this._health = this._health.takeDamageAmount(amount);
 
-    if (this.health <= 0) {
+    if (this._health.isDead()) {
       this.active = false;
     }
   }
@@ -173,8 +207,8 @@ export class Player extends Entity {
   public reset(position: Vector): void {
     this.active = true;
     this.position = position;
-    this.health = 5;
-    this.ammo = 6;
+    this._health = Health.player();
+    this._ammo = Ammo.default();
     this.isReloading = false;
     this.reloadTimer = 0;
     this.updateSpritePosition();

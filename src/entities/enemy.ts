@@ -1,5 +1,7 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import { Health } from "../values/health";
+import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
 import { Container, Graphics, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
@@ -20,10 +22,29 @@ export type EnemyType = (typeof EnemyType)[keyof typeof EnemyType];
 export class Enemy extends Entity {
   public position: Vector;
   public readonly type: EnemyType;
-  public health: number;
-  public readonly maxHealth: number;
   public readonly speed: number; // px/s
   public sprite: Container;
+
+  // Value Object
+  private _health: Health;
+
+  // Backward compatible getters
+  public get health(): number {
+    return this._health.current;
+  }
+
+  public set health(value: number) {
+    this._health = new Health(value, this._health.max);
+  }
+
+  public get maxHealth(): number {
+    return this._health.max;
+  }
+
+  // Value Object accessor
+  public get healthVO(): Health {
+    return this._health;
+  }
 
   private enemySprite: Sprite;
   private healthBarContainer: Graphics | null = null;
@@ -35,13 +56,11 @@ export class Enemy extends Entity {
 
     // Set stats based on enemy type (SPEC § 2.6.2)
     if (type === EnemyType.Ghost) {
-      this.maxHealth = 1;
-      this.health = 1;
+      this._health = Health.ghost();
       this.speed = 50; // 0.5 units/s ≈ 50 px/s
     } else {
       // Boss
-      this.maxHealth = 3;
-      this.health = 3;
+      this._health = Health.boss();
       this.speed = 30; // 0.3 units/s ≈ 30 px/s
     }
 
@@ -99,14 +118,16 @@ export class Enemy extends Entity {
   public takeDamage(amount: number): boolean {
     if (!this.active) return false;
 
-    this.health = Math.max(0, this.health - amount);
+    // Support both number and Damage value object
+    const damage = typeof amount === "number" ? new Damage(amount) : amount;
+    this._health = this._health.takeDamage(damage);
 
     // Update health bar for Boss
     if (this.type === EnemyType.Boss) {
       this.updateHealthBar();
     }
 
-    if (this.health <= 0) {
+    if (this._health.isDead()) {
       this.active = false;
       return true; // Enemy died
     }
@@ -181,9 +202,9 @@ export class Enemy extends Entity {
     this.position = position;
 
     if (type === EnemyType.Ghost) {
-      this.health = 1;
+      this._health = Health.ghost();
     } else {
-      this.health = 3;
+      this._health = Health.boss();
       this.updateHealthBar();
     }
 

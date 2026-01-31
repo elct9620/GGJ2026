@@ -1,5 +1,6 @@
 import { Entity } from "./entity";
 import { Vector } from "../values/vector";
+import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
@@ -12,8 +13,24 @@ export class Bullet extends Entity {
   public position: Vector;
   public velocity: Vector;
   public readonly speed: number = 400; // px/s (SPEC § 2.6.3)
-  public damage: number = 1; // Base damage (SPEC § 2.6.3)
   public sprite: Graphics;
+
+  // Value Object
+  private _damage: Damage = Damage.normal();
+
+  // Backward compatible getter/setter
+  public get damage(): number {
+    return this._damage.toNumber();
+  }
+
+  public set damage(value: number) {
+    this._damage = new Damage(value);
+  }
+
+  // Value Object accessor
+  public get damageVO(): Damage {
+    return this._damage;
+  }
 
   // 子彈視覺半徑
   private readonly radius = 4;
@@ -84,7 +101,7 @@ export class Bullet extends Entity {
     this.active = true;
     this.position = position;
     this.velocity = direction.normalize().multiply(this.speed);
-    this.damage = 1;
+    this._damage = Damage.normal();
     this.updateSpritePosition();
   }
 }
