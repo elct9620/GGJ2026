@@ -135,36 +135,6 @@ describe("InputSystem", () => {
     });
   });
 
-  describe("Booth Key Input", () => {
-    it("應偵測數字鍵 1", () => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "1" }));
-
-      expect(inputSystem.getBoothKeyPressed()).toBe(1);
-    });
-
-    it("應偵測數字鍵 2", () => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
-
-      expect(inputSystem.getBoothKeyPressed()).toBe(2);
-    });
-
-    it("應偵測數字鍵 3", () => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "3" }));
-
-      expect(inputSystem.getBoothKeyPressed()).toBe(3);
-    });
-
-    it("未按下數字鍵時應回傳 null", () => {
-      expect(inputSystem.getBoothKeyPressed()).toBeNull();
-    });
-
-    it("按下非數字鍵時應回傳 null", () => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "4" }));
-
-      expect(inputSystem.getBoothKeyPressed()).toBeNull();
-    });
-  });
-
   describe("General Key Input", () => {
     it("應偵測任意鍵按下", () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));

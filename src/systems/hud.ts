@@ -1,6 +1,6 @@
 import { Container, Sprite, Text } from "pixi.js";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
-import type { ISystem } from "../core/systems/system.interface";
 import { getTexture, AssetKeys } from "../core/assets";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values/recipes";
@@ -24,7 +24,7 @@ export interface RecipeStatus {
  * - Bottom HUD Center (820×126px): skill buttons with keyBindTip (5× 46×46px)
  * - Bottom HUD Right (550×126px): key binding instructions
  */
-export class HUDSystem implements ISystem {
+export class HUDSystem extends InjectableSystem {
   public readonly name = "HUDSystem";
   public readonly priority = SystemPriority.HUD;
   private topHUD: Container;
@@ -46,6 +46,7 @@ export class HUDSystem implements ISystem {
   private skillCostIndicators: Sprite[][] = [];
 
   constructor() {
+    super();
     this.topHUD = new Container();
     this.bottomHUD = new Container();
 

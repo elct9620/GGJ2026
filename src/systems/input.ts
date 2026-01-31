@@ -1,12 +1,12 @@
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
-import type { ISystem } from "../core/systems/system.interface";
 import { Vector } from "../values/vector";
 
 /**
  * Input system for keyboard controls
  * Spec: § 2.4.1 Input Controls
  */
-export class InputSystem implements ISystem {
+export class InputSystem extends InjectableSystem {
   public readonly name = "InputSystem";
   public readonly priority = SystemPriority.INPUT;
 
@@ -66,18 +66,6 @@ export class InputSystem implements ISystem {
    */
   public isShootPressed(): boolean {
     return this.keysPressed.has(" ");
-  }
-
-  /**
-   * Check if booth key is pressed (1, 2, or 3)
-   * Spec: § 2.4.1 - 1/2/3 for retrieving food
-   * NOTE: Deprecated - will be removed in Phase 2 (new synthesis mechanism)
-   */
-  public getBoothKeyPressed(): number | null {
-    if (this.keysPressed.has("1")) return 1;
-    if (this.keysPressed.has("2")) return 2;
-    if (this.keysPressed.has("3")) return 3;
-    return null;
   }
 
   /**
