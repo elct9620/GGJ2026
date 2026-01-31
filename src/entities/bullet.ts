@@ -4,6 +4,7 @@ import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
+import { BULLET_CONFIG } from "../config";
 
 /**
  * Bullet entity fired by player
@@ -12,7 +13,7 @@ import { LAYOUT } from "../utils/constants";
 export class Bullet extends Entity {
   public position: Vector;
   public velocity: Vector;
-  public readonly speed: number = 400; // px/s (SPEC § 2.6.3)
+  public readonly speed: number = BULLET_CONFIG.speed;
   public sprite: Graphics;
 
   // Value Object
@@ -32,8 +33,8 @@ export class Bullet extends Entity {
     return this._damage;
   }
 
-  // 子彈視覺半徑
-  private readonly radius = 4;
+  // 子彈視覺半徑（碰撞箱為 8×8，半徑為 4）
+  private readonly radius = BULLET_CONFIG.collisionSize / 2;
 
   constructor(initialPosition: Vector, direction: Vector) {
     super();

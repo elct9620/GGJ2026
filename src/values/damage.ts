@@ -1,3 +1,5 @@
+import { BULLET_CONFIG } from "../config";
+
 /**
  * Damage - 不可變的傷害值物件
  *
@@ -20,11 +22,11 @@ export class Damage {
   }
 
   /**
-   * 建立普通子彈傷害（1 點）
-   * SPEC § 2.6.3: 普通子彈傷害 = 1
+   * 建立普通子彈傷害
+   * SPEC § 2.6.3: 普通子彈傷害
    */
   static normal(): Damage {
-    return new Damage(1);
+    return new Damage(BULLET_CONFIG.normalDamage);
   }
 
   /**

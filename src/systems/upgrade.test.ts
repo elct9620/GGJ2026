@@ -95,10 +95,11 @@ describe("UpgradeSystem", () => {
       const afterState = { ...upgradeSystem.getState() };
 
       // Verify at least one stat increased based on selected upgrade
+      // SPEC § 2.3.4: 加辣 +0.5, 加椰果 +1, 加香菜 +0.5
       if (selectedOption.id === "spicy") {
         expect(afterState.stinkyTofuDamageBonus).toBe(0.5);
       } else if (selectedOption.id === "coconut") {
-        expect(afterState.bubbleTeaBulletBonus).toBe(5);
+        expect(afterState.bubbleTeaBulletBonus).toBe(1);
       } else if (selectedOption.id === "cilantro") {
         expect(afterState.bloodCakeRangeBonus).toBe(0.5);
       }
@@ -213,15 +214,19 @@ describe("UpgradeSystem", () => {
       const afterState = { ...upgradeSystem.getState() };
 
       // Verify specific effect based on selected upgrade
+      // SPEC § 2.3.4: 打折 -1, 大胃王 +6, 快吃 +10%, 飢餓三十 +2s
       const selectedId = options[0].id;
       if (selectedId === "discount") {
         expect(afterState.recipeCostReduction).toBe(1);
       } else if (selectedId === "bigEater") {
-        expect(afterState.magazineMultiplier).toBe(2);
+        // 初始值 1 + 加成 6 = 7
+        expect(afterState.magazineMultiplier).toBe(7);
       } else if (selectedId === "fastEat") {
-        expect(afterState.killThresholdDivisor).toBe(2);
+        // 初始值 1 + 加成 0.1 = 1.1
+        expect(afterState.killThresholdDivisor).toBe(1.1);
       } else if (selectedId === "hunger30") {
-        expect(afterState.buffDurationMultiplier).toBe(2);
+        // 初始值 1 + 加成 2 = 3
+        expect(afterState.buffDurationMultiplier).toBe(3);
       }
 
       // At least one boss upgrade effect should apply

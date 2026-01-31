@@ -13,6 +13,7 @@ import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
 import { RECIPE_BUFF_MAPPING } from "../values/recipes";
 import { SpecialBulletType } from "../values/special-bullet";
+import { COMBAT_CONFIG } from "../config";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
@@ -42,12 +43,12 @@ export class CombatSystem extends InjectableSystem {
 
   // Shooting cooldown (SPEC § 2.3.2)
   private shootCooldown = 0;
-  private readonly shootCooldownTime = 0.2; // 200ms between shots
+  private readonly shootCooldownTime = COMBAT_CONFIG.shootCooldown;
 
   // Special bullet buff state (SPEC § 2.3.2)
   private currentBuff: SpecialBulletType = SpecialBulletType.None;
   private buffTimer = 0;
-  private readonly buffDuration = 2; // 2 seconds (SPEC § 2.3.2)
+  private readonly buffDuration = COMBAT_CONFIG.buffDuration;
 
   constructor() {
     super();
@@ -140,7 +141,11 @@ export class CombatSystem extends InjectableSystem {
 
       // Check if reload was triggered (SPEC § 2.3.2)
       if (this.player.isReloading && this.eventQueue) {
-        this.eventQueue.publish(EventType.ReloadComplete, {}, 3000);
+        this.eventQueue.publish(
+          EventType.ReloadComplete,
+          {},
+          COMBAT_CONFIG.reloadDelayMs,
+        );
       }
 
       return true;

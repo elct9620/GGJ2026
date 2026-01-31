@@ -1,3 +1,5 @@
+import { PLAYER_CONFIG } from "../config";
+
 /**
  * Ammo - 不可變的彈夾值物件
  *
@@ -26,11 +28,14 @@ export class Ammo {
   }
 
   /**
-   * 建立玩家預設彈夾（6/6）
-   * SPEC § 2.6.1: 彈夾容量 = 6
+   * 建立玩家預設彈夾
+   * SPEC § 2.6.1: 彈夾容量
    */
   static default(): Ammo {
-    return new Ammo(6, 6);
+    return new Ammo(
+      PLAYER_CONFIG.magazineCapacity,
+      PLAYER_CONFIG.magazineCapacity,
+    );
   }
 
   /**

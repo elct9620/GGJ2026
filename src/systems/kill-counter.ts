@@ -7,6 +7,7 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import { KILL_COUNTER_CONFIG } from "../config";
 
 /**
  * Kill Counter System
@@ -27,7 +28,7 @@ export class KillCounterSystem extends InjectableSystem {
 
   // Kill counter state (SPEC § 2.3.8)
   private killCount = 0;
-  private readonly consumeThreshold = 20;
+  private readonly consumeThreshold = KILL_COUNTER_CONFIG.oysterOmeletThreshold;
 
   constructor() {
     super();

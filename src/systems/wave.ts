@@ -7,6 +7,7 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import { WAVE_CONFIG, ENEMY_CONFIG } from "../config";
 
 /**
  * Enemy spawn callback type
@@ -118,15 +119,15 @@ export class WaveSystem extends InjectableSystem {
     this.eventQueue.publish(EventType.WaveStart, { waveNumber });
 
     // Calculate enemy count (SPEC § 2.3.5)
-    const enemyCount = waveNumber * 2;
+    const enemyCount = waveNumber * WAVE_CONFIG.enemyMultiplier;
 
     // Spawn regular enemies
     for (let i = 0; i < enemyCount; i++) {
       this.spawnEnemy("Ghost", i, enemyCount);
     }
 
-    // Spawn boss every 5 waves (SPEC § 2.3.5)
-    if (waveNumber % 5 === 0) {
+    // Spawn boss every N waves (SPEC § 2.3.5)
+    if (waveNumber % WAVE_CONFIG.bossWaveInterval === 0) {
       this.spawnEnemy("Boss", enemyCount, enemyCount + 1);
     }
 
@@ -166,8 +167,8 @@ export class WaveSystem extends InjectableSystem {
   ): void {
     if (!this.onSpawnEnemy) return;
 
-    // SPEC § 2.3.5: X = 1950 (off-screen right)
-    const xPosition = 1920 + 50 + index * 100; // Stagger spawn positions
+    // SPEC § 2.3.5: X = spawn position (off-screen right)
+    const xPosition = ENEMY_CONFIG.spawnX + index * 100; // Stagger spawn positions
 
     // SPEC § 2.3.5: Y = random 0~1080
     const yPosition = 100 + (index * 900) / totalEnemies;
@@ -202,11 +203,11 @@ export class WaveSystem extends InjectableSystem {
     this.isWaveActive = false;
 
     // Publish WaveComplete event (SPEC § 2.3.6)
-    // Delay can be configured (default 2000ms for upgrade screen)
+    // Delay can be configured for upgrade screen
     this.eventQueue.publish(
       EventType.WaveComplete,
       { waveNumber: this.currentWave },
-      2000,
+      WAVE_CONFIG.waveCompleteDelayMs,
     );
   }
 

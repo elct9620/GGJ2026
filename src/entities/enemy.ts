@@ -7,6 +7,7 @@ import { Container, Graphics, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
 import { FoodType } from "./booth";
+import { ENEMY_CONFIG } from "../config";
 
 export const EnemyType = {
   Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2)
@@ -57,11 +58,11 @@ export class Enemy extends Entity {
     // Set stats based on enemy type (SPEC § 2.6.2)
     if (type === EnemyType.Ghost) {
       this._health = Health.ghost();
-      this.speed = 50; // 0.5 units/s ≈ 50 px/s
+      this.speed = ENEMY_CONFIG.ghost.speed;
     } else {
       // Boss
       this._health = Health.boss();
-      this.speed = 30; // 0.3 units/s ≈ 30 px/s
+      this.speed = ENEMY_CONFIG.boss.speed;
     }
 
     this.sprite = new Container();

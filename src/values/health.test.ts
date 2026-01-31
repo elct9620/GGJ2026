@@ -71,10 +71,11 @@ describe("Health", () => {
   });
 
   describe("static boss()", () => {
-    test("creates boss health with 3/3", () => {
+    test("creates boss health with config value", () => {
       const h = Health.boss();
-      expect(h.current).toBe(3);
-      expect(h.max).toBe(3);
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
+      expect(h.current).toBe(10);
+      expect(h.max).toBe(10);
     });
   });
 
@@ -265,14 +266,20 @@ describe("Health", () => {
       let boss = Health.boss();
       const bullet = Damage.normal();
 
+      // SPEC § 2.6.2: Boss 基礎血量 = 10，普通子彈傷害 = 1
+      // 10 HP boss 需要 10 發子彈才會死亡
       boss = boss.takeDamage(bullet);
       expect(boss.isDead()).toBe(false);
-      expect(boss.percentage()).toBeCloseTo(0.667, 2);
+      expect(boss.percentage()).toBeCloseTo(0.9, 2); // 9/10 = 0.9
 
-      boss = boss.takeDamage(bullet);
+      // 打到剩 1 HP
+      for (let i = 0; i < 8; i++) {
+        boss = boss.takeDamage(bullet);
+      }
       expect(boss.isDead()).toBe(false);
-      expect(boss.percentage()).toBeCloseTo(0.333, 2);
+      expect(boss.percentage()).toBeCloseTo(0.1, 2); // 1/10 = 0.1
 
+      // 最後一擊
       boss = boss.takeDamage(bullet);
       expect(boss.isDead()).toBe(true);
     });

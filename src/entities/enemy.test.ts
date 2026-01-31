@@ -75,14 +75,14 @@ describe("Enemy", () => {
     // Elite enemies would be a subtype of Ghost with higher HP
     // Testing with Boss as closest equivalent for now
 
-    it("EN-06: Boss 3 HP + 1 發普通子彈 → Boss 2 HP", () => {
-      // Note: Current implementation uses HP=3, SPEC says 10
+    it("EN-06: Boss 10 HP + 1 發普通子彈 → Boss 9 HP", () => {
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
       const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
-      expect(boss.health).toBe(3);
+      expect(boss.health).toBe(10);
 
       boss.takeDamage(1);
 
-      expect(boss.health).toBe(2);
+      expect(boss.health).toBe(9);
       expect(boss.active).toBe(true); // Not dead yet
     });
 
@@ -116,18 +116,18 @@ describe("Enemy", () => {
       expect(boss.position.y).toBe(500);
     });
 
-    it("EN-12: 餓死鬼 3 HP + 普通子彈 → 餓死鬼 2 HP", () => {
-      // Note: Current implementation uses HP=3, SPEC says 10
-      expect(boss.health).toBe(3);
+    it("EN-12: 餓死鬼 10 HP + 普通子彈 → 餓死鬼 9 HP", () => {
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
+      expect(boss.health).toBe(10);
 
       boss.takeDamage(1);
 
-      expect(boss.health).toBe(2);
+      expect(boss.health).toBe(9);
     });
 
-    it("EN-13: 餓死鬼 3 HP + 3 發子彈 → 餓死鬼死亡", () => {
-      // Note: Current implementation uses HP=3, SPEC says 10
-      for (let i = 0; i < 2; i++) {
+    it("EN-13: 餓死鬼 10 HP + 10 發子彈 → 餓死鬼死亡", () => {
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
+      for (let i = 0; i < 9; i++) {
         boss.takeDamage(1);
         expect(boss.active).toBe(true);
       }
@@ -145,10 +145,10 @@ describe("Enemy", () => {
       expect(boss.hasReachedBaseline()).toBe(true);
     });
 
-    it("EN-15: Boss 初始 HP 為 3（實作值，SPEC 為 10）", () => {
-      // Note: Current implementation uses HP=3, SPEC says 10
+    it("EN-15: Boss 初始 HP 為 10", () => {
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
       const newBoss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
-      expect(newBoss.health).toBe(3);
+      expect(newBoss.health).toBe(10);
     });
 
     it("Boss 速度為 30 px/s", () => {
@@ -173,10 +173,10 @@ describe("Enemy", () => {
       expect(ghost.health).toBe(1);
     });
 
-    it("EN-24: Boss Wave 5 → HP = 3（實作值，SPEC 為 10）", () => {
-      // Note: Current implementation uses HP=3, SPEC formula: round(10 + (5-5) × 1.5) = 10
+    it("EN-24: Boss Wave 5 → HP = 10", () => {
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
       const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
-      expect(boss.health).toBe(3);
+      expect(boss.health).toBe(10);
     });
   });
 
@@ -262,15 +262,15 @@ describe("Enemy", () => {
       expect(ghost.position.y).toBe(300);
     });
 
-    it("reset Boss 恢復 3 HP（實作值）", () => {
+    it("reset Boss 恢復 10 HP", () => {
       const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
       boss.takeDamage(2);
 
-      expect(boss.health).toBe(1);
+      expect(boss.health).toBe(8);
 
       boss.reset(EnemyType.Boss, new Vector(1500, 300));
 
-      expect(boss.health).toBe(3);
+      expect(boss.health).toBe(10);
     });
   });
 

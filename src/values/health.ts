@@ -1,4 +1,5 @@
 import { Damage } from "./damage";
+import { PLAYER_CONFIG, ENEMY_CONFIG } from "../config";
 
 /**
  * Health - 不可變的血量值物件
@@ -27,27 +28,27 @@ export class Health {
   }
 
   /**
-   * 建立玩家預設血量（5/5）
-   * SPEC § 2.6.1: 玩家血量 = 5
+   * 建立玩家預設血量
+   * SPEC § 2.6.1: 玩家血量
    */
   static player(): Health {
-    return new Health(5, 5);
+    return new Health(PLAYER_CONFIG.maxHealth, PLAYER_CONFIG.maxHealth);
   }
 
   /**
-   * 建立餓鬼預設血量（1/1）
-   * SPEC § 2.6.2: 餓鬼血量 = 1
+   * 建立餓鬼預設血量
+   * SPEC § 2.6.2: 餓鬼血量
    */
   static ghost(): Health {
-    return new Health(1, 1);
+    return new Health(ENEMY_CONFIG.ghost.health, ENEMY_CONFIG.ghost.health);
   }
 
   /**
-   * 建立餓死鬼（Boss）預設血量（3/3）
-   * SPEC § 2.6.2: 餓死鬼血量 = 3
+   * 建立餓死鬼（Boss）預設血量
+   * SPEC § 2.6.2: 餓死鬼血量
    */
   static boss(): Health {
-    return new Health(3, 3);
+    return new Health(ENEMY_CONFIG.boss.health, ENEMY_CONFIG.boss.health);
   }
 
   /**

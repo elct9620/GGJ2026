@@ -5,6 +5,7 @@
 
 import { FoodType, type FoodType as FoodTypeType } from "../entities/booth";
 import { SpecialBulletType } from "./special-bullet";
+import { RECIPE_CONFIG } from "../config";
 
 /**
  * Recipe configuration (SPEC § 2.3.3)
@@ -79,27 +80,32 @@ export const RECIPE_DISPLAY: Record<string, RecipeDisplayConfig> = {
 
 /**
  * All available recipes (SPEC § 2.3.3)
+ * 配方消耗量從 config.ts 讀取
  */
 export const RECIPES: Record<string, Recipe> = {
   "1": {
     id: "1",
     name: "夜市總匯",
-    foodRequirements: { Pearl: 1, Tofu: 1, BloodCake: 1 },
+    foodRequirements: {
+      Pearl: RECIPE_CONFIG.nightMarket.pearl,
+      Tofu: RECIPE_CONFIG.nightMarket.tofu,
+      BloodCake: RECIPE_CONFIG.nightMarket.bloodCake,
+    },
   },
   "2": {
     id: "2",
     name: "臭豆腐",
-    foodRequirements: { Tofu: 3 },
+    foodRequirements: { Tofu: RECIPE_CONFIG.stinkyTofu.tofu },
   },
   "3": {
     id: "3",
     name: "珍珠奶茶",
-    foodRequirements: { Pearl: 3 },
+    foodRequirements: { Pearl: RECIPE_CONFIG.bubbleTea.pearl },
   },
   "4": {
     id: "4",
     name: "豬血糕",
-    foodRequirements: { BloodCake: 3 },
+    foodRequirements: { BloodCake: RECIPE_CONFIG.bloodCake.bloodCake },
   },
   "5": {
     id: "5",

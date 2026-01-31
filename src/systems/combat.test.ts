@@ -77,17 +77,18 @@ describe("CombatSystem", () => {
       expect(enemyDeathEventFired).toBe(true);
     });
 
-    it("CS-04: 子彈擊中 Boss（3 HP）→ Boss 生命 2 HP", () => {
+    it("CS-04: 子彈擊中 Boss（10 HP）→ Boss 生命 9 HP", () => {
+      // SPEC § 2.6.2: Boss 基礎血量 = 10
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540));
       enemies.push(boss);
-      expect(boss.health).toBe(3);
+      expect(boss.health).toBe(10);
 
       const bullet = new Bullet(new Vector(490, 540), new Vector(1, 0));
       bullets.push(bullet);
 
       combatSystem.update(0.016);
 
-      expect(boss.health).toBe(2);
+      expect(boss.health).toBe(9);
       expect(boss.active).toBe(true);
       expect(bullet.active).toBe(false); // Bullet consumed
     });

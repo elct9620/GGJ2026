@@ -6,6 +6,7 @@ import type { CollisionBox } from "../values/collision";
 import { Container, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
 import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
+import { PLAYER_CONFIG } from "../config";
 
 /**
  * Player entity with keyboard controls and shooting capability
@@ -13,7 +14,7 @@ import { CANVAS_WIDTH, LAYOUT } from "../utils/constants";
  */
 export class Player extends Entity {
   public position: Vector;
-  public readonly speed: number = 200; // px/s (SPEC § 2.6.1)
+  public readonly speed: number = PLAYER_CONFIG.speed;
 
   // Value Objects
   private _health: Health = Health.player();
@@ -21,7 +22,7 @@ export class Player extends Entity {
 
   public isReloading: boolean = false;
   public reloadTimer: number = 0;
-  public readonly reloadTime: number = 3; // 3 seconds (SPEC § 2.3.2)
+  public readonly reloadTime: number = PLAYER_CONFIG.reloadTime;
 
   // Backward compatible getters/setters
   public get health(): number {
