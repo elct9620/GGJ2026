@@ -14,6 +14,7 @@ import { checkAABBCollision } from "../values/collision";
 import { RECIPE_BUFF_MAPPING } from "../values/recipes";
 import { SpecialBulletType } from "../values/special-bullet";
 import { COMBAT_CONFIG } from "../config";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
@@ -33,9 +34,6 @@ export class CombatSystem extends InjectableSystem {
   public readonly name = "CombatSystem";
   public readonly priority = SystemPriority.COMBAT;
 
-  // Dependency keys
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-
   // References to game entities (not injectable - set via setters)
   private player: Player | null = null;
   private bullets: Bullet[] = [];
@@ -52,15 +50,15 @@ export class CombatSystem extends InjectableSystem {
 
   constructor() {
     super();
-    this.declareDependency(CombatSystem.DEP_EVENT_QUEUE, false); // Optional for testing
+    this.declareDependency(DependencyKeys.EventQueue, false); // Optional for testing
   }
 
   /**
    * Get EventQueue dependency (optional)
    */
   private get eventQueue(): EventQueue | null {
-    if (this.hasDependency(CombatSystem.DEP_EVENT_QUEUE)) {
-      return this.getDependency<EventQueue>(CombatSystem.DEP_EVENT_QUEUE);
+    if (this.hasDependency(DependencyKeys.EventQueue)) {
+      return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
     }
     return null;
   }

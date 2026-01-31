@@ -14,6 +14,7 @@ import type { BoothSystem } from "./booth";
 import type { Enemy } from "../entities/enemy";
 import { Container } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Booth Pool dimensions (matches DropItemPool sprite size)
@@ -37,10 +38,6 @@ export class BoxSystem extends InjectableSystem {
   public readonly name = "BoxSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Dependency keys
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-  private static readonly DEP_BOOTH = "BoothSystem";
-
   // Enemies reference (for collision detection)
   private enemies: Enemy[] = [];
 
@@ -59,22 +56,22 @@ export class BoxSystem extends InjectableSystem {
 
   constructor() {
     super();
-    this.declareDependency(BoxSystem.DEP_EVENT_QUEUE);
-    this.declareDependency(BoxSystem.DEP_BOOTH);
+    this.declareDependency(DependencyKeys.EventQueue);
+    this.declareDependency(DependencyKeys.BoothSystem);
   }
 
   /**
    * Get EventQueue dependency
    */
   private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(BoxSystem.DEP_EVENT_QUEUE);
+    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**
    * Get BoothSystem dependency
    */
   private get boothSystem(): BoothSystem {
-    return this.getDependency<BoothSystem>(BoxSystem.DEP_BOOTH);
+    return this.getDependency<BoothSystem>(DependencyKeys.BoothSystem);
   }
 
   /**

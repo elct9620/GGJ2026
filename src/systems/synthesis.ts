@@ -12,6 +12,7 @@ import { EventType } from "./event-queue";
 import type { KillCounterSystem } from "./kill-counter";
 import { type FoodType, getBoothIdForFood } from "../entities/booth";
 import { type Recipe, RECIPES } from "../values/recipes";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Synthesis System
@@ -28,48 +29,42 @@ export class SynthesisSystem extends InjectableSystem {
   public readonly name = "SynthesisSystem";
   public readonly priority = SystemPriority.SYNTHESIS;
 
-  // Dependency keys
-  private static readonly DEP_INPUT = "InputSystem";
-  private static readonly DEP_BOOTH = "BoothSystem";
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-  private static readonly DEP_KILL_COUNTER = "KillCounterSystem";
-
   constructor() {
     super();
-    this.declareDependency(SynthesisSystem.DEP_INPUT);
-    this.declareDependency(SynthesisSystem.DEP_BOOTH);
-    this.declareDependency(SynthesisSystem.DEP_EVENT_QUEUE);
-    this.declareDependency(SynthesisSystem.DEP_KILL_COUNTER, false); // Optional
+    this.declareDependency(DependencyKeys.InputSystem);
+    this.declareDependency(DependencyKeys.BoothSystem);
+    this.declareDependency(DependencyKeys.EventQueue);
+    this.declareDependency(DependencyKeys.KillCounterSystem, false); // Optional
   }
 
   /**
    * Get InputSystem dependency
    */
   private get inputSystem(): InputSystem {
-    return this.getDependency<InputSystem>(SynthesisSystem.DEP_INPUT);
+    return this.getDependency<InputSystem>(DependencyKeys.InputSystem);
   }
 
   /**
    * Get BoothSystem dependency
    */
   private get boothSystem(): BoothSystem {
-    return this.getDependency<BoothSystem>(SynthesisSystem.DEP_BOOTH);
+    return this.getDependency<BoothSystem>(DependencyKeys.BoothSystem);
   }
 
   /**
    * Get EventQueue dependency
    */
   private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(SynthesisSystem.DEP_EVENT_QUEUE);
+    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**
    * Get KillCounterSystem dependency (optional)
    */
   private get killCounterSystem(): KillCounterSystem | null {
-    if (this.hasDependency(SynthesisSystem.DEP_KILL_COUNTER)) {
+    if (this.hasDependency(DependencyKeys.KillCounterSystem)) {
       return this.getDependency<KillCounterSystem>(
-        SynthesisSystem.DEP_KILL_COUNTER,
+        DependencyKeys.KillCounterSystem,
       );
     }
     return null;

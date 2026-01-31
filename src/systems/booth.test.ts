@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { BoothSystem } from "./booth";
-import { FoodType } from "../entities/booth";
+import { FoodType, BoothId } from "../entities/booth";
 import { SystemPriority } from "../core/systems/system.interface";
 
 describe("BoothSystem", () => {
@@ -44,19 +44,19 @@ describe("BoothSystem", () => {
     it("應成功儲存珍珠", () => {
       const result = boothSystem.storeFood(FoodType.Pearl);
       expect(result).toBe(true);
-      expect(boothSystem.getFoodCount(1)).toBe(1);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(1);
     });
 
     it("應成功儲存豆腐", () => {
       const result = boothSystem.storeFood(FoodType.Tofu);
       expect(result).toBe(true);
-      expect(boothSystem.getFoodCount(2)).toBe(1);
+      expect(boothSystem.getFoodCount(BoothId.Tofu)).toBe(1);
     });
 
     it("應成功儲存米血", () => {
       const result = boothSystem.storeFood(FoodType.BloodCake);
       expect(result).toBe(true);
-      expect(boothSystem.getFoodCount(3)).toBe(1);
+      expect(boothSystem.getFoodCount(BoothId.BloodCake)).toBe(1);
     });
 
     it("攤位滿時應回傳 false", () => {
@@ -68,7 +68,7 @@ describe("BoothSystem", () => {
       // 第 7 個應失敗
       const result = boothSystem.storeFood(FoodType.Pearl);
       expect(result).toBe(false);
-      expect(boothSystem.getFoodCount(1)).toBe(6);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(6);
     });
   });
 
@@ -76,18 +76,13 @@ describe("BoothSystem", () => {
     it("應成功提取食材", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      const food = boothSystem.retrieveFood(1);
+      const food = boothSystem.retrieveFood(BoothId.Pearl);
       expect(food).toBe(FoodType.Pearl);
-      expect(boothSystem.getFoodCount(1)).toBe(0);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(0);
     });
 
     it("攤位空時應回傳 null", () => {
-      const food = boothSystem.retrieveFood(1);
-      expect(food).toBeNull();
-    });
-
-    it("不存在的攤位應回傳 null", () => {
-      const food = boothSystem.retrieveFood(99);
+      const food = boothSystem.retrieveFood(BoothId.Pearl);
       expect(food).toBeNull();
     });
   });
@@ -96,13 +91,13 @@ describe("BoothSystem", () => {
     it("應成功偷取食材", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      const result = boothSystem.stealFood(1);
+      const result = boothSystem.stealFood(BoothId.Pearl);
       expect(result).toBe(true);
-      expect(boothSystem.getFoodCount(1)).toBe(0);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(0);
     });
 
     it("攤位空時應回傳 false", () => {
-      const result = boothSystem.stealFood(1);
+      const result = boothSystem.stealFood(BoothId.Pearl);
       expect(result).toBe(false);
     });
   });
@@ -115,9 +110,9 @@ describe("BoothSystem", () => {
 
       boothSystem.reset();
 
-      expect(boothSystem.getFoodCount(1)).toBe(0);
-      expect(boothSystem.getFoodCount(2)).toBe(0);
-      expect(boothSystem.getFoodCount(3)).toBe(0);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(0);
+      expect(boothSystem.getFoodCount(BoothId.Tofu)).toBe(0);
+      expect(boothSystem.getFoodCount(BoothId.BloodCake)).toBe(0);
     });
   });
 
@@ -149,7 +144,7 @@ describe("BoothSystem", () => {
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.Tofu);
 
-      boothSystem.retrieveFood(1);
+      boothSystem.retrieveFood(BoothId.Pearl);
 
       expect(boothSystem.getTotalFoodCount()).toBe(2);
     });

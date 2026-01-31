@@ -16,13 +16,25 @@ export const FoodType = {
 export type FoodType = (typeof FoodType)[keyof typeof FoodType];
 
 /**
+ * Booth ID constants (1-indexed per SPEC § 2.3.1)
+ * Use these instead of magic numbers for type safety
+ */
+export const BoothId = {
+  Pearl: 1,
+  Tofu: 2,
+  BloodCake: 3,
+} as const;
+
+export type BoothId = (typeof BoothId)[keyof typeof BoothId];
+
+/**
  * Map FoodType to Booth ID (1-indexed per SPEC § 2.3.1)
  */
-export function getBoothIdForFood(foodType: FoodType): number {
-  const mapping: Record<FoodType, number> = {
-    Pearl: 1,
-    Tofu: 2,
-    BloodCake: 3,
+export function getBoothIdForFood(foodType: FoodType): BoothId {
+  const mapping: Record<FoodType, BoothId> = {
+    Pearl: BoothId.Pearl,
+    Tofu: BoothId.Tofu,
+    BloodCake: BoothId.BloodCake,
   };
   return mapping[foodType];
 }

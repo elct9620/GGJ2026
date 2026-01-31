@@ -7,7 +7,7 @@ import { InputSystem } from "./systems/input";
 import { HUDSystem, type RecipeStatus } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { BoxSystem } from "./systems/box";
-import { CombatSystem, SpecialBulletType } from "./systems/combat";
+import { CombatSystem } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
@@ -314,76 +314,30 @@ export class GameScene {
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
     const killCounterSystem =
       this.systemManager.get<KillCounterSystem>("KillCounterSystem");
-    const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
 
     this.updateTopHUD(hudSystem);
-    this.updateBottomHUD(
-      hudSystem,
-      boothSystem,
-      killCounterSystem,
-      combatSystem,
-    );
+    this.updateBottomHUD(hudSystem, boothSystem, killCounterSystem);
   }
 
   /**
-   * Update top HUD (wave, enemy count, health, score)
+   * Update top HUD (wave, enemy count, score)
    */
   private updateTopHUD(hudSystem: HUDSystem): void {
     hudSystem.updateEnemyCount(this.enemies.length);
-    hudSystem.updateHealthDisplay(this.player.health);
     hudSystem.updateScore(this.stats.enemiesDefeated * 10);
   }
 
   /**
-   * Update bottom HUD (ammo, food stock, buff, recipes)
+   * Update bottom HUD (recipes)
    */
   private updateBottomHUD(
     hudSystem: HUDSystem,
     boothSystem: BoothSystem,
     killCounterSystem: KillCounterSystem,
-    combatSystem: CombatSystem,
   ): void {
-    // Ammo and reload
-    hudSystem.updateAmmo(this.player.ammo, this.player.maxAmmo);
-    hudSystem.updateReload(this.player.isReloading, this.player.reloadTimer);
-
-    // Food stock display (SPEC § 2.7.3)
-    hudSystem.updateFoodStock(
-      boothSystem.getFoodCount(1), // Pearl
-      boothSystem.getFoodCount(2), // Tofu
-      boothSystem.getFoodCount(3), // BloodCake
-    );
-
-    // Kill count display
-    hudSystem.updateKillCount(killCounterSystem.getKillCount());
-
-    // Buff status display
-    if (combatSystem.isBuffActive()) {
-      const buffName = this.getBuffDisplayName(combatSystem.getCurrentBuff());
-      const timeLeft = combatSystem.getBuffTimer() / 1000; // ms → s
-      hudSystem.updateBuffStatus(buffName, timeLeft);
-    } else {
-      hudSystem.clearBuffStatus();
-    }
-
     // Recipe availability display
     const recipes = this.getRecipeStatuses(boothSystem, killCounterSystem);
     hudSystem.updateRecipeAvailability(recipes);
-  }
-
-  /**
-   * Get display name for buff type
-   */
-  private getBuffDisplayName(buffType: SpecialBulletType): string {
-    const nameMap: Record<SpecialBulletType, string> = {
-      [SpecialBulletType.NightMarket]: "夜市總匯",
-      [SpecialBulletType.StinkyTofu]: "臭豆腐",
-      [SpecialBulletType.BubbleTea]: "珍珠奶茶",
-      [SpecialBulletType.BloodCake]: "豬血糕",
-      [SpecialBulletType.OysterOmelette]: "蚵仔煎",
-      [SpecialBulletType.None]: "",
-    };
-    return nameMap[buffType] || "";
   }
 
   /**

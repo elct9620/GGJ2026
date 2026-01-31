@@ -8,6 +8,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { WAVE_CONFIG, ENEMY_CONFIG } from "../config";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Enemy spawn callback type
@@ -32,9 +33,6 @@ export class WaveSystem extends InjectableSystem {
   public readonly name = "WaveSystem";
   public readonly priority = SystemPriority.WAVE;
 
-  // Dependency keys
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-
   // Enemy tracking
   private enemiesSpawnedThisWave = 0;
   private enemiesRemainingThisWave = 0;
@@ -48,14 +46,14 @@ export class WaveSystem extends InjectableSystem {
 
   constructor() {
     super();
-    this.declareDependency(WaveSystem.DEP_EVENT_QUEUE);
+    this.declareDependency(DependencyKeys.EventQueue);
   }
 
   /**
    * Get EventQueue dependency
    */
   private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(WaveSystem.DEP_EVENT_QUEUE);
+    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**

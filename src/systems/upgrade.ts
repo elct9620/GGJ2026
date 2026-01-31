@@ -10,6 +10,7 @@ import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
 import { type FoodType, getBoothIdForFood } from "../entities/booth";
 import { UPGRADE_CONFIG, WAVE_CONFIG } from "../config";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Upgrade option definition
@@ -52,10 +53,6 @@ export class UpgradeSystem extends InjectableSystem {
   public readonly name = "UpgradeSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Dependency keys
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-  private static readonly DEP_BOOTH = "BoothSystem";
-
   // Upgrade state
   private state: UpgradeState = {
     stinkyTofuDamageBonus: 0,
@@ -75,22 +72,22 @@ export class UpgradeSystem extends InjectableSystem {
 
   constructor() {
     super();
-    this.declareDependency(UpgradeSystem.DEP_EVENT_QUEUE);
-    this.declareDependency(UpgradeSystem.DEP_BOOTH);
+    this.declareDependency(DependencyKeys.EventQueue);
+    this.declareDependency(DependencyKeys.BoothSystem);
   }
 
   /**
    * Get EventQueue dependency
    */
   private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(UpgradeSystem.DEP_EVENT_QUEUE);
+    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**
    * Get BoothSystem dependency
    */
   private get boothSystem(): BoothSystem {
-    return this.getDependency<BoothSystem>(UpgradeSystem.DEP_BOOTH);
+    return this.getDependency<BoothSystem>(DependencyKeys.BoothSystem);
   }
 
   // Upgrade pools (SPEC § 2.3.4)

@@ -337,64 +337,11 @@ export class HUDSystem extends InjectableSystem {
   }
 
   /**
-   * Update health display (no-op per reference design)
-   */
-  public updateHealthDisplay(_health: number): void {
-    // Health not shown in HUD per ui_rough_pixelSpec.png
-  }
-
-  /**
-   * Update ammo display (no-op per reference design)
-   */
-  public updateAmmo(_current: number, _max: number): void {
-    // Ammo not shown in HUD per ui_rough_pixelSpec.png
-  }
-
-  /**
-   * Update food stock display (no-op per reference design)
-   */
-  public updateFoodStock(
-    _pearl: number,
-    _tofu: number,
-    _bloodCake: number,
-  ): void {
-    // Food stock shown in booth pools, not HUD
-  }
-
-  /**
-   * Update kill count display (no-op per reference design)
-   */
-  public updateKillCount(_count: number): void {
-    // Kill count not shown as text in HUD
-  }
-
-  /**
-   * Update buff status display (no-op per reference design)
-   */
-  public updateBuffStatus(_buffName: string, _timeLeft: number): void {
-    // Buff status not shown in HUD per reference
-  }
-
-  /**
-   * Clear buff status display
-   */
-  public clearBuffStatus(): void {
-    // No-op
-  }
-
-  /**
    * Update recipe availability indicators
    */
   public updateRecipeAvailability(_recipes: RecipeStatus[]): void {
     // Recipe availability visual feedback could be implemented
     // by changing the tint/alpha of skill indicators
-  }
-
-  /**
-   * Show reload status (no-op per reference design)
-   */
-  public updateReload(_isReloading: boolean, _timeLeft: number = 0): void {
-    // Reload status not shown in HUD per reference
   }
 
   /**

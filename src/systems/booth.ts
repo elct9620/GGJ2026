@@ -1,11 +1,12 @@
 import { Container, Sprite, Text } from "pixi.js";
-import { FoodType } from "../entities/booth";
+import { FoodType, BoothId } from "../entities/booth";
 import { SystemPriority } from "../core/systems/system.interface";
 import { InjectableSystem } from "../core/systems/injectable";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Booth system for storing food ingredients
@@ -15,16 +16,13 @@ export class BoothSystem extends InjectableSystem {
   public readonly name = "BoothSystem";
   public readonly priority = SystemPriority.BOOTH;
 
-  // Dependency keys
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-
-  private booths: Map<number, Booth> = new Map();
+  private booths: Map<BoothId, Booth> = new Map();
   private container: Container;
   private backgroundSprite: Sprite | null = null;
 
   constructor() {
     super();
-    this.declareDependency(BoothSystem.DEP_EVENT_QUEUE, false); // Optional dependency
+    this.declareDependency(DependencyKeys.EventQueue, false); // Optional dependency
     this.container = new Container();
     this.initializeBackground();
     this.initializeBooths();
@@ -34,8 +32,8 @@ export class BoothSystem extends InjectableSystem {
    * Get EventQueue dependency (optional)
    */
   private get eventQueue(): EventQueue | null {
-    if (this.hasDependency(BoothSystem.DEP_EVENT_QUEUE)) {
-      return this.getDependency<EventQueue>(BoothSystem.DEP_EVENT_QUEUE);
+    if (this.hasDependency(DependencyKeys.EventQueue)) {
+      return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
     }
     return null;
   }
@@ -91,17 +89,23 @@ export class BoothSystem extends InjectableSystem {
       LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - boothHeight * 3) / 2; // 136
 
     this.booths.set(
-      1,
-      new Booth(1, FoodType.Pearl, startX, startY, this.container),
+      BoothId.Pearl,
+      new Booth(BoothId.Pearl, FoodType.Pearl, startX, startY, this.container),
     );
     this.booths.set(
-      2,
-      new Booth(2, FoodType.Tofu, startX, startY + boothHeight, this.container),
-    );
-    this.booths.set(
-      3,
+      BoothId.Tofu,
       new Booth(
-        3,
+        BoothId.Tofu,
+        FoodType.Tofu,
+        startX,
+        startY + boothHeight,
+        this.container,
+      ),
+    );
+    this.booths.set(
+      BoothId.BloodCake,
+      new Booth(
+        BoothId.BloodCake,
         FoodType.BloodCake,
         startX,
         startY + boothHeight * 2,
@@ -135,13 +139,13 @@ export class BoothSystem extends InjectableSystem {
    * Retrieve food from booth for synthesis
    * Returns true if successful, false if booth is empty
    */
-  public retrieveFood(boothNumber: number): FoodType | null {
-    const booth = this.booths.get(boothNumber);
+  public retrieveFood(boothId: BoothId): FoodType | null {
+    const booth = this.booths.get(boothId);
     if (booth && booth.removeFood()) {
       // Publish FoodConsumed event (SPEC § 2.3.7)
       if (this.eventQueue) {
         this.eventQueue.publish(EventType.FoodConsumed, {
-          boothId: String(boothNumber),
+          boothId: String(boothId),
           amount: 1,
         });
       }
@@ -153,13 +157,13 @@ export class BoothSystem extends InjectableSystem {
   /**
    * Enemy steals food from booth
    */
-  public stealFood(boothNumber: number): boolean {
-    const booth = this.booths.get(boothNumber);
+  public stealFood(boothId: BoothId): boolean {
+    const booth = this.booths.get(boothId);
     const success = booth ? booth.removeFood() : false;
     if (success && this.eventQueue) {
       // Publish FoodConsumed event (SPEC § 2.3.7)
       this.eventQueue.publish(EventType.FoodConsumed, {
-        boothId: String(boothNumber),
+        boothId: String(boothId),
         amount: 1,
       });
     }
@@ -176,8 +180,8 @@ export class BoothSystem extends InjectableSystem {
   /**
    * Get food count for specific booth
    */
-  public getFoodCount(boothNumber: number): number {
-    return this.booths.get(boothNumber)?.count ?? 0;
+  public getFoodCount(boothId: BoothId): number {
+    return this.booths.get(boothId)?.count ?? 0;
   }
 
   /**
@@ -207,7 +211,7 @@ export class BoothSystem extends InjectableSystem {
  * Uses DropItemPool_*.png sprites at x=340 (baseline)
  */
 class Booth {
-  public readonly id: number;
+  public readonly id: BoothId;
   public readonly foodType: FoodType;
   public count: number = 0;
   public readonly maxCapacity: number = 6; // SPEC § 2.3.1
@@ -217,7 +221,7 @@ class Booth {
   private nameText: Text;
 
   constructor(
-    id: number,
+    id: BoothId,
     foodType: FoodType,
     x: number,
     y: number,
@@ -258,13 +262,13 @@ class Booth {
     // Map booth id to DropItemPool asset
     let assetKey: keyof typeof AssetKeys;
     switch (this.id) {
-      case 1:
+      case BoothId.Pearl:
         assetKey = "boothPool0";
         break;
-      case 2:
+      case BoothId.Tofu:
         assetKey = "boothPool1";
         break;
-      case 3:
+      case BoothId.BloodCake:
         assetKey = "boothPool2";
         break;
       default:

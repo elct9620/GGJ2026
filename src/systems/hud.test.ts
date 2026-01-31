@@ -54,34 +54,8 @@ describe("HUDSystem", () => {
       expect(() => hudSystem.updateEnemyCount(10)).not.toThrow();
     });
 
-    it("updateHealthDisplay 應更新血量顯示", () => {
-      expect(() => hudSystem.updateHealthDisplay(3)).not.toThrow();
-    });
-
-    it("updateAmmo 應更新彈藥顯示", () => {
-      expect(() => hudSystem.updateAmmo(4, 6)).not.toThrow();
-    });
-
-    it("updateReload 應更新重裝狀態", () => {
-      expect(() => hudSystem.updateReload(true, 2.5)).not.toThrow();
-      expect(() => hudSystem.updateReload(false)).not.toThrow();
-    });
-
-    it("updateFoodStock 應更新食材庫存顯示", () => {
-      expect(() => hudSystem.updateFoodStock(3, 5, 2)).not.toThrow();
-    });
-
-    it("updateKillCount 應更新擊殺計數顯示", () => {
-      expect(() => hudSystem.updateKillCount(15)).not.toThrow();
-    });
-
-    it("updateBuffStatus 應更新 Buff 狀態顯示", () => {
-      expect(() => hudSystem.updateBuffStatus("臭豆腐", 1.2)).not.toThrow();
-    });
-
-    it("clearBuffStatus 應清除 Buff 狀態顯示", () => {
-      hudSystem.updateBuffStatus("臭豆腐", 1.2);
-      expect(() => hudSystem.clearBuffStatus()).not.toThrow();
+    it("updateScore 應更新分數顯示", () => {
+      expect(() => hudSystem.updateScore(1000)).not.toThrow();
     });
 
     it("updateRecipeAvailability 應更新配方可用性指示器", () => {

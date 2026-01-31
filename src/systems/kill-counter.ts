@@ -8,6 +8,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { KILL_COUNTER_CONFIG } from "../config";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Kill Counter System
@@ -23,23 +24,20 @@ export class KillCounterSystem extends InjectableSystem {
   public readonly name = "KillCounterSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Dependency keys
-  private static readonly DEP_EVENT_QUEUE = "EventQueue";
-
   // Kill counter state (SPEC § 2.3.8)
   private killCount = 0;
   private readonly consumeThreshold = KILL_COUNTER_CONFIG.oysterOmeletThreshold;
 
   constructor() {
     super();
-    this.declareDependency(KillCounterSystem.DEP_EVENT_QUEUE);
+    this.declareDependency(DependencyKeys.EventQueue);
   }
 
   /**
    * Get EventQueue dependency
    */
   private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(KillCounterSystem.DEP_EVENT_QUEUE);
+    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**
