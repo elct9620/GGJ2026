@@ -1,9 +1,14 @@
 # Testing Specification
 
-> 版本：0.1.0
+> 版本：0.2.0
 > 最後更新：2026-01-31
 
 本文件定義驗證 `SPEC.md` 需求的測試案例。
+
+**變更記錄**:
+
+- v0.2.0 (2026-01-31): 新增 Vector 測試案例（§ 2.8）與 Entity 測試案例（§ 2.9）
+- v0.1.0 (2026-01-31): 初始版本
 
 # 1. Testing Strategy
 
@@ -106,18 +111,18 @@
 
 ### 2.3.1 Decision Table: Synthesis Recipes
 
-| Test ID | 珍珠 | 豆腐 | 米血 | Expected Recipe | Buff Duration | Accept Criteria                       |
-| ------- | ---- | ---- | ---- | --------------- | ------------- | ------------------------------------- |
-| SY-01   | 3    | 0    | 0    | 珍珠奶茶        | 2s            | 散射 10 個小子彈                      |
-| SY-02   | 0    | 3    | 0    | 臭豆腐          | 2s            | 2 倍大子彈，傷害 ×2                   |
-| SY-03   | 0    | 0    | 3    | 豬血糕          | 2s            | 穿透追蹤子彈，傷害 ×1.2               |
-| SY-04   | 1    | 2    | 0    | 臭豆腐奶茶      | 2s            | 散射 3 個 1.6 倍巨大子彈，傷害 ×1.6   |
-| SY-05   | 2    | 1    | 0    | 珍珠臭豆腐      | 2s            | 散射 6 個 1.2 倍巨大子彈，傷害 ×1.2   |
-| SY-06   | 1    | 0    | 2    | 豬血糕奶茶      | 2s            | 散射 3 個穿透追蹤小子彈，傷害 ×1.2    |
-| SY-07   | 2    | 0    | 1    | 珍珠豬血糕      | 2s            | 散射 6 個穿透追蹤小子彈               |
-| SY-08   | 0    | 2    | 1    | 臭豬血糕        | 2s            | 1.6 倍穿透追蹤巨大子彈，傷害 ×1.8     |
-| SY-09   | 0    | 1    | 2    | 豬血糕豆腐      | 2s            | 1.2 倍穿透追蹤巨大子彈，傷害 ×2       |
-| SY-10   | 1    | 1    | 1    | 夜市總匯        | 2s            | 閃電連鎖追蹤，傷害 ×3                 |
+| Test ID | 珍珠 | 豆腐 | 米血 | Expected Recipe | Buff Duration | Accept Criteria                     |
+| ------- | ---- | ---- | ---- | --------------- | ------------- | ----------------------------------- |
+| SY-01   | 3    | 0    | 0    | 珍珠奶茶        | 2s            | 散射 10 個小子彈                    |
+| SY-02   | 0    | 3    | 0    | 臭豆腐          | 2s            | 2 倍大子彈，傷害 ×2                 |
+| SY-03   | 0    | 0    | 3    | 豬血糕          | 2s            | 穿透追蹤子彈，傷害 ×1.2             |
+| SY-04   | 1    | 2    | 0    | 臭豆腐奶茶      | 2s            | 散射 3 個 1.6 倍巨大子彈，傷害 ×1.6 |
+| SY-05   | 2    | 1    | 0    | 珍珠臭豆腐      | 2s            | 散射 6 個 1.2 倍巨大子彈，傷害 ×1.2 |
+| SY-06   | 1    | 0    | 2    | 豬血糕奶茶      | 2s            | 散射 3 個穿透追蹤小子彈，傷害 ×1.2  |
+| SY-07   | 2    | 0    | 1    | 珍珠豬血糕      | 2s            | 散射 6 個穿透追蹤小子彈             |
+| SY-08   | 0    | 2    | 1    | 臭豬血糕        | 2s            | 1.6 倍穿透追蹤巨大子彈，傷害 ×1.8   |
+| SY-09   | 0    | 1    | 2    | 豬血糕豆腐      | 2s            | 1.2 倍穿透追蹤巨大子彈，傷害 ×2     |
+| SY-10   | 1    | 1    | 1    | 夜市總匯        | 2s            | 閃電連鎖追蹤，傷害 ×3               |
 
 ### 2.3.2 Insert Food
 
@@ -278,59 +283,102 @@
 
 ### 2.8.3 subtract Operation
 
-| Test ID | Input                                    | Expected Output  | Accept Criteria |
-| ------- | ---------------------------------------- | ---------------- | --------------- |
-| VT-09   | Vector(10, 20).subtract(Vector(5, 3))    | Vector(5, 17)    | 向量減法        |
-| VT-10   | Vector(10, 20).subtract(Vector(15, 25))  | Vector(-5, -5)   | 結果為負數      |
-| VT-11   | Vector(10, 20).subtract(Vector(10, 20))  | Vector(0, 0)     | 結果為零向量    |
-| VT-12   | Vector(10, 20).subtract(undefined)       | 拋出 TypeError   | 參數驗證        |
+| Test ID | Input                                   | Expected Output | Accept Criteria |
+| ------- | --------------------------------------- | --------------- | --------------- |
+| VT-09   | Vector(10, 20).subtract(Vector(5, 3))   | Vector(5, 17)   | 向量減法        |
+| VT-10   | Vector(10, 20).subtract(Vector(15, 25)) | Vector(-5, -5)  | 結果為負數      |
+| VT-11   | Vector(10, 20).subtract(Vector(10, 20)) | Vector(0, 0)    | 結果為零向量    |
+| VT-12   | Vector(10, 20).subtract(undefined)      | 拋出 TypeError  | 參數驗證        |
 
 ### 2.8.4 multiply Operation
 
-| Test ID | Input                      | Expected Output | Accept Criteria      |
-| ------- | -------------------------- | --------------- | -------------------- |
-| VT-13   | Vector(10, 20).multiply(2) | Vector(20, 40)  | 純量乘法             |
-| VT-14   | Vector(10, 20).multiply(0) | Vector(0, 0)    | 乘以 0 返回零向量    |
-| VT-15   | Vector(3, 5).multiply(0.5) | Vector(2, 3)    | 小數乘法並四捨五入   |
-| VT-16   | Vector(10, 20).multiply(-1)| Vector(-10, -20)| 負數乘法（反向）     |
-| VT-17   | Vector(10, 20).multiply(NaN)| 拋出 TypeError | 參數驗證             |
-| VT-18   | Vector(10, 20).multiply(Infinity)| 拋出 RangeError | 參數驗證        |
+| Test ID | Input                             | Expected Output  | Accept Criteria    |
+| ------- | --------------------------------- | ---------------- | ------------------ |
+| VT-13   | Vector(10, 20).multiply(2)        | Vector(20, 40)   | 純量乘法           |
+| VT-14   | Vector(10, 20).multiply(0)        | Vector(0, 0)     | 乘以 0 返回零向量  |
+| VT-15   | Vector(3, 5).multiply(0.5)        | Vector(2, 3)     | 小數乘法並四捨五入 |
+| VT-16   | Vector(10, 20).multiply(-1)       | Vector(-10, -20) | 負數乘法（反向）   |
+| VT-17   | Vector(10, 20).multiply(NaN)      | 拋出 TypeError   | 參數驗證           |
+| VT-18   | Vector(10, 20).multiply(Infinity) | 拋出 RangeError  | 參數驗證           |
 
 ### 2.8.5 normalize Operation
 
-| Test ID | Input                    | Expected Output | Accept Criteria          |
-| ------- | ------------------------ | --------------- | ------------------------ |
-| VT-19   | Vector(3, 4).normalize() | Vector(1, 1)    | 正規化並四捨五入         |
-| VT-20   | Vector(0, 0).normalize() | Vector(0, 0)    | 零向量正規化返回零向量   |
-| VT-21   | Vector(10, 0).normalize()| Vector(1, 0)    | 水平向量正規化           |
-| VT-22   | Vector(0, 10).normalize()| Vector(0, 1)    | 垂直向量正規化           |
+| Test ID | Input                     | Expected Output | Accept Criteria        |
+| ------- | ------------------------- | --------------- | ---------------------- |
+| VT-19   | Vector(3, 4).normalize()  | Vector(1, 1)    | 正規化並四捨五入       |
+| VT-20   | Vector(0, 0).normalize()  | Vector(0, 0)    | 零向量正規化返回零向量 |
+| VT-21   | Vector(10, 0).normalize() | Vector(1, 0)    | 水平向量正規化         |
+| VT-22   | Vector(0, 10).normalize() | Vector(0, 1)    | 垂直向量正規化         |
 
 ### 2.8.6 magnitude Operation
 
-| Test ID | Input                     | Expected Output | Accept Criteria |
-| ------- | ------------------------- | --------------- | --------------- |
-| VT-23   | Vector(3, 4).magnitude()  | 5               | 計算向量長度    |
-| VT-24   | Vector(0, 0).magnitude()  | 0               | 零向量長度為 0  |
-| VT-25   | Vector(5, 0).magnitude()  | 5               | 水平向量長度    |
-| VT-26   | Vector(-3, -4).magnitude()| 5               | 負數座標長度    |
+| Test ID | Input                      | Expected Output | Accept Criteria |
+| ------- | -------------------------- | --------------- | --------------- |
+| VT-23   | Vector(3, 4).magnitude()   | 5               | 計算向量長度    |
+| VT-24   | Vector(0, 0).magnitude()   | 0               | 零向量長度為 0  |
+| VT-25   | Vector(5, 0).magnitude()   | 5               | 水平向量長度    |
+| VT-26   | Vector(-3, -4).magnitude() | 5               | 負數座標長度    |
 
 ### 2.8.7 distance Operation
 
-| Test ID | Input                                   | Expected Output | Accept Criteria      |
-| ------- | --------------------------------------- | --------------- | -------------------- |
-| VT-27   | Vector(0, 0).distance(Vector(3, 4))     | 5               | 計算兩點距離         |
-| VT-28   | Vector(10, 10).distance(Vector(10, 10)) | 0               | 相同點距離為 0       |
-| VT-29   | Vector(0, 0).distance(Vector(-3, -4))   | 5               | 負數座標距離         |
-| VT-30   | Vector(10, 10).distance(null)           | 拋出 TypeError  | 參數驗證             |
+| Test ID | Input                                   | Expected Output | Accept Criteria |
+| ------- | --------------------------------------- | --------------- | --------------- |
+| VT-27   | Vector(0, 0).distance(Vector(3, 4))     | 5               | 計算兩點距離    |
+| VT-28   | Vector(10, 10).distance(Vector(10, 10)) | 0               | 相同點距離為 0  |
+| VT-29   | Vector(0, 0).distance(Vector(-3, -4))   | 5               | 負數座標距離    |
+| VT-30   | Vector(10, 10).distance(null)           | 拋出 TypeError  | 參數驗證        |
 
 ### 2.8.8 dot Operation
 
-| Test ID | Input                              | Expected Output | Accept Criteria      |
-| ------- | ---------------------------------- | --------------- | -------------------- |
-| VT-31   | Vector(2, 3).dot(Vector(4, 5))     | 23              | 點積運算（2×4+3×5）  |
-| VT-32   | Vector(1, 0).dot(Vector(0, 1))     | 0               | 垂直向量點積為 0     |
-| VT-33   | Vector(1, 0).dot(Vector(-1, 0))    | -1              | 反向向量點積為負數   |
-| VT-34   | Vector(10, 20).dot(undefined)      | 拋出 TypeError  | 參數驗證             |
+| Test ID | Input                           | Expected Output | Accept Criteria     |
+| ------- | ------------------------------- | --------------- | ------------------- |
+| VT-31   | Vector(2, 3).dot(Vector(4, 5))  | 23              | 點積運算（2×4+3×5） |
+| VT-32   | Vector(1, 0).dot(Vector(0, 1))  | 0               | 垂直向量點積為 0    |
+| VT-33   | Vector(1, 0).dot(Vector(-1, 0)) | -1              | 反向向量點積為負數  |
+| VT-34   | Vector(10, 20).dot(undefined)   | 拋出 TypeError  | 參數驗證            |
+
+## 2.9 Entity Tests
+
+### 2.9.1 ID Generation
+
+| Test ID | Input                | Expected Output   | Accept Criteria     |
+| ------- | -------------------- | ----------------- | ------------------- |
+| ET-01   | 建立第 1 個 Entity   | id = "1"          | ID 為字串格式的整數 |
+| ET-02   | 建立第 2 個 Entity   | id = "2"          | ID 自動遞增         |
+| ET-03   | 建立 100 個 Entity   | id = "1" 到 "100" | ID 不重複           |
+| ET-04   | Entity 建立後修改 id | 編譯錯誤          | id 為 readonly 屬性 |
+| ET-05   | 兩個 Entity 的 id    | id 必定不同       | ID 唯一性           |
+
+### 2.9.2 Lifecycle Management
+
+| Test ID | Input                           | Expected Output | Accept Criteria             |
+| ------- | ------------------------------- | --------------- | --------------------------- |
+| ET-06   | 新建立的 Entity                 | active = true   | 預設為啟用狀態              |
+| ET-07   | 設定 active = false             | active = false  | 可停用 Entity               |
+| ET-08   | 停用後再設定 active = true      | active = true   | 可重新啟用 Entity           |
+| ET-09   | 停用的 Entity（active = false） | 系統應忽略      | 遊戲邏輯不處理停用的 Entity |
+| ET-10   | 啟用的 Entity（active = true）  | 系統正常處理    | 遊戲邏輯處理啟用的 Entity   |
+
+### 2.9.3 Object Pool Integration
+
+| Test ID | Input                         | Expected Output            | Accept Criteria    |
+| ------- | ----------------------------- | -------------------------- | ------------------ |
+| ET-11   | 從物件池取得 Entity（池為空） | 建立新 Entity，分配新 ID   | 自動建立新實體     |
+| ET-12   | 從物件池取得 Entity（池非空） | 重用現有 Entity，保留原 ID | 重用物件池內的實體 |
+| ET-13   | Entity 返回物件池             | active = false，狀態清除   | 停用並清除狀態     |
+| ET-14   | 重新啟用池內 Entity           | active = true，ID 不變     | ID 保持不變        |
+| ET-15   | 連續建立/回收 10 次           | ID 總數 ≤ 10               | 物件池有效重用     |
+
+### 2.9.4 Inheritance
+
+| Test ID | Input              | Expected Output      | Accept Criteria  |
+| ------- | ------------------ | -------------------- | ---------------- |
+| ET-16   | Player 繼承 Entity | Player.id 存在且唯一 | 繼承 Entity 屬性 |
+| ET-17   | Ghost 繼承 Entity  | Ghost.id 存在且唯一  | 繼承 Entity 屬性 |
+| ET-18   | Boss 繼承 Entity   | Boss.id 存在且唯一   | 繼承 Entity 屬性 |
+| ET-19   | Bullet 繼承 Entity | Bullet.id 存在且唯一 | 繼承 Entity 屬性 |
+| ET-20   | Food 繼承 Entity   | Food.id 存在且唯一   | 繼承 Entity 屬性 |
+| ET-21   | 不同類型的 Entity  | 所有 id 必定不同     | 全域 ID 唯一性   |
 
 # 3. Integration Tests
 
