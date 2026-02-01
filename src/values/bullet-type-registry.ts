@@ -7,56 +7,22 @@
  * and accessed through a single source of truth.
  */
 
-import { SpecialBulletType } from "../core/types";
-import { BULLET_CONFIG, HIT_EFFECTS_CONFIG } from "../config";
-import { AssetKeys, type AssetKey } from "../core/assets";
+import {
+  SpecialBulletType,
+  createRegistry,
+  type BulletTypeProperties,
+  type VisualEffectConfig,
+  type HitEffectConfigKey,
+} from "../core/types";
+import { BULLET_CONFIG } from "../config";
+import { AssetKeys } from "../core/assets";
 
-/**
- * Hit effect config key type for HIT_EFFECTS_CONFIG lookups
- */
-export type HitEffectConfigKey = keyof typeof HIT_EFFECTS_CONFIG.flash;
-
-/**
- * Visual effect configuration for bullet trails and hit effects
- */
-export interface VisualEffectConfig {
-  trailColor: number;
-  trailLength: number;
-  trailLifetime: number;
-  hitColor?: number;
-  hitDuration?: number;
-  chainColor?: number;
-  chainWidth?: number;
-  flashDuration?: number;
-  pierceColor?: number;
-  pierceRadius?: number;
-  pierceDuration?: number;
-  residueAlpha?: number;
-  explosionColor?: number;
-  explosionRadius?: number;
-  explosionDuration?: number;
-  screenShakeMagnitude?: number;
-  screenShakeDuration?: number;
-}
-
-/**
- * Complete bullet type properties
- * Contains all information needed for visual, collision, and player appearance
- */
-export interface BulletTypeProperties {
-  /** Bullet size in pixels (collision and visual unified) */
-  size: number;
-  /** Bullet color for rendering */
-  color: number;
-  /** Config key for HIT_EFFECTS_CONFIG lookup */
-  configKey: HitEffectConfigKey;
-  /** Player sprite asset key when this buff is active */
-  playerAsset: AssetKey;
-  /** Direction hint sprite asset key when this buff is active */
-  dirHintAsset: AssetKey;
-  /** Visual effect configuration */
-  visualConfig: VisualEffectConfig;
-}
+// Re-export types from core/types for backwards compatibility
+export type {
+  BulletTypeProperties,
+  VisualEffectConfig,
+  HitEffectConfigKey,
+} from "../core/types";
 
 /**
  * Visual effects configuration per bullet type
@@ -113,11 +79,12 @@ const VISUAL_CONFIGS: Record<SpecialBulletType, VisualEffectConfig> = {
 /**
  * Bullet Type Registry
  * Single source of truth for all bullet type properties
+ * Uses TypeRegistry<K, V> interface from core/types
  */
-export const BulletTypeRegistry: Record<
+export const BulletTypeRegistry = createRegistry<
   SpecialBulletType,
   BulletTypeProperties
-> = {
+>({
   [SpecialBulletType.None]: {
     size: BULLET_CONFIG.sizes.normal,
     color: BULLET_CONFIG.colors.normal,
@@ -166,7 +133,7 @@ export const BulletTypeRegistry: Record<
     dirHintAsset: AssetKeys.playerDirHint01,
     visualConfig: VISUAL_CONFIGS[SpecialBulletType.OysterOmelette],
   },
-};
+});
 
 /**
  * Get bullet properties for a given bullet type
@@ -175,21 +142,21 @@ export const BulletTypeRegistry: Record<
 export function getBulletProperties(
   bulletType: SpecialBulletType,
 ): BulletTypeProperties {
-  return BulletTypeRegistry[bulletType];
+  return BulletTypeRegistry.get(bulletType);
 }
 
 /**
  * Get bullet size for a given bullet type
  */
 export function getBulletSize(bulletType: SpecialBulletType): number {
-  return BulletTypeRegistry[bulletType].size;
+  return BulletTypeRegistry.get(bulletType).size;
 }
 
 /**
  * Get bullet color for a given bullet type
  */
 export function getBulletColor(bulletType: SpecialBulletType): number {
-  return BulletTypeRegistry[bulletType].color;
+  return BulletTypeRegistry.get(bulletType).color;
 }
 
 /**
@@ -198,7 +165,7 @@ export function getBulletColor(bulletType: SpecialBulletType): number {
 export function getHitEffectConfigKey(
   bulletType: SpecialBulletType,
 ): HitEffectConfigKey {
-  return BulletTypeRegistry[bulletType].configKey;
+  return BulletTypeRegistry.get(bulletType).configKey;
 }
 
 /**
@@ -207,19 +174,23 @@ export function getHitEffectConfigKey(
 export function getVisualEffectConfig(
   bulletType: SpecialBulletType,
 ): VisualEffectConfig {
-  return BulletTypeRegistry[bulletType].visualConfig;
+  return BulletTypeRegistry.get(bulletType).visualConfig;
 }
 
 /**
  * Get player asset key for a given buff type
  */
-export function getPlayerAssetForBuff(buffType: SpecialBulletType): AssetKey {
-  return BulletTypeRegistry[buffType].playerAsset;
+export function getPlayerAssetForBuff(
+  buffType: SpecialBulletType,
+): BulletTypeProperties["playerAsset"] {
+  return BulletTypeRegistry.get(buffType).playerAsset;
 }
 
 /**
  * Get direction hint asset key for a given buff type
  */
-export function getDirHintAssetForBuff(buffType: SpecialBulletType): AssetKey {
-  return BulletTypeRegistry[buffType].dirHintAsset;
+export function getDirHintAssetForBuff(
+  buffType: SpecialBulletType,
+): BulletTypeProperties["dirHintAsset"] {
+  return BulletTypeRegistry.get(buffType).dirHintAsset;
 }

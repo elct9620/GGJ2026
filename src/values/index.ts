@@ -30,6 +30,7 @@ export {
   FoodType,
   BoothId,
   getBoothIdForFood,
+  createRegistry,
 } from "../core/types";
 export type {
   TypeRegistry,
@@ -37,6 +38,10 @@ export type {
   SpecialBulletType as SpecialBulletTypeValue,
   FoodType as FoodTypeValue,
   BoothId as BoothIdValue,
+  BulletTypeProperties,
+  VisualEffectConfig,
+  HitEffectConfigKey,
+  EnemyTypeProperties,
 } from "../core/types";
 
 // 子彈類型註冊表
@@ -50,11 +55,18 @@ export {
   getPlayerAssetForBuff,
   getDirHintAssetForBuff,
 } from "./bullet-type-registry";
-export type {
-  BulletTypeProperties,
-  VisualEffectConfig,
-  HitEffectConfigKey,
-} from "./bullet-type-registry";
+
+// 敵人類型註冊表
+export {
+  EnemyTypeRegistry,
+  getEnemyProperties,
+  getEnemyAssetKey,
+  getEnemySpeed,
+  getEnemySize,
+  getEnemyFoodDrop,
+  shouldShowHealthBar,
+  getEnemyHealthForWave,
+} from "./enemy-type-registry";
 
 // 子彈升級快照
 export type { BulletUpgradeSnapshot } from "./bullet-upgrade-snapshot";

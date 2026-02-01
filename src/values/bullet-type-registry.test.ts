@@ -23,12 +23,12 @@ describe("BulletTypeRegistry", () => {
     it("should have entry for all bullet types", () => {
       const bulletTypes = Object.values(SpecialBulletType);
       for (const type of bulletTypes) {
-        expect(BulletTypeRegistry[type]).toBeDefined();
+        expect(BulletTypeRegistry.get(type)).toBeDefined();
       }
     });
 
     it("should have all required properties for each entry", () => {
-      for (const [_type, props] of Object.entries(BulletTypeRegistry)) {
+      for (const [_type, props] of Object.entries(BulletTypeRegistry.entries)) {
         expect(props.size).toBeTypeOf("number");
         expect(props.color).toBeTypeOf("number");
         expect(props.configKey).toBeTypeOf("string");

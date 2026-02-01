@@ -6,6 +6,8 @@
  * a generic TypeRegistry interface for type-to-properties mappings.
  */
 
+import type { AssetKey } from "./assets";
+
 // =============================================================================
 // Generic Registry Interface
 // =============================================================================
@@ -127,4 +129,88 @@ export function getBoothIdForFood(foodType: FoodType): BoothId {
     BloodCake: BoothId.BloodCake,
   };
   return mapping[foodType];
+}
+
+// =============================================================================
+// Bullet Type Properties
+// =============================================================================
+
+/**
+ * Hit effect config key type for HIT_EFFECTS_CONFIG lookups
+ * Matches keys in HIT_EFFECTS_CONFIG.flash from config.ts
+ */
+export type HitEffectConfigKey =
+  | "normal"
+  | "nightMarket"
+  | "stinkyTofu"
+  | "bubbleTea"
+  | "bloodCake"
+  | "oysterOmelette";
+
+/**
+ * Visual effect configuration for bullet trails and hit effects
+ * SPEC § 2.6.3: Bullet visual and collision properties
+ */
+export interface VisualEffectConfig {
+  trailColor: number;
+  trailLength: number;
+  trailLifetime: number;
+  hitColor?: number;
+  hitDuration?: number;
+  chainColor?: number;
+  chainWidth?: number;
+  flashDuration?: number;
+  pierceColor?: number;
+  pierceRadius?: number;
+  pierceDuration?: number;
+  residueAlpha?: number;
+  explosionColor?: number;
+  explosionRadius?: number;
+  explosionDuration?: number;
+  screenShakeMagnitude?: number;
+  screenShakeDuration?: number;
+}
+
+/**
+ * Complete bullet type properties
+ * Contains all information needed for visual, collision, and player appearance
+ * SPEC § 2.6.3: Bullet visual and collision properties
+ */
+export interface BulletTypeProperties {
+  /** Bullet size in pixels (collision and visual unified) */
+  size: number;
+  /** Bullet color for rendering */
+  color: number;
+  /** Config key for HIT_EFFECTS_CONFIG lookup */
+  configKey: HitEffectConfigKey;
+  /** Player sprite asset key when this buff is active */
+  playerAsset: AssetKey;
+  /** Direction hint sprite asset key when this buff is active */
+  dirHintAsset: AssetKey;
+  /** Visual effect configuration */
+  visualConfig: VisualEffectConfig;
+}
+
+// =============================================================================
+// Enemy Type Properties
+// =============================================================================
+
+/**
+ * Enemy type properties
+ * Contains all information needed for visual, stats, and behavior
+ * SPEC § 2.6.2: Enemy types and their properties
+ */
+export interface EnemyTypeProperties {
+  /** Base health value (before wave scaling) */
+  baseHealth: number;
+  /** Movement speed in px/s */
+  speed: number;
+  /** Sprite asset key */
+  assetKey: AssetKey;
+  /** Sprite size in pixels */
+  size: number;
+  /** Food drop when defeated (null = no drop) */
+  foodDrop: FoodType | null;
+  /** Whether this enemy shows health bar */
+  showHealthBar: boolean;
 }

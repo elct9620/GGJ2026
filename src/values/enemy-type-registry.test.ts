@@ -19,13 +19,13 @@ describe("EnemyTypeRegistry", () => {
     it("should contain all enemy types", () => {
       const enemyTypes = Object.values(EnemyType);
       enemyTypes.forEach((type) => {
-        expect(EnemyTypeRegistry[type]).toBeDefined();
+        expect(EnemyTypeRegistry.get(type)).toBeDefined();
       });
     });
 
     it("should have all required properties for each type", () => {
       Object.values(EnemyType).forEach((type) => {
-        const props = EnemyTypeRegistry[type];
+        const props = EnemyTypeRegistry.get(type);
         expect(props.baseHealth).toBeTypeOf("number");
         expect(props.speed).toBeTypeOf("number");
         expect(props.assetKey).toBeTypeOf("string");
