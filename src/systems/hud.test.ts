@@ -68,5 +68,17 @@ describe("HUDSystem", () => {
       ];
       expect(() => hudSystem.updateRecipeAvailability(recipes)).not.toThrow();
     });
+
+    it("updateKillCount 應更新擊殺計數顯示 (SPEC § 2.3.8)", () => {
+      expect(() => hudSystem.updateKillCount(0, 20)).not.toThrow();
+    });
+
+    it("updateKillCount 應正確顯示擊殺進度", () => {
+      expect(() => hudSystem.updateKillCount(15, 20)).not.toThrow();
+    });
+
+    it("updateKillCount 應正確顯示蚵仔煎可用狀態", () => {
+      expect(() => hudSystem.updateKillCount(20, 20)).not.toThrow();
+    });
   });
 });
