@@ -39,6 +39,11 @@ import skillTip2 from "../assets/image_skillTip_2.png";
 import skillTip3 from "../assets/image_skillTip_3.png";
 import upgradeIcon from "../assets/image_upgradeIcon.png";
 import skillIcon from "../assets/btn_skillIcon.png";
+import skillNightMarket from "../assets/Skill_Sandwich.png";
+import skillStinkyTofu from "../assets/Skill_StinkyTofu.png";
+import skillBubbleTea from "../assets/Skill_BubbleTea.png";
+import skillBloodCake from "../assets/Skill_PigBloodCake.png";
+import skillOysterOmelette from "../assets/Skill_oyster.png";
 
 /**
  * Asset keys for type-safe access
@@ -76,6 +81,11 @@ export const AssetKeys = {
   skillTip3: "skillTip3",
   upgradeIcon: "upgradeIcon",
   skillIcon: "skillIcon",
+  skillNightMarket: "skillNightMarket",
+  skillStinkyTofu: "skillStinkyTofu",
+  skillBubbleTea: "skillBubbleTea",
+  skillBloodCake: "skillBloodCake",
+  skillOysterOmelette: "skillOysterOmelette",
 } as const;
 
 export type AssetKey = (typeof AssetKeys)[keyof typeof AssetKeys];
@@ -116,6 +126,11 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.skillTip3]: skillTip3,
   [AssetKeys.upgradeIcon]: upgradeIcon,
   [AssetKeys.skillIcon]: skillIcon,
+  [AssetKeys.skillNightMarket]: skillNightMarket,
+  [AssetKeys.skillStinkyTofu]: skillStinkyTofu,
+  [AssetKeys.skillBubbleTea]: skillBubbleTea,
+  [AssetKeys.skillBloodCake]: skillBloodCake,
+  [AssetKeys.skillOysterOmelette]: skillOysterOmelette,
 };
 
 /**

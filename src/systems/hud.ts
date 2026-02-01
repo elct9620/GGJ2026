@@ -230,7 +230,7 @@ export class HUDSystem extends InjectableSystem {
    * Setup skill buttons in the bulletClassBase area (820×126px)
    * Based on ui_rough_pixelSpec.png:
    * - keyBindTip (white box with number 1-5) positioned ABOVE skill icon by 32px
-   * - btn_skillIcon (116×116px) as skill background (will be replaced with actual icons)
+   * - Skill icons (116×116px) showing actual skill images
    * - Cost indicators (colored dots) below skill icon showing food requirements
    * Layout: 68px left margin, 30px gap between buttons
    */
@@ -256,6 +256,16 @@ export class HUDSystem extends InjectableSystem {
     const keyTipSize = BUTTON_SIZE;
     const costIndicatorSize = INDICATOR_SIZE;
 
+    // Skill icon textures mapped to button index (1-5)
+    // Key 1: 夜市總匯, Key 2: 臭豆腐, Key 3: 珍珠奶茶, Key 4: 豬血糕, Key 5: 蚵仔煎
+    const skillIconKeys = [
+      AssetKeys.skillNightMarket,
+      AssetKeys.skillStinkyTofu,
+      AssetKeys.skillBubbleTea,
+      AssetKeys.skillBloodCake,
+      AssetKeys.skillOysterOmelette,
+    ] as const;
+
     // Get skill display configs from centralized recipes
     const recipeIds = ["1", "2", "3", "4", "5"];
     const skillCosts = recipeIds.map((id) => RECIPE_DISPLAY[id].costs.length);
@@ -271,8 +281,8 @@ export class HUDSystem extends InjectableSystem {
         skillIconSize / 2 +
         i * (skillIconSize + BUTTON_GAP);
 
-      // Add skill button background (btn_skillIcon.png 116×116px)
-      const skillBg = new Sprite(getTexture(AssetKeys.skillIcon));
+      // Add skill button with actual skill icon
+      const skillBg = new Sprite(getTexture(skillIconKeys[i]));
       skillBg.width = skillIconSize;
       skillBg.height = skillIconSize;
       const skillBgX = buttonCenterX - skillIconSize / 2;
