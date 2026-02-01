@@ -26,6 +26,11 @@ import skillTip3 from "../assets/image_skillTip_3.png";
 import upgradeIcon from "../assets/image_upgradeIcon.png";
 import skillIcon from "../assets/btn_skillIcon.png";
 
+// Import audio assets
+import soundButton from "../assets/se/select03.mp3";
+import soundShoot from "../assets/se/shoot5.mp3";
+import soundHit from "../assets/se/short_punch1.mp3";
+
 /**
  * Asset keys for type-safe access
  */
@@ -48,6 +53,9 @@ export const AssetKeys = {
   skillTip3: "skillTip3",
   upgradeIcon: "upgradeIcon",
   skillIcon: "skillIcon",
+  soundButton: "soundButton",
+  soundShoot: "soundShoot",
+  soundHit: "soundHit",
 } as const;
 
 export type AssetKey = (typeof AssetKeys)[keyof typeof AssetKeys];
@@ -74,6 +82,9 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.skillTip3]: skillTip3,
   [AssetKeys.upgradeIcon]: upgradeIcon,
   [AssetKeys.skillIcon]: skillIcon,
+  [AssetKeys.soundButton]: soundButton,
+  [AssetKeys.soundShoot]: soundShoot,
+  [AssetKeys.soundHit]: soundHit,
 };
 
 /**

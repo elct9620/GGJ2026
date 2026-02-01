@@ -7,6 +7,9 @@ import type { ISystem } from "../core/systems/system.interface";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
+import soundButton from "../assets/se/select03.mp3";
+import soundShoot from "../assets/se/shoot5.mp3";
+import soundHit from "../assets/se/short_punch1.mp3";
 
 /**
  * Audio System
@@ -30,11 +33,16 @@ export class AudioSystem implements ISystem {
   // Mute state
   private muted = false;
 
+  // Volume control (SPEC § 2.3.9: 音量控制)
+  // Default: 0.7 (70%) for comfortable gameplay
+  private soundEffectVolume = 0.7;
+
   // Sound file mapping (SPEC § 2.3.9: 音效檔案映射)
+  // Using Vite imports for correct path resolution in production
   private soundMap: Record<string, string> = {
-    button: "/src/assets/se/select03.mp3",
-    shoot: "/src/assets/se/shoot5.mp3",
-    hit: "/src/assets/se/short_punch1.mp3",
+    button: soundButton,
+    shoot: soundShoot,
+    hit: soundHit,
   };
 
   /**
@@ -93,6 +101,22 @@ export class AudioSystem implements ISystem {
   }
 
   /**
+   * Set global sound effect volume
+   * SPEC § 2.3.9: 音量控制
+   * @param volume - Volume level (0.0 to 1.0)
+   */
+  public setSoundEffectVolume(volume: number): void {
+    this.soundEffectVolume = Math.max(0, Math.min(1, volume));
+  }
+
+  /**
+   * Get current sound effect volume
+   */
+  public getSoundEffectVolume(): number {
+    return this.soundEffectVolume;
+  }
+
+  /**
    * Handle SoundEffectTriggered event
    * SPEC § 2.3.9: Play Sound Effect
    */
@@ -126,6 +150,7 @@ export class AudioSystem implements ISystem {
       // Create new audio instance for each play (allows overlapping)
       const audio = new Audio(filePath);
       audio.muted = this.muted;
+      audio.volume = this.soundEffectVolume; // Apply volume control
 
       // Play audio
       const playPromise = audio.play();
