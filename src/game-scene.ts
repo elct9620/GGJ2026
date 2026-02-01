@@ -4,7 +4,11 @@ import { Enemy, EnemyType } from "./entities/enemy";
 import { Bullet } from "./entities/bullet";
 import { Food, FoodType, getBoothIdForFood } from "./entities/booth";
 import { InputSystem } from "./systems/input";
-import { HUDSystem, type RecipeStatus } from "./systems/hud";
+import {
+  HUDSystem,
+  type RecipeStatus,
+  type FoodRequirementStatus,
+} from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { BoxSystem } from "./systems/box";
 import { CombatSystem, type BulletSpawnRequest } from "./systems/combat";
@@ -16,7 +20,7 @@ import { BulletVisualEffectsSystem } from "./systems/bullet-visual-effects";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
-import { RECIPES } from "./values/recipes";
+import { RECIPES, RECIPE_DISPLAY, FOOD_HUD_COLOR } from "./values/recipes";
 import { PLAYER_CONFIG } from "./config";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
@@ -398,23 +402,82 @@ export class GameScene {
 
   /**
    * Get recipe availability statuses for HUD display
+   * Includes individual food requirement collection status for visual feedback
    */
   private getRecipeStatuses(
     boothSystem: BoothSystem,
     killCounterSystem: KillCounterSystem,
   ): RecipeStatus[] {
-    return Object.values(RECIPES).map((recipe) => ({
-      key: recipe.id,
-      name: recipe.name,
-      available: this.checkRecipeAvailability(
-        {
-          requirements: recipe.foodRequirements,
-          requiresKillCounter: recipe.requiresKillCounter,
-        },
+    return Object.values(RECIPES).map((recipe) => {
+      const displayConfig = RECIPE_DISPLAY[recipe.id];
+      const requirements = this.getRequirementStatuses(
+        recipe.id,
+        displayConfig.costs,
         boothSystem,
         killCounterSystem,
-      ),
-    }));
+      );
+
+      return {
+        key: recipe.id,
+        name: recipe.name,
+        available: this.checkRecipeAvailability(
+          {
+            requirements: recipe.foodRequirements,
+            requiresKillCounter: recipe.requiresKillCounter,
+          },
+          boothSystem,
+          killCounterSystem,
+        ),
+        requirements,
+      };
+    });
+  }
+
+  /**
+   * Get individual food requirement collection statuses
+   * Used for HUD indicators to show which foods are collected
+   */
+  private getRequirementStatuses(
+    recipeId: string,
+    costs: FoodType[],
+    boothSystem: BoothSystem,
+    killCounterSystem: KillCounterSystem,
+  ): FoodRequirementStatus[] {
+    // Special case for 蚵仔煎 (skill 5): uses kill counter
+    if (recipeId === "5") {
+      const killCount = killCounterSystem.getKillCount();
+      const threshold = killCounterSystem.getConsumeThreshold();
+      // Show green indicator if kill threshold met
+      return [
+        {
+          type: FOOD_HUD_COLOR.Tofu, // Use Tofu color (green) as placeholder
+          collected: killCount >= threshold,
+        },
+      ];
+    }
+
+    // Track food consumption to handle duplicate food types
+    const foodCounters: Record<string, number> = {};
+
+    return costs.map((foodType) => {
+      const boothId = getBoothIdForFood(foodType);
+      const available = boothSystem.getFoodCount(boothId);
+
+      // Track how many of this food type we've already "used"
+      if (foodCounters[foodType] === undefined) {
+        foodCounters[foodType] = 0;
+      }
+      const usedCount = foodCounters[foodType];
+      foodCounters[foodType]++;
+
+      // Check if this specific food slot is collected
+      const collected = available > usedCount;
+
+      return {
+        type: FOOD_HUD_COLOR[foodType],
+        collected,
+      };
+    });
   }
 
   /**

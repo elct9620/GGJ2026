@@ -60,11 +60,52 @@ describe("HUDSystem", () => {
 
     it("updateRecipeAvailability 應更新配方可用性指示器", () => {
       const recipes: RecipeStatus[] = [
-        { key: "1", name: "夜市總匯", available: true },
-        { key: "2", name: "臭豆腐", available: true },
-        { key: "3", name: "珍珠奶茶", available: false },
-        { key: "4", name: "豬血糕", available: true },
-        { key: "5", name: "蚵仔煎", available: false },
+        {
+          key: "1",
+          name: "夜市總匯",
+          available: true,
+          requirements: [
+            { type: 2, collected: true },
+            { type: 3, collected: true },
+            { type: 1, collected: true },
+          ],
+        },
+        {
+          key: "2",
+          name: "臭豆腐",
+          available: true,
+          requirements: [
+            { type: 3, collected: true },
+            { type: 3, collected: true },
+            { type: 3, collected: true },
+          ],
+        },
+        {
+          key: "3",
+          name: "珍珠奶茶",
+          available: false,
+          requirements: [
+            { type: 2, collected: true },
+            { type: 2, collected: false },
+            { type: 2, collected: false },
+          ],
+        },
+        {
+          key: "4",
+          name: "豬血糕",
+          available: true,
+          requirements: [
+            { type: 1, collected: true },
+            { type: 1, collected: true },
+            { type: 1, collected: true },
+          ],
+        },
+        {
+          key: "5",
+          name: "蚵仔煎",
+          available: false,
+          requirements: [{ type: 3, collected: false }],
+        },
       ];
       expect(() => hudSystem.updateRecipeAvailability(recipes)).not.toThrow();
     });

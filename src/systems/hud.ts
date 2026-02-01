@@ -6,12 +6,21 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values/recipes";
 
 /**
+ * Individual food requirement status
+ */
+export interface FoodRequirementStatus {
+  type: number; // HUD color type: 0=gray, 1=red, 2=blue, 3=green
+  collected: boolean; // Whether this food is collected
+}
+
+/**
  * Recipe status for HUD display
  */
 export interface RecipeStatus {
   key: string; // "1"-"5"
   name: string; // Recipe name in Chinese
   available: boolean; // Whether the recipe can be synthesized
+  requirements: FoodRequirementStatus[]; // Individual food requirements with collection status
 }
 
 /**
@@ -219,8 +228,11 @@ export class HUDSystem extends InjectableSystem {
 
   /**
    * Setup skill buttons in the bulletClassBase area (820×126px)
-   * Each skill has: btn_skillIcon (116×116px) background, keyBindTip (46×46px), cost indicators (20×20px)
-   * Layout: 30px left margin, 68px gap between buttons
+   * Based on ui_rough_pixelSpec.png:
+   * - keyBindTip (white box with number 1-5) positioned ABOVE skill icon by 32px
+   * - btn_skillIcon (116×116px) as skill background (will be replaced with actual icons)
+   * - Cost indicators (colored dots) below skill icon showing food requirements
+   * Layout: 68px left margin, 30px gap between buttons
    */
   private setupSkillButtons(): void {
     const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
@@ -232,15 +244,13 @@ export class HUDSystem extends InjectableSystem {
       BACKGROUND_SIZE,
       BUTTON_SIZE,
       INDICATOR_SIZE,
-      KEY_TIP_Y_OFFSET,
+      KEY_TIP_ABOVE_OFFSET,
       NUMBER_LABEL_X_OFFSET,
       NUMBER_LABEL_Y_OFFSET,
       NUMBER_LABEL_FONT_SIZE,
-      INDICATOR_Y_OFFSET,
+      INDICATOR_BOTTOM_OFFSET,
       INDICATOR_GAP,
       LABEL_FONT_SIZE,
-      LABEL_X_OFFSET,
-      LABEL_Y_OFFSET,
     } = LAYOUT.SKILL_SECTION;
 
     const skillIconSize = BACKGROUND_SIZE;
@@ -249,7 +259,6 @@ export class HUDSystem extends InjectableSystem {
 
     // Get skill display configs from centralized recipes
     const recipeIds = ["1", "2", "3", "4", "5"];
-    const skillLabels = recipeIds.map((id) => RECIPE_DISPLAY[id].label);
     const skillCosts = recipeIds.map((id) => RECIPE_DISPLAY[id].costs.length);
     const skillCostTypes = recipeIds.map((id) =>
       RECIPE_DISPLAY[id].costs.map((foodType) => FOOD_HUD_COLOR[foodType]),
@@ -272,18 +281,18 @@ export class HUDSystem extends InjectableSystem {
       skillBg.position.set(skillBgX, skillBgY);
       this.bottomHUD.addChild(skillBg);
 
-      // Create keyBindTip sprite (46×46px) - positioned at top of skill button
+      // Create keyBindTip sprite (46×46px) - positioned ABOVE skill icon by 32px
       const keyTip = new Sprite(getTexture(AssetKeys.keyBindTip));
       keyTip.width = keyTipSize;
       keyTip.height = keyTipSize;
       const keyTipX = buttonCenterX - keyTipSize / 2;
-      const keyTipY = skillBgY + KEY_TIP_Y_OFFSET;
+      const keyTipY = skillBgY - KEY_TIP_ABOVE_OFFSET;
       keyTip.position.set(keyTipX, keyTipY);
 
       this.skillKeyTips.push(keyTip);
       this.bottomHUD.addChild(keyTip);
 
-      // Add number label on keyBindTip
+      // Add number label centered on keyBindTip
       const numberLabel = this.createText(
         `${i + 1}`,
         buttonCenterX - NUMBER_LABEL_X_OFFSET,
@@ -292,11 +301,12 @@ export class HUDSystem extends InjectableSystem {
       );
       this.bottomHUD.addChild(numberLabel);
 
-      // Add skill cost indicators below keyBindTip
+      // Add skill cost indicators at bottom of skill icon (inside, to stay within HUD)
       const indicators: Sprite[] = [];
       const costCount = skillCosts[i];
       const costTypes = skillCostTypes[i];
-      const indicatorY = keyTipY + keyTipSize + INDICATOR_Y_OFFSET;
+      const indicatorY =
+        skillBgY + skillIconSize - costIndicatorSize - INDICATOR_BOTTOM_OFFSET;
       const indicatorTotalWidth =
         costCount * costIndicatorSize + (costCount - 1) * INDICATOR_GAP;
       const indicatorStartX = buttonCenterX - indicatorTotalWidth / 2;
@@ -327,16 +337,6 @@ export class HUDSystem extends InjectableSystem {
         );
         this.bottomHUD.addChild(killCountLabel);
       }
-
-      // Add skill label below indicators
-      const labelY = indicatorY + costIndicatorSize + LABEL_Y_OFFSET;
-      const label = this.createText(
-        skillLabels[i],
-        buttonCenterX - LABEL_X_OFFSET,
-        labelY,
-        LABEL_FONT_SIZE,
-      );
-      this.bottomHUD.addChild(label);
     }
   }
 
@@ -393,10 +393,26 @@ export class HUDSystem extends InjectableSystem {
 
   /**
    * Update recipe availability indicators
+   * Based on ui_rough_pixelSpec.png: colored dots show food collection status
+   * - Collected: show original color (red/blue/green)
+   * - Not collected: show gray
    */
-  public updateRecipeAvailability(_recipes: RecipeStatus[]): void {
-    // Recipe availability visual feedback could be implemented
-    // by changing the tint/alpha of skill indicators
+  public updateRecipeAvailability(recipes: RecipeStatus[]): void {
+    recipes.forEach((recipe, recipeIndex) => {
+      const indicators = this.skillCostIndicators[recipeIndex];
+      if (!indicators || !recipe.requirements) return;
+
+      recipe.requirements.forEach((req, reqIndex) => {
+        const indicator = indicators[reqIndex];
+        if (!indicator) return;
+
+        // Update texture based on collection status
+        const textureKey = req.collected
+          ? this.getSkillTipKey(req.type)
+          : AssetKeys.skillTip0; // gray for uncollected
+        indicator.texture = getTexture(textureKey);
+      });
+    });
   }
 
   /**
