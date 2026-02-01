@@ -94,7 +94,7 @@ export class Player extends SpriteEntity {
   }
 
   private createPlayerSprite(): Sprite {
-    const sprite = new Sprite(getTexture(AssetKeys.player));
+    const sprite = new Sprite(getTexture(AssetKeys.playerBase));
 
     // Asset size is 256×256, use full size per SPEC § 2.7.2
     sprite.width = LAYOUT.PLAYER_SIZE;
