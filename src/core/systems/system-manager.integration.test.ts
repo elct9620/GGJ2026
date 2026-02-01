@@ -7,26 +7,31 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { SystemManager } from "./system-manager";
 import { EventQueue, EventType } from "../../systems/event-queue";
 import { InputSystem } from "../../systems/input";
-import { HUDSystem } from "../../systems/hud";
+import { WaveSystem } from "../../systems/wave";
 import { BoothSystem } from "../../systems/booth";
 import { SystemPriority } from "./system.interface";
 import { GameStateManager } from "../game-state";
 
 /**
- * Helper to create a BoothSystem with GameState injected
+ * Helper to create systems with GameState injected
  */
-function createBoothSystem(eventQueue?: EventQueue): {
+function createSystems(eventQueue: EventQueue): {
   boothSystem: BoothSystem;
+  waveSystem: WaveSystem;
   gameState: GameStateManager;
 } {
   const gameState = new GameStateManager();
   gameState.initializeBooths();
+
   const boothSystem = new BoothSystem();
-  if (eventQueue) {
-    boothSystem.inject("EventQueue", eventQueue);
-  }
+  boothSystem.inject("EventQueue", eventQueue);
   boothSystem.inject("GameState", gameState);
-  return { boothSystem, gameState };
+
+  const waveSystem = new WaveSystem();
+  waveSystem.inject("EventQueue", eventQueue);
+  waveSystem.inject("GameState", gameState);
+
+  return { boothSystem, waveSystem, gameState };
 }
 
 describe("SystemManager Integration", () => {
@@ -50,10 +55,10 @@ describe("SystemManager Integration", () => {
     it("EventQueue should have highest priority (executed first)", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
+      const { waveSystem } = createSystems(eventQueue);
 
       // Register in random order
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(eventQueue);
       manager.register(inputSystem);
 
@@ -62,7 +67,7 @@ describe("SystemManager Integration", () => {
       // Verify EventQueue priority
       expect(eventQueue.priority).toBe(SystemPriority.EVENT_QUEUE);
       expect(eventQueue.priority).toBeLessThan(inputSystem.priority);
-      expect(eventQueue.priority).toBeLessThan(hudSystem.priority);
+      expect(eventQueue.priority).toBeLessThan(waveSystem.priority);
     });
 
     it("should process delayed events via SystemManager.update", () => {
@@ -111,12 +116,11 @@ describe("SystemManager Integration", () => {
     it("should register all game systems", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
-      const { boothSystem } = createBoothSystem(eventQueue);
+      const { boothSystem, waveSystem } = createSystems(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(boothSystem);
 
       expect(manager.count).toBe(4);
@@ -125,12 +129,11 @@ describe("SystemManager Integration", () => {
     it("should initialize all systems in correct order", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
-      const { boothSystem } = createBoothSystem(eventQueue);
+      const { boothSystem, waveSystem } = createSystems(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(boothSystem);
 
       expect(() => manager.initialize()).not.toThrow();
@@ -139,12 +142,11 @@ describe("SystemManager Integration", () => {
     it("should update all systems", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
-      const { boothSystem } = createBoothSystem(eventQueue);
+      const { boothSystem, waveSystem } = createSystems(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(boothSystem);
 
       manager.initialize();
@@ -155,12 +157,11 @@ describe("SystemManager Integration", () => {
     it("should destroy all systems", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
-      const { boothSystem } = createBoothSystem(eventQueue);
+      const { boothSystem, waveSystem } = createSystems(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(boothSystem);
 
       manager.initialize();
@@ -177,13 +178,12 @@ describe("SystemManager Integration", () => {
 
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
-      const { boothSystem } = createBoothSystem(eventQueue);
+      const { boothSystem, waveSystem } = createSystems(eventQueue);
 
       // Wrap update methods to track execution order
       const originalEventQueueUpdate = eventQueue.update.bind(eventQueue);
       const originalInputUpdate = inputSystem.update.bind(inputSystem);
-      const originalHUDUpdate = hudSystem.update.bind(hudSystem);
+      const originalWaveUpdate = waveSystem.update.bind(waveSystem);
       const originalBoothUpdate = boothSystem.update.bind(boothSystem);
 
       eventQueue.update = (deltaTime: number) => {
@@ -196,9 +196,9 @@ describe("SystemManager Integration", () => {
         originalInputUpdate(deltaTime);
       };
 
-      hudSystem.update = (deltaTime: number) => {
-        executionOrder.push("HUDSystem");
-        originalHUDUpdate(deltaTime);
+      waveSystem.update = (deltaTime: number) => {
+        executionOrder.push("WaveSystem");
+        originalWaveUpdate(deltaTime);
       };
 
       boothSystem.update = (deltaTime: number) => {
@@ -207,7 +207,7 @@ describe("SystemManager Integration", () => {
       };
 
       // Register in random order
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(boothSystem);
       manager.register(inputSystem);
       manager.register(eventQueue);
@@ -215,12 +215,14 @@ describe("SystemManager Integration", () => {
       manager.initialize();
       manager.update(0.016);
 
-      // Verify execution order: EventQueue (0) → InputSystem (100) → BoothSystem (200) → HUDSystem (900)
-      expect(executionOrder).toEqual([
-        "EventQueue",
-        "InputSystem",
+      // Verify execution order: EventQueue (0) → InputSystem (100) → WaveSystem/BoothSystem (200)
+      // Note: WaveSystem and BoothSystem have the same priority (200), order depends on registration
+      expect(executionOrder[0]).toBe("EventQueue");
+      expect(executionOrder[1]).toBe("InputSystem");
+      // Both WaveSystem and BoothSystem have priority 200
+      expect(executionOrder.slice(2).sort()).toEqual([
         "BoothSystem",
-        "HUDSystem",
+        "WaveSystem",
       ]);
     });
   });
@@ -229,12 +231,11 @@ describe("SystemManager Integration", () => {
     it("should handle multiple systems at 60 FPS", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
-      const hudSystem = new HUDSystem();
-      const { boothSystem } = createBoothSystem(eventQueue);
+      const { boothSystem, waveSystem } = createSystems(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
-      manager.register(hudSystem);
+      manager.register(waveSystem);
       manager.register(boothSystem);
 
       manager.initialize();

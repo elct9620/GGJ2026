@@ -1,6 +1,15 @@
+/**
+ * HUD Renderer
+ * Handles all Pixi.js rendering for HUD (Heads-Up Display)
+ * SPEC § 2.7.3: HUD Layout
+ *
+ * Based on ui_rough_pixelSpec.png reference:
+ * - Top HUD (1920×86px): enemy count (left), wave info (center), score (right)
+ * - Bottom HUD Left (550×126px): upgrade icons (5× 88×88px)
+ * - Bottom HUD Center (820×126px): skill buttons with keyBindTip (5× 46×46px)
+ * - Bottom HUD Right (550×126px): key binding instructions
+ */
 import { Container, Sprite, Text } from "pixi.js";
-import { InjectableSystem } from "../core/systems/injectable";
-import { SystemPriority } from "../core/systems/system.interface";
 import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 import { recipeData, FOOD_HUD_COLOR } from "../data";
@@ -26,18 +35,21 @@ export interface RecipeStatus {
 }
 
 /**
- * HUD (Heads-Up Display) system for game UI
- * Spec: § 2.7.3 HUD Layout
- *
- * Based on ui_rough_pixelSpec.png reference:
- * - Top HUD (1920×86px): enemy count (left), wave info (center), score (right)
- * - Bottom HUD Left (550×126px): upgrade icons (5× 88×88px)
- * - Bottom HUD Center (820×126px): skill buttons with keyBindTip (5× 46×46px)
- * - Bottom HUD Right (550×126px): key binding instructions
+ * Data required for HUD synchronization
  */
-export class HUDSystem extends InjectableSystem {
-  public readonly name = "HUDSystem";
-  public readonly priority = SystemPriority.HUD;
+export interface HUDData {
+  wave: number;
+  totalEnemies: number;
+  enemyCount: number;
+  score: number;
+  recipes: RecipeStatus[];
+}
+
+/**
+ * HUD Renderer - Pure rendering logic for HUD
+ * Separates Pixi.js rendering from system lifecycle
+ */
+export class HUDRenderer {
   private topHUD: Container;
   private bottomHUD: Container;
 
@@ -57,7 +69,6 @@ export class HUDSystem extends InjectableSystem {
   private skillCostIndicators: Sprite[][] = [];
 
   constructor() {
-    super();
     this.topHUD = new Container();
     this.bottomHUD = new Container();
 
@@ -137,28 +148,6 @@ export class HUDSystem extends InjectableSystem {
     sprite.height = LAYOUT.BOTTOM_HUD_HEIGHT;
     sprite.position.set(1370, CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT);
     return sprite;
-  }
-
-  /**
-   * Initialize HUD system (System lifecycle)
-   */
-  public initialize(): void {
-    // HUD is already set up in constructor
-  }
-
-  /**
-   * Update method (System lifecycle)
-   */
-  public update(_deltaTime: number): void {
-    // HUD updates are event-driven via update* methods
-  }
-
-  /**
-   * Clean up HUD resources (System lifecycle)
-   */
-  public destroy(): void {
-    this.topHUD.destroy({ children: true });
-    this.bottomHUD.destroy({ children: true });
   }
 
   private createText(
@@ -377,28 +366,17 @@ export class HUDSystem extends InjectableSystem {
   }
 
   /**
-   * Update wave number display
+   * Sync HUD with current game state
+   * Call this each frame to update all HUD elements
    */
-  public updateWave(wave: number, totalEnemies?: number): void {
-    if (totalEnemies !== undefined) {
-      this.waveText.text = `餓鬼人潮: ${wave}/${totalEnemies}`;
-    } else {
-      this.waveText.text = `餓鬼人潮: ${wave}`;
-    }
-  }
+  sync(data: HUDData): void {
+    // Update top HUD
+    this.waveText.text = `餓鬼人潮: ${data.wave}/${data.totalEnemies}`;
+    this.enemyCountText.text = `剩餘敵人: ${data.enemyCount}`;
+    this.scoreText.text = `分數: ${data.score}`;
 
-  /**
-   * Update enemy count display
-   */
-  public updateEnemyCount(count: number): void {
-    this.enemyCountText.text = `剩餘敵人: ${count}`;
-  }
-
-  /**
-   * Update score display
-   */
-  public updateScore(score: number): void {
-    this.scoreText.text = `分數: ${score}`;
+    // Update recipe indicators
+    this.updateRecipeIndicators(data.recipes);
   }
 
   /**
@@ -407,7 +385,7 @@ export class HUDSystem extends InjectableSystem {
    * - Collected: show original color (red/blue/green)
    * - Not collected: show gray
    */
-  public updateRecipeAvailability(recipes: RecipeStatus[]): void {
+  private updateRecipeIndicators(recipes: RecipeStatus[]): void {
     recipes.forEach((recipe, recipeIndex) => {
       const indicators = this.skillCostIndicators[recipeIndex];
       if (!indicators || !recipe.requirements) return;
@@ -426,16 +404,24 @@ export class HUDSystem extends InjectableSystem {
   }
 
   /**
-   * Get top HUD container
+   * Get top HUD container for scene integration
    */
-  public getTopHUD(): Container {
+  getTopHUD(): Container {
     return this.topHUD;
   }
 
   /**
-   * Get bottom HUD container
+   * Get bottom HUD container for scene integration
    */
-  public getBottomHUD(): Container {
+  getBottomHUD(): Container {
     return this.bottomHUD;
+  }
+
+  /**
+   * Clean up renderer resources
+   */
+  destroy(): void {
+    this.topHUD.destroy({ children: true });
+    this.bottomHUD.destroy({ children: true });
   }
 }

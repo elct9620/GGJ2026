@@ -7,10 +7,10 @@ import { EnemyType } from "./core/types";
 import { FoodType, getBoothIdForFood } from "./core/types";
 import { InputSystem } from "./systems/input";
 import {
-  HUDSystem,
+  HUDRenderer,
   type RecipeStatus,
   type FoodRequirementStatus,
-} from "./systems/hud";
+} from "./renderers/hud-renderer";
 import { BoothSystem } from "./systems/booth";
 import { BoxSystem } from "./systems/box";
 import { CombatSystem, type BulletSpawnRequest } from "./systems/combat";
@@ -65,6 +65,7 @@ export class GameScene {
 
   // Renderers
   private boothRenderer: BoothRenderer;
+  private hudRenderer: HUDRenderer;
 
   constructor(
     playerContainer: Container,
@@ -89,6 +90,7 @@ export class GameScene {
 
     // Initialize renderers
     this.boothRenderer = new BoothRenderer();
+    this.hudRenderer = new HUDRenderer();
 
     // Initialize SystemManager and register all systems
     this.systemManager = new SystemManager();
@@ -111,7 +113,6 @@ export class GameScene {
     this.systemManager.register(killCounterSystem);
     this.systemManager.register(waveSystem);
     this.systemManager.register(upgradeSystem);
-    this.systemManager.register(new HUDSystem());
     this.systemManager.register(boothSystem);
     this.systemManager.register(boxSystem);
     this.systemManager.register(bulletVisualEffects);
@@ -198,10 +199,9 @@ export class GameScene {
     // Add to bullets container so effects render with bullets
     this.bulletsContainer.addChild(bulletVisualEffects.getContainer());
 
-    // Setup HUD
-    const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
-    this.uiLayer.addChild(hudSystem.getTopHUD());
-    this.uiLayer.addChild(hudSystem.getBottomHUD());
+    // Setup HUD (using HUDRenderer)
+    this.uiLayer.addChild(this.hudRenderer.getTopHUD());
+    this.uiLayer.addChild(this.hudRenderer.getBottomHUD());
 
     // Setup Upgrade Screen (SPEC § 2.3.4)
     this.upgradeScreen = new UpgradeScreen(
@@ -237,13 +237,11 @@ export class GameScene {
 
   /**
    * Handle WaveStart event (SPEC § 2.3.6)
+   * HUD updates are handled by updateHUD() via sync()
    */
-  private onWaveStart(data: { waveNumber: number }): void {
-    const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
-    // SPEC: enemy count = wave × 2
-    const totalEnemies = data.waveNumber * 2;
-    hudSystem.updateWave(data.waveNumber, totalEnemies);
-    hudSystem.updateEnemyCount(this.enemies.length);
+  private onWaveStart(_data: { waveNumber: number }): void {
+    // Wave state is already updated by WaveSystem via GameState.startWave()
+    // HUD updates are handled by updateHUD() in the main loop
   }
 
   /**
@@ -451,36 +449,24 @@ export class GameScene {
     this.foodsContainer.addChild(food.sprite);
   }
 
+  /**
+   * Update HUD with current game state
+   * Uses HUDRenderer.sync() for unified updates
+   */
   private updateHUD(): void {
-    const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
     const killCounterSystem =
       this.systemManager.get<KillCounterSystem>("KillCounterSystem");
 
-    this.updateTopHUD(hudSystem);
-    this.updateBottomHUD(hudSystem, boothSystem, killCounterSystem);
-  }
-
-  /**
-   * Update top HUD (wave, enemy count, score)
-   */
-  private updateTopHUD(hudSystem: HUDSystem): void {
-    hudSystem.updateEnemyCount(this.enemies.length);
-    hudSystem.updateScore(this.gameState.stats.enemiesDefeated * 10);
-  }
-
-  /**
-   * Update bottom HUD (recipes and kill counter)
-   * SPEC § 2.3.8: UI 顯示擊殺總數和蚵仔煎可用狀態
-   */
-  private updateBottomHUD(
-    hudSystem: HUDSystem,
-    boothSystem: BoothSystem,
-    killCounterSystem: KillCounterSystem,
-  ): void {
-    // Recipe availability display
+    // Gather all HUD data and sync
     const recipes = this.getRecipeStatuses(boothSystem, killCounterSystem);
-    hudSystem.updateRecipeAvailability(recipes);
+    this.hudRenderer.sync({
+      wave: this.gameState.wave.currentWave,
+      totalEnemies: this.gameState.wave.currentWave * 2,
+      enemyCount: this.enemies.length,
+      score: this.gameState.stats.enemiesDefeated * 10,
+      recipes,
+    });
   }
 
   /**

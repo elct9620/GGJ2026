@@ -1,64 +1,41 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { HUDSystem, type RecipeStatus } from "./hud";
-import { SystemPriority } from "../core/systems/system.interface";
+import { HUDRenderer, type HUDData, type RecipeStatus } from "./hud-renderer";
 
-describe("HUDSystem", () => {
-  let hudSystem: HUDSystem;
+describe("HUDRenderer", () => {
+  let renderer: HUDRenderer;
 
   beforeEach(() => {
-    hudSystem = new HUDSystem();
+    renderer = new HUDRenderer();
   });
 
-  describe("System Interface", () => {
-    it("應有正確的 name", () => {
-      expect(hudSystem.name).toBe("HUDSystem");
-    });
-
-    it("應有正確的 priority", () => {
-      expect(hudSystem.priority).toBe(SystemPriority.HUD);
-    });
-
-    it("initialize 應可被呼叫", () => {
-      expect(() => hudSystem.initialize()).not.toThrow();
-    });
-
-    it("update 應可被呼叫（無操作）", () => {
-      expect(() => hudSystem.update(0.016)).not.toThrow();
-    });
-
-    it("destroy 應清理資源", () => {
-      expect(() => hudSystem.destroy()).not.toThrow();
-    });
-  });
-
-  describe("HUD Containers", () => {
+  describe("Container", () => {
     it("應提供 top HUD container", () => {
-      const topHUD = hudSystem.getTopHUD();
+      const topHUD = renderer.getTopHUD();
       expect(topHUD).toBeDefined();
       expect(topHUD.children.length).toBeGreaterThan(0);
     });
 
     it("應提供 bottom HUD container", () => {
-      const bottomHUD = hudSystem.getBottomHUD();
+      const bottomHUD = renderer.getBottomHUD();
       expect(bottomHUD).toBeDefined();
       expect(bottomHUD.children.length).toBeGreaterThan(0);
     });
   });
 
-  describe("Update Methods", () => {
-    it("updateWave 應更新波次顯示", () => {
-      expect(() => hudSystem.updateWave(5)).not.toThrow();
+  describe("Sync", () => {
+    it("應更新所有 HUD 元素", () => {
+      const data: HUDData = {
+        wave: 3,
+        totalEnemies: 6,
+        enemyCount: 4,
+        score: 500,
+        recipes: [],
+      };
+
+      expect(() => renderer.sync(data)).not.toThrow();
     });
 
-    it("updateEnemyCount 應更新敵人數量", () => {
-      expect(() => hudSystem.updateEnemyCount(10)).not.toThrow();
-    });
-
-    it("updateScore 應更新分數顯示", () => {
-      expect(() => hudSystem.updateScore(1000)).not.toThrow();
-    });
-
-    it("updateRecipeAvailability 應更新配方可用性指示器", () => {
+    it("應更新配方可用性指示器", () => {
       const recipes: RecipeStatus[] = [
         {
           key: "1",
@@ -107,7 +84,46 @@ describe("HUDSystem", () => {
           requirements: [{ type: 3, collected: false }],
         },
       ];
-      expect(() => hudSystem.updateRecipeAvailability(recipes)).not.toThrow();
+
+      const data: HUDData = {
+        wave: 1,
+        totalEnemies: 2,
+        enemyCount: 2,
+        score: 0,
+        recipes,
+      };
+
+      expect(() => renderer.sync(data)).not.toThrow();
+    });
+
+    it("應正確處理空配方陣列", () => {
+      const data: HUDData = {
+        wave: 1,
+        totalEnemies: 2,
+        enemyCount: 0,
+        score: 100,
+        recipes: [],
+      };
+
+      expect(() => renderer.sync(data)).not.toThrow();
+    });
+
+    it("應正確處理高分數和高波次", () => {
+      const data: HUDData = {
+        wave: 99,
+        totalEnemies: 198,
+        enemyCount: 50,
+        score: 99999,
+        recipes: [],
+      };
+
+      expect(() => renderer.sync(data)).not.toThrow();
+    });
+  });
+
+  describe("Destroy", () => {
+    it("應正確清理資源", () => {
+      expect(() => renderer.destroy()).not.toThrow();
     });
   });
 });

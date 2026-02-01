@@ -201,18 +201,19 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 
 ### 5.2 目標架構差異
 
-| 面向     | 目前實作                  | 目標架構               | 狀態    |
-| -------- | ------------------------- | ---------------------- | ------- |
-| 狀態管理 | 集中於 GameStateManager   | 集中於 GameState       | ✅ 完成 |
-| 渲染同步 | BoothRenderer 已分離      | 獨立 RenderSystem 同步 | ⚠️ 部分 |
-| Entity   | 混合資料與 Sprite         | 純資料容器             | 未來    |
-| 事件流   | 高度事件驅動（14 種事件） | 完全事件驅動           | ✅ 接近 |
+| 面向     | 目前實作                          | 目標架構               | 狀態    |
+| -------- | --------------------------------- | ---------------------- | ------- |
+| 狀態管理 | 集中於 GameStateManager           | 集中於 GameState       | ✅ 完成 |
+| 渲染同步 | BoothRenderer、HUDRenderer 已分離 | 獨立 RenderSystem 同步 | ⚠️ 部分 |
+| Entity   | 混合資料與 Sprite                 | 純資料容器             | 未來    |
+| 事件流   | 高度事件驅動（14 種事件）         | 完全事件驅動           | ✅ 接近 |
 
 ### 5.3 重構進度
 
 1. ✅ **Phase 1**：抽取 GameState，集中狀態管理
 2. ⚠️ **Phase 2**：分離 RenderSystem，統一 Entity-Sprite 同步
    - ✅ BoothRenderer 已分離
+   - ✅ HUDRenderer 已分離（原 HUDSystem 重構為純渲染器）
    - ⏳ Player、Enemy 渲染尚未分離
 3. ✅ **Phase 3**：將 System 內部狀態移至 GameState
    - BoothSystem、BoxSystem、WaveSystem 已無狀態
@@ -228,11 +229,6 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
    - 現況：直接呼叫 `player.updateAppearanceForBuff()`
    - 理想：Player 訂閱 BuffExpired 事件自行更新外觀
    - 原因：目前 Entity 不直接訂閱事件，需架構調整
-
-2. **HUDSystem 混合渲染邏輯**
-   - 現況：系統內建構 Pixi.js 元件
-   - 評估：這是設計意圖，HUDSystem 本身就是 UI 系統
-   - 結論：無需改動
 
 ### 5.5 重構原則
 
