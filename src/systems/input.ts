@@ -89,16 +89,9 @@ export class InputSystem extends InjectableSystem {
   }
 
   /**
-   * Clear all pressed keys (useful for testing or manual cleanup)
+   * Clear all pressed keys
    */
   public clear(): void {
     this.keysPressed.clear();
-  }
-
-  /**
-   * Get all currently pressed keys (useful for testing)
-   */
-  public getPressedKeys(): ReadonlySet<string> {
-    return this.keysPressed;
   }
 }

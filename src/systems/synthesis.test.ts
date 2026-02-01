@@ -279,8 +279,8 @@ describe("SynthesisSystem", () => {
   });
 
   describe("Kill Counter Integration", () => {
-    it("canUseOysterOmelet 正確反映擊殺數狀態", () => {
-      expect(synthesisSystem.canUseOysterOmelet()).toBe(false);
+    it("canConsume 正確反映擊殺數狀態", () => {
+      expect(killCounterSystem.canConsume()).toBe(false);
 
       // Accumulate 20 kills
       for (let i = 0; i < 20; i++) {
@@ -290,14 +290,14 @@ describe("SynthesisSystem", () => {
         });
       }
 
-      expect(synthesisSystem.canUseOysterOmelet()).toBe(true);
+      expect(killCounterSystem.canConsume()).toBe(true);
 
       // Use oyster omelet
       const event = new KeyboardEvent("keydown", { key: "5" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 
-      expect(synthesisSystem.canUseOysterOmelet()).toBe(false);
+      expect(killCounterSystem.canConsume()).toBe(false);
     });
 
     it("蚵仔煎可重複使用（累積足夠擊殺數後）", () => {

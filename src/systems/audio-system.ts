@@ -61,9 +61,6 @@ export class AudioSystem extends InjectableSystem {
   // 音量控制（0.0 - 1.0）
   private _volume: number = 1.0;
 
-  // 預載入狀態
-  private _isLoaded: boolean = false;
-
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue, true); // Required dependency
@@ -109,8 +106,6 @@ export class AudioSystem extends InjectableSystem {
 
     // 清空音效緩存
     this.sounds.clear();
-
-    this._isLoaded = false;
   }
 
   /**
@@ -140,15 +135,10 @@ export class AudioSystem extends InjectableSystem {
     }
 
     // 背景執行，不阻塞初始化
-    Promise.all(loadPromises)
-      .then(() => {
-        this._isLoaded = true;
-      })
-      .catch((error) => {
-        // 靜默失敗：音效載入失敗不阻擋遊戲
-        console.warn("Audio preload failed (game continues):", error);
-        this._isLoaded = false;
-      });
+    Promise.all(loadPromises).catch((error) => {
+      // 靜默失敗：音效載入失敗不阻擋遊戲
+      console.warn("Audio preload failed (game continues):", error);
+    });
   }
 
   /**
@@ -247,20 +237,6 @@ export class AudioSystem extends InjectableSystem {
     this.currentlyPlaying.forEach((audio) => {
       audio.volume = this._volume;
     });
-  }
-
-  /**
-   * 取得當前音量
-   */
-  public getVolume(): number {
-    return this._volume;
-  }
-
-  /**
-   * 取得預載入狀態
-   */
-  public isLoaded(): boolean {
-    return this._isLoaded;
   }
 
   /**

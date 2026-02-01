@@ -192,12 +192,4 @@ export class SynthesisSystem extends InjectableSystem {
       this.boothSystem.consumeFood(boothId, adjustedCost);
     }
   }
-
-  /**
-   * Check if oyster omelet is available (for UI)
-   * SPEC § 2.3.8: 檢查是否有足夠擊殺數
-   */
-  public canUseOysterOmelet(): boolean {
-    return this.killCounterSystem?.canConsume() ?? false;
-  }
 }

@@ -13,18 +13,28 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { AudioSystem, SoundId } from "./audio-system";
+import { AudioSystem } from "./audio-system";
 import { EventQueue, EventType } from "./event-queue";
 import { SystemManager } from "../core/systems/system-manager";
+
+// Sound paths from Vite imports (these are the actual paths used internally)
+import playerShootSound from "../assets/se/shoot5.mp3";
+import enemyHitSound from "../assets/se/short_punch1.mp3";
+import buttonClickSound from "../assets/se/select03.mp3";
 
 describe("AudioSystem", () => {
   let audioSystem: AudioSystem;
   let eventQueue: EventQueue;
   let systemManager: SystemManager;
 
+  // Track created mock audios for behavior verification
+  type MockAudio = ReturnType<typeof createMockAudio>;
+  let createdAudios: MockAudio[];
+
   // Mock HTMLAudioElement
-  const createMockAudio = () => {
+  const createMockAudio = (path: string) => {
     const audio = {
+      src: path,
       volume: 1.0,
       currentTime: 0,
       paused: true,
@@ -39,20 +49,30 @@ describe("AudioSystem", () => {
       }),
       removeEventListener: vi.fn(),
     };
-    return audio as unknown as HTMLAudioElement;
+    return audio;
+  };
+
+  // Helper to find audio by path
+  const findAudioByPath = (path: string): MockAudio | undefined => {
+    return createdAudios.find((audio) => audio.src === path);
   };
 
   let originalAudio: typeof Audio;
 
   beforeEach(() => {
+    // Reset tracked audios
+    createdAudios = [];
+
     // Save original Audio
     originalAudio = (globalThis as typeof globalThis & { Audio: typeof Audio })
       .Audio;
 
-    // Mock Audio constructor - must be a proper constructor function
+    // Mock Audio constructor - track created instances for behavior verification
     (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = vi.fn(
-      function (this: HTMLAudioElement) {
-        return createMockAudio();
+      function (this: HTMLAudioElement, path: string) {
+        const audio = createMockAudio(path);
+        createdAudios.push(audio);
+        return audio;
       },
     ) as unknown as typeof Audio;
 
@@ -86,35 +106,47 @@ describe("AudioSystem", () => {
       // Wait for preload to complete
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      expect(audioSystem.isLoaded()).toBe(true);
+      // Verify Audio constructor was called for each sound (3 sounds defined)
+      expect(createdAudios.length).toBe(3);
+      // Verify load() was called on each audio element
+      createdAudios.forEach((audio) => {
+        expect(audio.load).toHaveBeenCalled();
+      });
     });
   });
 
   describe("Volume Control", () => {
-    it("應該設定音量在有效範圍內 (0.0 - 1.0) (AS-05)", () => {
-      audioSystem.setVolume(0.5);
-      expect(audioSystem.getVolume()).toBe(0.5);
-    });
-
-    it("應該限制音量不超過 1.0 (AS-06)", () => {
-      audioSystem.setVolume(1.5);
-      expect(audioSystem.getVolume()).toBe(1.0);
-    });
-
-    it("應該限制音量不低於 0.0 (AS-07)", () => {
-      audioSystem.setVolume(-0.5);
-      expect(audioSystem.getVolume()).toBe(0.0);
-    });
-
-    it("應該更新所有音效的音量 (AS-08)", async () => {
+    it("應該更新所有音效的音量 (AS-05, AS-08)", async () => {
       // Wait for preload
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      audioSystem.setVolume(0.7);
+      audioSystem.setVolume(0.5);
 
-      const sounds = audioSystem["sounds"];
-      sounds.forEach((audio) => {
-        expect(audio.volume).toBe(0.7);
+      // Verify all audio elements have updated volume
+      createdAudios.forEach((audio) => {
+        expect(audio.volume).toBe(0.5);
+      });
+    });
+
+    it("應該限制音量不超過 1.0 (AS-06)", async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      audioSystem.setVolume(1.5);
+
+      // Verify volume is clamped to 1.0
+      createdAudios.forEach((audio) => {
+        expect(audio.volume).toBe(1.0);
+      });
+    });
+
+    it("應該限制音量不低於 0.0 (AS-07)", async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      audioSystem.setVolume(-0.5);
+
+      // Verify volume is clamped to 0.0
+      createdAudios.forEach((audio) => {
+        expect(audio.volume).toBe(0.0);
       });
     });
   });
@@ -126,36 +158,27 @@ describe("AudioSystem", () => {
     });
 
     it("應該播放子彈發射音效當 BulletFired 事件發布時 (AS-09)", () => {
-      const playSpy = vi.spyOn(
-        audioSystem["sounds"].get(SoundId.PlayerShoot)!,
-        "play",
-      );
+      const shootAudio = findAudioByPath(playerShootSound)!;
 
       eventQueue.publish(EventType.BulletFired, {});
 
-      expect(playSpy).toHaveBeenCalled();
+      expect(shootAudio.play).toHaveBeenCalled();
     });
 
     it("應該播放敵人被擊中音效當 EnemyHit 事件發布時 (AS-10)", () => {
-      const playSpy = vi.spyOn(
-        audioSystem["sounds"].get(SoundId.EnemyHit)!,
-        "play",
-      );
+      const hitAudio = findAudioByPath(enemyHitSound)!;
 
       eventQueue.publish(EventType.EnemyHit, {});
 
-      expect(playSpy).toHaveBeenCalled();
+      expect(hitAudio.play).toHaveBeenCalled();
     });
 
     it("應該播放按鈕點擊音效當 ButtonClicked 事件發布時 (AS-11)", () => {
-      const playSpy = vi.spyOn(
-        audioSystem["sounds"].get(SoundId.ButtonClick)!,
-        "play",
-      );
+      const clickAudio = findAudioByPath(buttonClickSound)!;
 
       eventQueue.publish(EventType.ButtonClicked, {});
 
-      expect(playSpy).toHaveBeenCalled();
+      expect(clickAudio.play).toHaveBeenCalled();
     });
   });
 
@@ -164,35 +187,31 @@ describe("AudioSystem", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
-    it("應該停止前一個實例再播放新的音效 (AS-13)", () => {
-      const audio = audioSystem["sounds"].get(SoundId.PlayerShoot)!;
-      const pauseSpy = vi.spyOn(audio, "pause");
+    it("應該停止前一個實例再播放新的音效 (AS-13)", async () => {
+      const shootAudio = findAudioByPath(playerShootSound)!;
 
       // First play
       eventQueue.publish(EventType.BulletFired, {});
 
-      // Mark as currently playing
-      audioSystem["currentlyPlaying"].set(SoundId.PlayerShoot, audio);
+      // Wait for play promise to resolve and currentlyPlaying to be set
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Second play (should stop first instance)
       eventQueue.publish(EventType.BulletFired, {});
 
-      expect(pauseSpy).toHaveBeenCalled();
-      expect(audio.currentTime).toBe(0);
+      expect(shootAudio.pause).toHaveBeenCalled();
+      expect(shootAudio.currentTime).toBe(0);
     });
 
     it("應該允許不同音效同時播放 (AS-14)", () => {
-      const shootAudio = audioSystem["sounds"].get(SoundId.PlayerShoot)!;
-      const hitAudio = audioSystem["sounds"].get(SoundId.EnemyHit)!;
-
-      const shootPlaySpy = vi.spyOn(shootAudio, "play");
-      const hitPlaySpy = vi.spyOn(hitAudio, "play");
+      const shootAudio = findAudioByPath(playerShootSound)!;
+      const hitAudio = findAudioByPath(enemyHitSound)!;
 
       eventQueue.publish(EventType.BulletFired, {});
       eventQueue.publish(EventType.EnemyHit, {});
 
-      expect(shootPlaySpy).toHaveBeenCalled();
-      expect(hitPlaySpy).toHaveBeenCalled();
+      expect(shootAudio.play).toHaveBeenCalled();
+      expect(hitAudio.play).toHaveBeenCalled();
     });
   });
 
@@ -202,16 +221,18 @@ describe("AudioSystem", () => {
       systemManager.destroy();
       systemManager = new SystemManager();
       eventQueue = new EventQueue();
+      createdAudios = [];
 
       // Mock Audio to fail loading
       (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = vi.fn(
-        function (this: HTMLAudioElement) {
-          const audio = createMockAudio();
+        function (this: HTMLAudioElement, path: string) {
+          const audio = createMockAudio(path);
           audio.addEventListener = vi.fn((event, handler) => {
             if (event === "error") {
               setTimeout(() => handler(new Event("error")), 0);
             }
           });
+          createdAudios.push(audio);
           return audio as unknown as HTMLAudioElement;
         },
       ) as unknown as typeof Audio;
@@ -228,8 +249,8 @@ describe("AudioSystem", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
+      // Verify error was logged (silent failure)
       expect(consoleWarnSpy).toHaveBeenCalled();
-      expect(newAudioSystem.isLoaded()).toBe(false);
 
       consoleWarnSpy.mockRestore();
     });
@@ -238,8 +259,10 @@ describe("AudioSystem", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Mock play() to reject (autoplay policy)
-      const audio = audioSystem["sounds"].get(SoundId.PlayerShoot)!;
-      audio.play = vi.fn().mockRejectedValue(new Error("Autoplay blocked"));
+      const shootAudio = findAudioByPath(playerShootSound)!;
+      shootAudio.play = vi
+        .fn()
+        .mockRejectedValue(new Error("Autoplay blocked"));
 
       const consoleWarnSpy = vi
         .spyOn(console, "warn")
@@ -274,30 +297,22 @@ describe("AudioSystem", () => {
   });
 
   describe("Lifecycle", () => {
-    it("應該清理所有資源當 destroy 被呼叫時 (AS-20, AS-21, AS-22)", async () => {
+    it("應該暫停所有播放中的音效當 destroy 被呼叫時 (AS-20, AS-21, AS-22, AS-23)", async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Simulate playing audio
+      // Trigger play to set currentlyPlaying
       eventQueue.publish(EventType.BulletFired, {});
 
-      audioSystem.destroy();
+      // Wait for play promise to resolve
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(audioSystem["currentlyPlaying"].size).toBe(0);
-      expect(audioSystem["sounds"].size).toBe(0);
-      expect(audioSystem.isLoaded()).toBe(false);
-    });
-
-    it("應該暫停所有播放中的音效當 destroy 被呼叫時 (AS-23)", async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      const audio = audioSystem["sounds"].get(SoundId.PlayerShoot)!;
-      audioSystem["currentlyPlaying"].set(SoundId.PlayerShoot, audio);
-
-      const pauseSpy = vi.spyOn(audio, "pause");
+      const shootAudio = findAudioByPath(playerShootSound)!;
+      shootAudio.pause.mockClear(); // Clear previous calls
 
       audioSystem.destroy();
 
-      expect(pauseSpy).toHaveBeenCalled();
+      // Verify pause was called during cleanup
+      expect(shootAudio.pause).toHaveBeenCalled();
     });
   });
 
@@ -305,22 +320,18 @@ describe("AudioSystem", () => {
     it("應該正確回應多個連續事件 (AS-12, AS-24)", async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      const shootAudio = audioSystem["sounds"].get(SoundId.PlayerShoot)!;
-      const hitAudio = audioSystem["sounds"].get(SoundId.EnemyHit)!;
-      const clickAudio = audioSystem["sounds"].get(SoundId.ButtonClick)!;
-
-      const shootPlaySpy = vi.spyOn(shootAudio, "play");
-      const hitPlaySpy = vi.spyOn(hitAudio, "play");
-      const clickPlaySpy = vi.spyOn(clickAudio, "play");
+      const shootAudio = findAudioByPath(playerShootSound)!;
+      const hitAudio = findAudioByPath(enemyHitSound)!;
+      const clickAudio = findAudioByPath(buttonClickSound)!;
 
       // Publish multiple events
       eventQueue.publish(EventType.BulletFired, {});
       eventQueue.publish(EventType.EnemyHit, {});
       eventQueue.publish(EventType.ButtonClicked, {});
 
-      expect(shootPlaySpy).toHaveBeenCalled();
-      expect(hitPlaySpy).toHaveBeenCalled();
-      expect(clickPlaySpy).toHaveBeenCalled();
+      expect(shootAudio.play).toHaveBeenCalled();
+      expect(hitAudio.play).toHaveBeenCalled();
+      expect(clickAudio.play).toHaveBeenCalled();
     });
 
     it("應該不受其他事件影響 (AS-25)", () => {
@@ -328,17 +339,6 @@ describe("AudioSystem", () => {
       expect(() => {
         eventQueue.publish(EventType.WaveStart, { waveNumber: 1 });
       }).not.toThrow();
-    });
-  });
-
-  describe("Preload Status", () => {
-    it("應該回報預載入狀態 (AS-02, AS-03, AS-26)", async () => {
-      // Before preload completes
-      expect(audioSystem.isLoaded()).toBe(false);
-
-      // After preload completes
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(audioSystem.isLoaded()).toBe(true);
     });
   });
 });

@@ -65,7 +65,8 @@ describe("InputSystem", () => {
 
       inputSystem.destroy();
 
-      expect(inputSystem.getPressedKeys().size).toBe(0);
+      // After destroy, key should no longer be pressed
+      expect(inputSystem.isKeyPressed("w")).toBe(false);
     });
   });
 
