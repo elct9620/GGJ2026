@@ -143,6 +143,11 @@ export class SynthesisSystem extends InjectableSystem {
     // Consume food from booths
     this.consumeFood(recipe);
 
+    // Publish sound effect event (SPEC § 2.3.9)
+    this.eventQueue.publish(EventType.SoundEffectTriggered, {
+      soundId: "button",
+    });
+
     // Publish SynthesisTriggered event (SPEC § 2.3.6)
     this.eventQueue.publish(EventType.SynthesisTriggered, {
       recipeId: recipe.id,

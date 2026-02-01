@@ -289,6 +289,11 @@ export class UpgradeSystem extends InjectableSystem {
     // Apply upgrade effect
     option.effect(this.state);
 
+    // Publish sound effect event (SPEC § 2.3.9)
+    this.eventQueue.publish(EventType.SoundEffectTriggered, {
+      soundId: "button",
+    });
+
     // Publish UpgradeSelected event (SPEC § 2.3.6)
     this.eventQueue.publish(EventType.UpgradeSelected, {
       upgradeId: option.id,

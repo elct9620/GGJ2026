@@ -7,7 +7,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { ISystem } from "../core/systems/system.interface";
 
 /**
- * Event types defined in SPEC § 2.3.6
+ * Event types defined in SPEC § 2.3.6 and § 2.3.9
  */
 export const EventType = {
   WaveComplete: "WaveComplete",
@@ -22,6 +22,8 @@ export const EventType = {
   FoodStored: "FoodStored",
   FoodConsumed: "FoodConsumed",
   KillCounterConsumed: "KillCounterConsumed",
+  SoundEffectTriggered: "SoundEffectTriggered",
+  BackgroundMusicStart: "BackgroundMusicStart",
 } as const;
 
 export type EventType = (typeof EventType)[keyof typeof EventType];
@@ -45,6 +47,8 @@ export interface EventData {
   [EventType.FoodStored]: { boothId: string; foodType: string };
   [EventType.FoodConsumed]: { boothId: string; amount: number };
   [EventType.KillCounterConsumed]: { consumed: number; remaining: number };
+  [EventType.SoundEffectTriggered]: { soundId: string };
+  [EventType.BackgroundMusicStart]: { musicId: string; loop: boolean };
 }
 
 /**

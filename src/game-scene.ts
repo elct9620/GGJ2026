@@ -14,6 +14,7 @@ import { WaveSystem } from "./systems/wave";
 import { UpgradeSystem } from "./systems/upgrade";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
+import { AudioSystem } from "./systems/audio";
 import { Vector } from "./values/vector";
 import { RECIPES } from "./values/recipes";
 import { PLAYER_CONFIG } from "./config";
@@ -76,6 +77,7 @@ export class GameScene {
     // Initialize SystemManager and register all systems
     this.systemManager = new SystemManager();
     const eventQueue = new EventQueue();
+    const audioSystem = new AudioSystem();
     const inputSystem = new InputSystem();
     const boothSystem = new BoothSystem();
     const boxSystem = new BoxSystem();
@@ -86,6 +88,7 @@ export class GameScene {
     const upgradeSystem = new UpgradeSystem();
 
     this.systemManager.register(eventQueue);
+    this.systemManager.register(audioSystem);
     this.systemManager.register(inputSystem);
     this.systemManager.register(combatSystem);
     this.systemManager.register(synthesisSystem);
@@ -107,7 +110,16 @@ export class GameScene {
     this.systemManager.provideDependency("UpgradeSystem", upgradeSystem);
     this.systemManager.provideDependency("GameState", this.gameState);
 
+    // Connect AudioSystem with EventQueue (SPEC § 2.3.9)
+    audioSystem.setEventQueue(eventQueue);
+
     this.systemManager.initialize();
+
+    // Start background music after initialization (SPEC § 2.3.9)
+    eventQueue.publish(EventType.BackgroundMusicStart, {
+      musicId: "bgm",
+      loop: true,
+    });
 
     // Subscribe to EnemyDeath event for food drops
     eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
