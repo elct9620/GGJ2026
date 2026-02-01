@@ -10,15 +10,9 @@ export { createData } from "./data";
 
 // BulletData Catalog
 export { BulletData, bulletData } from "./bullet-data";
-export type {
-  BulletTypeProperties,
-  VisualEffectConfig,
-  HitEffectConfigKey,
-} from "./bullet-data";
 
 // EnemyData Catalog
 export { EnemyData, enemyData } from "./enemy-data";
-export type { EnemyTypeProperties } from "./enemy-data";
 
 // RecipeData Catalog
 export { RecipeData, recipeData, FOOD_HUD_COLOR } from "./recipe-data";

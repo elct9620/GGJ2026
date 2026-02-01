@@ -8,7 +8,6 @@
 import type { Bullet } from "../entities/bullet";
 import type { Enemy } from "../entities/enemy";
 import type { BulletVisualEffectsSystem } from "../systems/bullet-visual-effects";
-import type { UpgradeSystem } from "../systems/upgrade";
 import type { EventQueue } from "../systems/event-queue";
 import type { GameStateManager } from "../core/game-state";
 import type { Vector } from "../values/vector";
@@ -27,11 +26,9 @@ export interface CollisionContext {
   enemies: Enemy[];
   /** Visual effects system (optional) */
   visualEffects: BulletVisualEffectsSystem | null;
-  /** Upgrade system for bonus calculations (optional) */
-  upgradeSystem: UpgradeSystem | null;
   /** Event queue for publishing events (optional) */
   eventQueue: EventQueue | null;
-  /** Game state manager */
+  /** Game state manager (centralized state access) */
   gameState: GameStateManager;
   /** Callback to apply damage and publish death event */
   applyDamageAndPublishDeath: (enemy: Enemy, damage: number) => void;

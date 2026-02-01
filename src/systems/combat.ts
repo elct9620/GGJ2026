@@ -15,7 +15,6 @@ import { recipeData } from "../data";
 import { SpecialBulletType } from "../core/types";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
-import type { UpgradeSystem } from "./upgrade";
 import type { BulletVisualEffectsSystem } from "./bullet-visual-effects";
 import type { GameStateManager } from "../core/game-state";
 import { Vector } from "../values/vector";
@@ -87,7 +86,6 @@ export class CombatSystem extends InjectableSystem {
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue, false); // Optional for testing
-    this.declareDependency(DependencyKeys.UpgradeSystem, false); // Optional for testing
     this.declareDependency(DependencyKeys.BulletVisualEffects, false); // Optional for testing
     this.declareDependency(DependencyKeys.GameState); // Required
 
@@ -100,15 +98,6 @@ export class CombatSystem extends InjectableSystem {
    */
   private get eventQueue(): EventQueue | null {
     return this.getOptionalDependency<EventQueue>(DependencyKeys.EventQueue);
-  }
-
-  /**
-   * Get UpgradeSystem dependency (optional)
-   */
-  private get upgradeSystem(): UpgradeSystem | null {
-    return this.getOptionalDependency<UpgradeSystem>(
-      DependencyKeys.UpgradeSystem,
-    );
   }
 
   /**
@@ -482,7 +471,6 @@ export class CombatSystem extends InjectableSystem {
       enemy,
       enemies: this.enemies,
       visualEffects: this.visualEffects,
-      upgradeSystem: this.upgradeSystem,
       eventQueue: this.eventQueue,
       gameState: this.gameState,
       applyDamageAndPublishDeath: this.applyDamageAndPublishDeath.bind(this),

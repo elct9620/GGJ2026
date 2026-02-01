@@ -22,15 +22,13 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
     const baseChainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
     const baseDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
 
-    // Use snapshot if available, fallback to current upgrade state for backwards compatibility
+    // Use snapshot if available, fallback to centralized GameState
     const chainMultiplier =
       context.bullet.upgradeSnapshot?.nightMarketChainMultiplier ??
-      context.upgradeSystem?.getState().nightMarketChainMultiplier ??
-      1;
+      context.gameState.upgrades.nightMarketChainMultiplier;
     const decayReduction =
       context.bullet.upgradeSnapshot?.nightMarketDecayReduction ??
-      context.upgradeSystem?.getState().nightMarketDecayReduction ??
-      0;
+      context.gameState.upgrades.nightMarketDecayReduction;
 
     const chainTargets = Math.floor(baseChainTargets * chainMultiplier);
     const damageDecay = Math.max(0, baseDecay - decayReduction);

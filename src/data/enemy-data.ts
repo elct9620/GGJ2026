@@ -14,9 +14,6 @@ import {
 import { type AssetKey } from "../core/assets";
 import enemyJson from "./enemies.json";
 
-// Re-export types for backwards compatibility
-export type { EnemyTypeProperties } from "../core/types";
-
 /**
  * HP scaling configuration
  */

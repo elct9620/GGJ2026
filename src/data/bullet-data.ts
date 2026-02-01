@@ -14,13 +14,6 @@ import {
 import { type AssetKey } from "../core/assets";
 import bulletJson from "./bullets.json";
 
-// Re-export types for backwards compatibility
-export type {
-  BulletTypeProperties,
-  VisualEffectConfig,
-  HitEffectConfigKey,
-} from "../core/types";
-
 /**
  * JSON representation of bullet properties (asset keys as strings)
  */

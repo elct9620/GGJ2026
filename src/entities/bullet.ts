@@ -48,16 +48,16 @@ export class Bullet extends SpriteEntity {
     return this._upgradeSnapshot;
   }
 
-  // Backward compatible getter/setter
+  /**
+   * Get damage as number (convenience getter for collision handlers)
+   */
   public get damage(): number {
     return this._damage.toNumber();
   }
 
-  public set damage(value: number) {
-    this._damage = new Damage(value);
-  }
-
-  // Value Object accessor
+  /**
+   * Get damage as Value Object (for Damage.fromPercentage etc.)
+   */
   public get damageVO(): Damage {
     return this._damage;
   }
