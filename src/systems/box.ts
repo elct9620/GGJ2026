@@ -30,8 +30,9 @@ const BOOTH_POOL_HEIGHT = 256;
  *
  * Responsibilities:
  * - 監聽攤位食材變化（訂閱 FoodStored/FoodConsumed）
- * - 敵人碰撞檢測（在 Booth Pool 區域 x=340~468）
- * - 碰撞時消耗食材並消滅敵人（不掉落）
+ * - 敵人碰撞檢測（在紅線 x=340 baseline）
+ * - 碰撞時隨機消耗任一攤位食材並消滅敵人（不掉落）
+ * - 總食材=0 時，敵人可穿過防禦線
  *
  * Note: totalFoodCount is now derived from BoothSystem (Single Source of Truth)
  */
@@ -119,54 +120,73 @@ export class BoxSystem extends InjectableSystem {
    * Update box system - check enemy collisions with booth pool area
    */
   public update(): void {
-    // Check if any boxes are active
-    const hasActiveBox = Array.from(this.boxes.values()).some(
-      (active) => active,
-    );
-    if (!hasActiveBox) return;
+    // Check if total food count > 0 (defense is active)
+    const totalFood = this.boothSystem.getTotalFoodCount();
+    if (totalFood === 0) return; // No defense, enemies pass through
 
-    // Check enemy collisions with each booth's box (SPEC § 2.3.7)
+    // Check enemy collisions at the baseline (x=340)
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
 
       const enemyX = enemy.position.x;
-      const enemyY = enemy.position.y;
 
-      // Check if enemy is within booth pool X range
-      const inPoolX =
+      // Check if enemy reached the baseline (collision with box defense line)
+      // Allow small margin for collision detection
+      const reachedBaseline =
         enemyX >= this.poolX && enemyX <= this.poolX + BOOTH_POOL_WIDTH;
 
-      if (!inPoolX) continue;
+      if (!reachedBaseline) continue;
 
-      // Determine which booth's box the enemy collided with based on Y position
-      for (const [boothId, yRange] of this.boothYPositions.entries()) {
-        const inBoothY = enemyY >= yRange.min && enemyY <= yRange.max;
+      // Enemy hit the box defense line
+      // Randomly consume food from any booth that has food (Issue #92)
+      const consumedFromBooth = this.consumeRandomFood();
 
-        if (inBoothY && this.boxes.get(boothId)) {
-          // Enemy collided with this booth's box
-          // Consume food from the specific booth (SPEC § 2.3.7: 攤位食材 -1)
-          this.boothSystem.stealFood(boothId);
+      if (consumedFromBooth !== null) {
+        // Deactivate enemy (SPEC § 2.3.7: 敵人立即消失，不掉落食材)
+        enemy.active = false;
 
-          // Deactivate enemy (SPEC § 2.3.7: 敵人立即消失，不掉落食材)
-          enemy.active = false;
+        // Publish EnemyReachedEnd event (for statistics tracking)
+        this.eventQueue.publish(EventType.EnemyReachedEnd, {
+          enemyId: enemy.id,
+        });
 
-          // Publish EnemyReachedEnd event (for statistics tracking)
-          this.eventQueue.publish(EventType.EnemyReachedEnd, {
-            enemyId: enemy.id,
-          });
-
-          // Check if this box should despawn after food consumption
-          if (this.boothSystem.getFoodCount(boothId) === 0) {
-            this.boxes.set(boothId, false);
-          }
-
-          break; // Only one collision per frame
+        // Check if the booth's box should despawn after food consumption
+        if (this.boothSystem.getFoodCount(consumedFromBooth) === 0) {
+          this.boxes.set(consumedFromBooth, false);
         }
-      }
 
-      // Break outer loop if enemy was deactivated
-      if (!enemy.active) break;
+        break; // Only one collision per frame
+      }
     }
+  }
+
+  /**
+   * Randomly consume food from any booth that has food
+   * Returns the booth ID that food was consumed from, or null if no food available
+   */
+  private consumeRandomFood(): BoothId | null {
+    // Get all booths that have food
+    const boothsWithFood: BoothId[] = [];
+    for (const boothId of [
+      BoothId.Pearl,
+      BoothId.Tofu,
+      BoothId.BloodCake,
+    ] as const) {
+      if (this.boothSystem.getFoodCount(boothId) > 0) {
+        boothsWithFood.push(boothId);
+      }
+    }
+
+    if (boothsWithFood.length === 0) return null;
+
+    // Randomly select a booth
+    const randomIndex = Math.floor(Math.random() * boothsWithFood.length);
+    const selectedBooth = boothsWithFood[randomIndex];
+
+    // Consume food from the selected booth
+    this.boothSystem.stealFood(selectedBooth);
+
+    return selectedBooth;
   }
 
   /**

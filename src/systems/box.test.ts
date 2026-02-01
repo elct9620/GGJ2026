@@ -121,44 +121,42 @@ describe("BoxSystem", () => {
   });
 
   describe("Enemy Collision", () => {
-    it("BX-08: 敵人碰撞珍珠寶箱消耗珍珠食材", () => {
+    it("BX-08: 敵人碰撞寶箱隨機消耗食材", () => {
       // Spawn Pearl box with 3 food
       for (let i = 0; i < 3; i++) {
         boothSystem.storeFood(FoodType.Pearl);
       }
 
-      // Calculate Pearl booth Y position (top booth)
-      const pearlBoothY = POOL_START_Y + 256 / 2; // Center of first booth
+      // Enemy at baseline position (any Y position)
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, pearlBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // SPEC § 2.3.7: Enemy collision consumes 1 food from Pearl booth only
-      expect(boothSystem.getFoodCount(1)).toBe(2); // Pearl booth
+      // Issue #92: Random consumption - total food decreases by 1
+      expect(boxSystem.getTotalFoodCount()).toBe(2);
       expect(enemy.active).toBe(false);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
-    it("BX-09: 最後一次碰撞消耗該攤位寶箱", () => {
+    it("BX-09: 最後一次碰撞消耗所有寶箱", () => {
       // Spawn Pearl box with 1 food
       boothSystem.storeFood(FoodType.Pearl);
 
-      // Spawn enemy at Pearl booth position
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      // Spawn enemy at baseline
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, pearlBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 / 2),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // SPEC § 2.3.7: Last food consumed, Pearl box despawns
-      expect(boothSystem.getFoodCount(1)).toBe(0);
+      // SPEC § 2.3.7: Last food consumed, all boxes despawn
+      expect(boxSystem.getTotalFoodCount()).toBe(0);
       expect(enemy.active).toBe(false);
       expect(boxSystem.isBoxActive()).toBe(false); // No boxes active
     });
@@ -166,52 +164,46 @@ describe("BoxSystem", () => {
     it("BX-10: 遠距離敵人不觸發碰撞", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      // Spawn enemy far from box
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      // Spawn enemy far from baseline
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 200, pearlBoothY),
+        new Vector(BOX_X + 200, POOL_START_Y + 256 / 2),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      expect(boothSystem.getFoodCount(1)).toBe(1);
+      expect(boxSystem.getTotalFoodCount()).toBe(1);
       expect(enemy.active).toBe(true);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
-    it("BX-11: 無寶箱時敵人不受影響", () => {
-      // No box spawned
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+    it("BX-11: 無食材時敵人可穿過", () => {
+      // No food, enemy can pass through (Issue #92)
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, pearlBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 / 2),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      expect(enemy.active).toBe(true);
+      expect(enemy.active).toBe(true); // Enemy passes through
       expect(boxSystem.getTotalFoodCount()).toBe(0);
     });
 
     it("BX-12: 每幀最多處理一次碰撞", () => {
-      // Spawn Pearl box with 5 food
+      // Spawn box with 5 food
       for (let i = 0; i < 5; i++) {
         boothSystem.storeFood(FoodType.Pearl);
       }
 
-      // Spawn 3 enemies at Pearl booth position
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      // Spawn 3 enemies at baseline
+      const yPos = POOL_START_Y + 256 / 2;
+      enemies.push(new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, yPos)));
+      enemies.push(new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, yPos + 5)));
       enemies.push(
-        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY)),
-      );
-      enemies.push(
-        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY + 5)),
-      );
-      enemies.push(
-        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY - 5)),
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, yPos - 5)),
       );
 
       boxSystem.update();
@@ -219,92 +211,83 @@ describe("BoxSystem", () => {
       // Only 1 enemy should be deactivated per frame
       const activeEnemies = enemies.filter((e) => e.active);
       expect(activeEnemies.length).toBe(2);
-      // SPEC § 2.3.7: 1 food consumed per collision from Pearl booth
-      expect(boothSystem.getFoodCount(1)).toBe(4);
+      // SPEC § 2.3.7: 1 food consumed per collision
+      expect(boxSystem.getTotalFoodCount()).toBe(4);
     });
 
     it("BX-13: 非活躍敵人不觸發碰撞", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      const pearlBoothY = POOL_START_Y + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, pearlBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 / 2),
       );
       enemy.active = false;
       enemies.push(enemy);
 
       boxSystem.update();
 
-      expect(boothSystem.getFoodCount(1)).toBe(1);
+      expect(boxSystem.getTotalFoodCount()).toBe(1);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
-    it("BX-14: 敵人碰撞豆腐箱子只消耗豆腐", () => {
+    it("BX-14: 敵人碰撞隨機消耗任一攤位食材", () => {
       // Setup multiple booths with food
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.Tofu);
       boothSystem.storeFood(FoodType.Tofu);
 
-      // Enemy hits Tofu booth (middle)
-      const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
+      // Enemy hits baseline
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, tofuBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 + 256 / 2),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // Only Tofu booth should lose food
-      expect(boothSystem.getFoodCount(1)).toBe(2); // Pearl unchanged
-      expect(boothSystem.getFoodCount(2)).toBe(1); // Tofu -1
+      // Issue #92: Random consumption - total food decreases by 1
+      expect(boxSystem.getTotalFoodCount()).toBe(3);
       expect(enemy.active).toBe(false);
     });
 
-    it("BX-15: 敵人碰撞米血箱子只消耗米血", () => {
+    it("BX-15: 多種食材時隨機選擇消耗", () => {
       // Setup multiple booths with food
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.BloodCake);
       boothSystem.storeFood(FoodType.BloodCake);
 
-      // Enemy hits BloodCake booth (bottom)
-      const bloodCakeBoothY = POOL_START_Y + 256 * 2 + 256 / 2;
+      // Enemy hits baseline
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, bloodCakeBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 * 2 + 256 / 2),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // Only BloodCake booth should lose food
-      expect(boothSystem.getFoodCount(1)).toBe(1); // Pearl unchanged
-      expect(boothSystem.getFoodCount(3)).toBe(1); // BloodCake -1
+      // Issue #92: Random consumption - total food decreases by 1
+      expect(boxSystem.getTotalFoodCount()).toBe(2);
       expect(enemy.active).toBe(false);
     });
 
-    it("BX-16: 某攤位食材歸零後該箱子消失，敵人可通過", () => {
-      // Setup: Pearl has food, Tofu empty, BloodCake has food
+    it("BX-16: 總食材>0時隨機消耗，=0時可通過", () => {
+      // Setup: Total food > 0
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.BloodCake);
 
-      // Enemy passes through Tofu booth position (no box)
-      const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, tofuBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 + 256 / 2),
       );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // Enemy should pass through (not deactivated)
-      expect(enemy.active).toBe(true);
-      expect(boothSystem.getFoodCount(1)).toBe(1); // Pearl unchanged
-      expect(boothSystem.getFoodCount(2)).toBe(0); // Tofu still 0
-      expect(boothSystem.getFoodCount(3)).toBe(1); // BloodCake unchanged
+      // Issue #92: Total food > 0, enemy is blocked and random food consumed
+      expect(enemy.active).toBe(false);
+      expect(boxSystem.getTotalFoodCount()).toBe(1);
     });
   });
 
@@ -368,10 +351,9 @@ describe("BoxSystem", () => {
 
       boothSystem.storeFood(FoodType.Pearl);
 
-      const pearlBoothY = POOL_START_Y + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
-        new Vector(BOX_X + 6, pearlBoothY),
+        new Vector(BOX_X + 6, POOL_START_Y + 256 / 2),
       );
       enemies.push(enemy);
 
