@@ -5,6 +5,51 @@
 
 import { SpecialBulletType } from "./types";
 
+// ============================================
+// Upgrade State (SPEC § 2.3.4)
+// ============================================
+
+/**
+ * Upgrade state tracking all permanent upgrades
+ * Re-exported from upgrade.ts for centralized access
+ */
+export interface UpgradeState {
+  // Normal upgrades (SPEC § 2.3.4)
+  stinkyTofuDamageBonus: number; // 加辣: +0.5 per upgrade
+  bubbleTeaBulletBonus: number; // 加椰果: +1 per upgrade
+  bloodCakeRangeBonus: number; // 加香菜: +0.5 per upgrade
+
+  // Boss upgrades (SPEC § 2.3.4)
+  recipeCostReduction: number; // 打折: -1 per upgrade (min 1)
+  magazineMultiplier: number; // 大胃王: +6 per upgrade
+  killThresholdDivisor: number; // 快吃: +10% per upgrade
+  buffDurationMultiplier: number; // 飢餓三十: +2s per upgrade
+
+  // NEW: Missing Boss upgrades
+  reloadTimeReduction: number; // 好餓好餓: -0.5s per upgrade
+  nightMarketChainMultiplier: number; // 總匯吃到飽: ×2 per upgrade (初始 1)
+  nightMarketDecayReduction: number; // 總匯吃到飽: -0.1 per upgrade
+}
+
+/**
+ * Create default upgrade state
+ * Single source of truth for initial upgrade values
+ */
+export function createDefaultUpgradeState(): UpgradeState {
+  return {
+    stinkyTofuDamageBonus: 0,
+    bubbleTeaBulletBonus: 0,
+    bloodCakeRangeBonus: 0,
+    recipeCostReduction: 0,
+    magazineMultiplier: 1,
+    killThresholdDivisor: 1,
+    buffDurationMultiplier: 1,
+    reloadTimeReduction: 0,
+    nightMarketChainMultiplier: 1,
+    nightMarketDecayReduction: 0,
+  };
+}
+
 // Screen state enum (renamed to avoid conflict with class)
 export const ScreenState = {
   START: "START",
@@ -83,6 +128,12 @@ export interface GameStateInterface {
 
   // Statistics
   stats: GameStats;
+
+  // Upgrades (SPEC § 2.3.4)
+  upgrades: UpgradeState;
+
+  // Resources (SPEC § 2.3.1) - read-only snapshot
+  resources: ResourceState;
 }
 
 /**
@@ -119,6 +170,8 @@ export class GameStateManager implements GameStateInterface {
   private _combat: CombatState = createInitialCombatState();
   private _kills: number = 0;
   private _stats: GameStats = createGameStats();
+  private _upgrades: UpgradeState = createDefaultUpgradeState();
+  private _resourceProvider: (() => ResourceState) | null = null;
 
   // ============================================
   // Read-only getters
@@ -142,6 +195,17 @@ export class GameStateManager implements GameStateInterface {
 
   get stats(): Readonly<GameStats> {
     return this._stats;
+  }
+
+  get upgrades(): Readonly<UpgradeState> {
+    return this._upgrades;
+  }
+
+  get resources(): ResourceState {
+    if (this._resourceProvider) {
+      return this._resourceProvider();
+    }
+    return { pearl: 0, tofu: 0, bloodCake: 0 };
   }
 
   // ============================================
@@ -248,6 +312,124 @@ export class GameStateManager implements GameStateInterface {
   }
 
   // ============================================
+  // Upgrade state updaters (SPEC § 2.3.4)
+  // ============================================
+
+  /**
+   * Increment stinky tofu damage bonus (加辣)
+   */
+  incrementStinkyTofuDamage(bonus: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      stinkyTofuDamageBonus: this._upgrades.stinkyTofuDamageBonus + bonus,
+    };
+  }
+
+  /**
+   * Increment bubble tea bullet bonus (加椰果)
+   */
+  incrementBubbleTeaBullets(bonus: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      bubbleTeaBulletBonus: this._upgrades.bubbleTeaBulletBonus + bonus,
+    };
+  }
+
+  /**
+   * Increment blood cake range bonus (加香菜)
+   */
+  incrementBloodCakeRange(bonus: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      bloodCakeRangeBonus: this._upgrades.bloodCakeRangeBonus + bonus,
+    };
+  }
+
+  /**
+   * Increment recipe cost reduction (打折)
+   */
+  incrementRecipeCostReduction(reduction: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      recipeCostReduction: this._upgrades.recipeCostReduction + reduction,
+    };
+  }
+
+  /**
+   * Increment magazine capacity (大胃王)
+   */
+  incrementMagazineCapacity(bonus: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      magazineMultiplier: this._upgrades.magazineMultiplier + bonus,
+    };
+  }
+
+  /**
+   * Increment kill threshold divisor (快吃)
+   */
+  incrementKillThresholdDivisor(bonus: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      killThresholdDivisor: this._upgrades.killThresholdDivisor + bonus,
+    };
+  }
+
+  /**
+   * Increment buff duration multiplier (飢餓三十)
+   */
+  incrementBuffDuration(bonus: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      buffDurationMultiplier: this._upgrades.buffDurationMultiplier + bonus,
+    };
+  }
+
+  /**
+   * Increment reload time reduction (好餓好餓)
+   */
+  incrementReloadTimeReduction(reduction: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      reloadTimeReduction: this._upgrades.reloadTimeReduction + reduction,
+    };
+  }
+
+  /**
+   * Multiply night market chain multiplier (總匯吃到飽)
+   */
+  multiplyNightMarketChain(multiplier: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      nightMarketChainMultiplier:
+        this._upgrades.nightMarketChainMultiplier * multiplier,
+    };
+  }
+
+  /**
+   * Increment night market decay reduction (總匯吃到飽)
+   */
+  incrementNightMarketDecayReduction(reduction: number): void {
+    this._upgrades = {
+      ...this._upgrades,
+      nightMarketDecayReduction:
+        this._upgrades.nightMarketDecayReduction + reduction,
+    };
+  }
+
+  // ============================================
+  // Resource provider (SPEC § 2.3.1)
+  // ============================================
+
+  /**
+   * Set resource provider callback
+   * BoothSystem registers this to provide real-time resource snapshot
+   */
+  setResourceProvider(provider: () => ResourceState): void {
+    this._resourceProvider = provider;
+  }
+
+  // ============================================
   // Reset for new game
   // ============================================
 
@@ -257,5 +439,7 @@ export class GameStateManager implements GameStateInterface {
     this._combat = createInitialCombatState();
     this._kills = 0;
     this._stats = createGameStats();
+    this._upgrades = createDefaultUpgradeState();
+    // Note: _resourceProvider is not reset as it's a BoothSystem reference
   }
 }

@@ -267,15 +267,17 @@ export class CombatSystem extends InjectableSystem {
    * Create upgrade snapshot capturing current upgrade state
    * This snapshot is attached to bullets at creation time to ensure
    * consistent behavior throughout the bullet's lifetime
+   *
+   * Reads directly from GameStateManager for centralized state access
    */
   private createUpgradeSnapshot(): BulletUpgradeSnapshot {
-    const state = this.upgradeSystem?.getState();
+    const state = this.gameState.upgrades;
     return {
-      stinkyTofuDamageBonus: state?.stinkyTofuDamageBonus ?? 0,
-      nightMarketChainMultiplier: state?.nightMarketChainMultiplier ?? 1,
-      nightMarketDecayReduction: state?.nightMarketDecayReduction ?? 0,
-      killThresholdDivisor: state?.killThresholdDivisor ?? 1,
-      bloodCakeRangeBonus: state?.bloodCakeRangeBonus ?? 0,
+      stinkyTofuDamageBonus: state.stinkyTofuDamageBonus,
+      nightMarketChainMultiplier: state.nightMarketChainMultiplier,
+      nightMarketDecayReduction: state.nightMarketDecayReduction,
+      killThresholdDivisor: state.killThresholdDivisor,
+      bloodCakeRangeBonus: state.bloodCakeRangeBonus,
     };
   }
 
@@ -304,12 +306,12 @@ export class CombatSystem extends InjectableSystem {
     if (!this.bulletSpawner || !this.player) return [];
 
     const bullets: Bullet[] = [];
-    const upgradeState = this.upgradeSystem?.getState();
+    const upgradeState = this.gameState.upgrades;
     const snapshot = this.createUpgradeSnapshot();
 
     // Base extra bullets + upgrade bonus (SPEC § 2.3.4: 加椰果)
     const baseExtra = RECIPE_CONFIG.bubbleTea.extraBullets;
-    const upgradeBonus = upgradeState?.bubbleTeaBulletBonus ?? 0;
+    const upgradeBonus = upgradeState.bubbleTeaBulletBonus;
     const totalBullets = 1 + baseExtra + upgradeBonus; // center + extras
 
     const spreadAngle = 15; // degrees between each bullet
@@ -569,8 +571,7 @@ export class CombatSystem extends InjectableSystem {
     }
 
     // Calculate buff duration with 飢餓三十 upgrade bonus
-    const durationBonus =
-      this.upgradeSystem?.getState().buffDurationMultiplier ?? 1;
+    const durationBonus = this.gameState.upgrades.buffDurationMultiplier;
     const effectiveDuration = this.buffDuration + (durationBonus - 1);
 
     // Activate buff via GameStateManager

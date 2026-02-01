@@ -13,7 +13,7 @@ import type { KillCounterSystem } from "./kill-counter";
 import { type FoodType, getBoothIdForFood } from "../core/types";
 import { type Recipe, recipeData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
-import type { UpgradeSystem } from "./upgrade";
+import type { GameStateManager } from "../core/game-state";
 
 /**
  * Synthesis System
@@ -36,7 +36,7 @@ export class SynthesisSystem extends InjectableSystem {
     this.declareDependency(DependencyKeys.BoothSystem);
     this.declareDependency(DependencyKeys.EventQueue);
     this.declareDependency(DependencyKeys.KillCounterSystem, false); // Optional
-    this.declareDependency(DependencyKeys.UpgradeSystem, false); // Optional
+    this.declareDependency(DependencyKeys.GameState, false); // Optional for upgrade state
   }
 
   /**
@@ -70,20 +70,21 @@ export class SynthesisSystem extends InjectableSystem {
   }
 
   /**
-   * Get UpgradeSystem dependency (optional)
+   * Get GameStateManager dependency (optional)
    */
-  private get upgradeSystem(): UpgradeSystem | null {
-    return this.getOptionalDependency<UpgradeSystem>(
-      DependencyKeys.UpgradeSystem,
+  private get gameState(): GameStateManager | null {
+    return this.getOptionalDependency<GameStateManager>(
+      DependencyKeys.GameState,
     );
   }
 
   /**
    * Get adjusted cost after applying discount upgrade
    * SPEC § 2.3.4: 打折 reduces food cost by recipeCostReduction (min 1)
+   * Reads directly from GameStateManager for centralized state access
    */
   private getAdjustedCost(baseAmount: number): number {
-    const reduction = this.upgradeSystem?.getState().recipeCostReduction ?? 0;
+    const reduction = this.gameState?.upgrades.recipeCostReduction ?? 0;
     return Math.max(1, baseAmount - reduction);
   }
 
@@ -164,8 +165,8 @@ export class SynthesisSystem extends InjectableSystem {
   private checkFoodRequirements(recipe: Recipe): boolean {
     for (const [foodType, required] of Object.entries(
       recipe.foodRequirements,
-    )) {
-      const boothId = getBoothIdForFood(foodType as FoodType);
+    ) as [FoodType, number][]) {
+      const boothId = getBoothIdForFood(foodType);
       const available = this.boothSystem.getFoodCount(boothId);
       const adjustedCost = this.getAdjustedCost(required);
 
@@ -183,8 +184,10 @@ export class SynthesisSystem extends InjectableSystem {
    * SPEC § 2.3.4: 打折升級減少消耗
    */
   private consumeFood(recipe: Recipe): void {
-    for (const [foodType, amount] of Object.entries(recipe.foodRequirements)) {
-      const boothId = getBoothIdForFood(foodType as FoodType);
+    for (const [foodType, amount] of Object.entries(
+      recipe.foodRequirements,
+    ) as [FoodType, number][]) {
+      const boothId = getBoothIdForFood(foodType);
       const adjustedCost = this.getAdjustedCost(amount);
       this.boothSystem.consumeFood(boothId, adjustedCost);
     }

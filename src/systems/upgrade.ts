@@ -11,56 +11,22 @@ import type { BoothSystem } from "./booth";
 import { type FoodType, getBoothIdForFood } from "../core/types";
 import { upgradeData, waveData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
+import type { GameStateManager, UpgradeState } from "../core/game-state";
+
+// Re-export UpgradeState from game-state for backwards compatibility
+export type { UpgradeState } from "../core/game-state";
+export { createDefaultUpgradeState } from "../core/game-state";
 
 /**
  * Upgrade option definition
+ * Effect now takes GameStateManager for centralized state updates
  */
 export interface UpgradeOption {
   id: string;
   name: string;
   description: string;
   cost: { foodType: FoodType; amount: number } | null;
-  effect: (state: UpgradeState) => void;
-}
-
-/**
- * Upgrade state tracking all permanent upgrades
- */
-export interface UpgradeState {
-  // Normal upgrades (SPEC § 2.3.4)
-  stinkyTofuDamageBonus: number; // 加辣: +0.5 per upgrade
-  bubbleTeaBulletBonus: number; // 加椰果: +1 per upgrade
-  bloodCakeRangeBonus: number; // 加香菜: +0.5 per upgrade
-
-  // Boss upgrades (SPEC § 2.3.4)
-  recipeCostReduction: number; // 打折: -1 per upgrade (min 1)
-  magazineMultiplier: number; // 大胃王: +6 per upgrade
-  killThresholdDivisor: number; // 快吃: +10% per upgrade
-  buffDurationMultiplier: number; // 飢餓三十: +2s per upgrade
-
-  // NEW: Missing Boss upgrades
-  reloadTimeReduction: number; // 好餓好餓: -0.5s per upgrade
-  nightMarketChainMultiplier: number; // 總匯吃到飽: ×2 per upgrade (初始 1)
-  nightMarketDecayReduction: number; // 總匯吃到飽: -0.1 per upgrade
-}
-
-/**
- * Create default upgrade state
- * Single source of truth for initial upgrade values
- */
-export function createDefaultUpgradeState(): UpgradeState {
-  return {
-    stinkyTofuDamageBonus: 0,
-    bubbleTeaBulletBonus: 0,
-    bloodCakeRangeBonus: 0,
-    recipeCostReduction: 0,
-    magazineMultiplier: 1,
-    killThresholdDivisor: 1,
-    buffDurationMultiplier: 1,
-    reloadTimeReduction: 0,
-    nightMarketChainMultiplier: 1,
-    nightMarketDecayReduction: 0,
-  };
+  effect: (gameState: GameStateManager) => void;
 }
 
 /**
@@ -77,9 +43,6 @@ export class UpgradeSystem extends InjectableSystem {
   public readonly name = "UpgradeSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Upgrade state (initialized using factory function)
-  private state: UpgradeState = createDefaultUpgradeState();
-
   // Current upgrade options (shown to player)
   private currentOptions: UpgradeOption[] = [];
 
@@ -90,6 +53,7 @@ export class UpgradeSystem extends InjectableSystem {
     super();
     this.declareDependency(DependencyKeys.EventQueue);
     this.declareDependency(DependencyKeys.BoothSystem);
+    this.declareDependency(DependencyKeys.GameState); // For centralized upgrade state
   }
 
   /**
@@ -106,16 +70,25 @@ export class UpgradeSystem extends InjectableSystem {
     return this.getDependency<BoothSystem>(DependencyKeys.BoothSystem);
   }
 
+  /**
+   * Get GameStateManager dependency
+   */
+  private get gameState(): GameStateManager {
+    return this.getDependency<GameStateManager>(DependencyKeys.GameState);
+  }
+
   // Upgrade pools (SPEC § 2.3.4 - 無消耗，直接選擇)
+  // Effects now use GameStateManager methods for centralized state updates
   private readonly normalUpgrades: UpgradeOption[] = [
     {
       id: "spicy",
       name: "加辣",
       description: `臭豆腐傷害 +${upgradeData.getNormal("spicy").damageBonus}`,
       cost: null, // SPEC § 2.3.4: 無消耗
-      effect: (state) => {
-        state.stinkyTofuDamageBonus +=
-          upgradeData.getNormal("spicy").damageBonus ?? 0;
+      effect: (gameState) => {
+        gameState.incrementStinkyTofuDamage(
+          upgradeData.getNormal("spicy").damageBonus ?? 0,
+        );
       },
     },
     {
@@ -123,9 +96,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "加椰果",
       description: `珍珠奶茶子彈 +${upgradeData.getNormal("coconut").bulletBonus}`,
       cost: null, // SPEC § 2.3.4: 無消耗
-      effect: (state) => {
-        state.bubbleTeaBulletBonus +=
-          upgradeData.getNormal("coconut").bulletBonus ?? 0;
+      effect: (gameState) => {
+        gameState.incrementBubbleTeaBullets(
+          upgradeData.getNormal("coconut").bulletBonus ?? 0,
+        );
       },
     },
     {
@@ -133,9 +107,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "加香菜",
       description: `豬血糕範圍 +${upgradeData.getNormal("cilantro").rangeBonus}`,
       cost: null, // SPEC § 2.3.4: 無消耗
-      effect: (state) => {
-        state.bloodCakeRangeBonus +=
-          upgradeData.getNormal("cilantro").rangeBonus ?? 0;
+      effect: (gameState) => {
+        gameState.incrementBloodCakeRange(
+          upgradeData.getNormal("cilantro").rangeBonus ?? 0,
+        );
       },
     },
   ];
@@ -146,9 +121,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "打折",
       description: `臭豆腐/珍珠奶茶/豬血糕消耗 -${upgradeData.getBoss("discount").costReduction}`,
       cost: null,
-      effect: (state) => {
-        state.recipeCostReduction +=
-          upgradeData.getBoss("discount").costReduction ?? 0;
+      effect: (gameState) => {
+        gameState.incrementRecipeCostReduction(
+          upgradeData.getBoss("discount").costReduction ?? 0,
+        );
       },
     },
     {
@@ -156,9 +132,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "大胃王",
       description: `彈匣容量 +${upgradeData.getBoss("bigEater").magazineBonus}`,
       cost: null,
-      effect: (state) => {
-        state.magazineMultiplier +=
-          upgradeData.getBoss("bigEater").magazineBonus ?? 0;
+      effect: (gameState) => {
+        gameState.incrementMagazineCapacity(
+          upgradeData.getBoss("bigEater").magazineBonus ?? 0,
+        );
       },
     },
     {
@@ -166,9 +143,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "快吃",
       description: `蚵仔煎傷害 +${(upgradeData.getBoss("fastEat").damageBonus ?? 0) * 100}%`,
       cost: null,
-      effect: (state) => {
-        state.killThresholdDivisor +=
-          upgradeData.getBoss("fastEat").damageBonus ?? 0;
+      effect: (gameState) => {
+        gameState.incrementKillThresholdDivisor(
+          upgradeData.getBoss("fastEat").damageBonus ?? 0,
+        );
       },
     },
     {
@@ -176,9 +154,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "飢餓三十",
       description: `特殊子彈 Buff 時間 +${upgradeData.getBoss("hunger30").durationBonus}s`,
       cost: null,
-      effect: (state) => {
-        state.buffDurationMultiplier +=
-          upgradeData.getBoss("hunger30").durationBonus ?? 0;
+      effect: (gameState) => {
+        gameState.incrementBuffDuration(
+          upgradeData.getBoss("hunger30").durationBonus ?? 0,
+        );
       },
     },
     {
@@ -186,9 +165,10 @@ export class UpgradeSystem extends InjectableSystem {
       name: "好餓好餓",
       description: `換彈時間 -${upgradeData.getBoss("veryHungry").reloadReduction}s`,
       cost: null,
-      effect: (state) => {
-        state.reloadTimeReduction +=
-          upgradeData.getBoss("veryHungry").reloadReduction ?? 0;
+      effect: (gameState) => {
+        gameState.incrementReloadTimeReduction(
+          upgradeData.getBoss("veryHungry").reloadReduction ?? 0,
+        );
       },
     },
     {
@@ -196,11 +176,13 @@ export class UpgradeSystem extends InjectableSystem {
       name: "總匯吃到飽",
       description: `夜市總匯連鎖 ×${upgradeData.getBoss("buffet").chainMultiplier}、衰減 -${(upgradeData.getBoss("buffet").decayReduction ?? 0) * 100}%`,
       cost: null,
-      effect: (state) => {
-        state.nightMarketChainMultiplier *=
-          upgradeData.getBoss("buffet").chainMultiplier ?? 1;
-        state.nightMarketDecayReduction +=
-          upgradeData.getBoss("buffet").decayReduction ?? 0;
+      effect: (gameState) => {
+        gameState.multiplyNightMarketChain(
+          upgradeData.getBoss("buffet").chainMultiplier ?? 1,
+        );
+        gameState.incrementNightMarketDecayReduction(
+          upgradeData.getBoss("buffet").decayReduction ?? 0,
+        );
       },
     },
   ];
@@ -209,7 +191,7 @@ export class UpgradeSystem extends InjectableSystem {
    * Initialize upgrade system
    */
   public initialize(): void {
-    this.resetState();
+    // Upgrade state is managed by GameStateManager, no local reset needed
 
     // Subscribe to WaveComplete event (SPEC § 2.3.4)
     this.eventQueue.subscribe(
@@ -234,9 +216,10 @@ export class UpgradeSystem extends InjectableSystem {
 
   /**
    * Get upgrade state (read by other systems)
+   * Delegates to GameStateManager for centralized state
    */
   public getState(): Readonly<UpgradeState> {
-    return this.state;
+    return this.gameState.upgrades;
   }
 
   /**
@@ -300,8 +283,8 @@ export class UpgradeSystem extends InjectableSystem {
       }
     }
 
-    // Apply upgrade effect
-    option.effect(this.state);
+    // Apply upgrade effect (via GameStateManager)
+    option.effect(this.gameState);
 
     // Publish UpgradeSelected event (SPEC § 2.3.6)
     this.eventQueue.publish(EventType.UpgradeSelected, {
@@ -317,17 +300,12 @@ export class UpgradeSystem extends InjectableSystem {
 
   /**
    * Reset upgrade state for new game
+   * Note: Upgrade state is now managed by GameStateManager.reset()
    */
   public reset(): void {
-    this.resetState();
+    // Upgrade state reset is handled by GameStateManager
+    // Only reset local UI state
     this.isPendingUpgrade = false;
     this.currentOptions = [];
-  }
-
-  /**
-   * Reset upgrade state to initial values
-   */
-  private resetState(): void {
-    this.state = createDefaultUpgradeState();
   }
 }

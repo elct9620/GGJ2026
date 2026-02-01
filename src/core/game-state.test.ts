@@ -47,6 +47,25 @@ describe("GameStateManager", () => {
       expect(gameState.stats.enemiesDefeated).toBe(0);
       expect(gameState.stats.specialBulletsUsed).toBe(0);
     });
+
+    it("應以預設升級狀態初始化", () => {
+      expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(0);
+      expect(gameState.upgrades.bubbleTeaBulletBonus).toBe(0);
+      expect(gameState.upgrades.bloodCakeRangeBonus).toBe(0);
+      expect(gameState.upgrades.recipeCostReduction).toBe(0);
+      expect(gameState.upgrades.magazineMultiplier).toBe(1);
+      expect(gameState.upgrades.killThresholdDivisor).toBe(1);
+      expect(gameState.upgrades.buffDurationMultiplier).toBe(1);
+      expect(gameState.upgrades.reloadTimeReduction).toBe(0);
+      expect(gameState.upgrades.nightMarketChainMultiplier).toBe(1);
+      expect(gameState.upgrades.nightMarketDecayReduction).toBe(0);
+    });
+
+    it("無 resource provider 時應回傳零資源", () => {
+      expect(gameState.resources.pearl).toBe(0);
+      expect(gameState.resources.tofu).toBe(0);
+      expect(gameState.resources.bloodCake).toBe(0);
+    });
   });
 
   describe("Screen state", () => {
@@ -219,6 +238,128 @@ describe("GameStateManager", () => {
       expect(gameState.kills).toBe(0);
       expect(gameState.stats.wavesSurvived).toBe(0);
       expect(gameState.stats.enemiesDefeated).toBe(0);
+    });
+
+    it("應重置升級狀態", () => {
+      // 套用一些升級
+      gameState.incrementStinkyTofuDamage(0.5);
+      gameState.incrementBubbleTeaBullets(1);
+      gameState.incrementMagazineCapacity(6);
+
+      // 重置
+      gameState.reset();
+
+      // 驗證升級狀態歸零
+      expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(0);
+      expect(gameState.upgrades.bubbleTeaBulletBonus).toBe(0);
+      expect(gameState.upgrades.magazineMultiplier).toBe(1);
+    });
+  });
+
+  describe("Upgrade state", () => {
+    it("應能增加臭豆腐傷害加成（加辣）", () => {
+      gameState.incrementStinkyTofuDamage(0.5);
+
+      expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(0.5);
+    });
+
+    it("應能增加珍珠奶茶子彈加成（加椰果）", () => {
+      gameState.incrementBubbleTeaBullets(1);
+
+      expect(gameState.upgrades.bubbleTeaBulletBonus).toBe(1);
+    });
+
+    it("應能增加豬血糕範圍加成（加香菜）", () => {
+      gameState.incrementBloodCakeRange(100);
+
+      expect(gameState.upgrades.bloodCakeRangeBonus).toBe(100);
+    });
+
+    it("應能增加配方消耗減少（打折）", () => {
+      gameState.incrementRecipeCostReduction(1);
+
+      expect(gameState.upgrades.recipeCostReduction).toBe(1);
+    });
+
+    it("應能增加彈匣容量（大胃王）", () => {
+      gameState.incrementMagazineCapacity(6);
+
+      expect(gameState.upgrades.magazineMultiplier).toBe(7); // 初始 1 + 6
+    });
+
+    it("應能增加擊殺閾值除數（快吃）", () => {
+      gameState.incrementKillThresholdDivisor(0.1);
+
+      expect(gameState.upgrades.killThresholdDivisor).toBe(1.1); // 初始 1 + 0.1
+    });
+
+    it("應能增加 Buff 持續時間（飢餓三十）", () => {
+      gameState.incrementBuffDuration(2);
+
+      expect(gameState.upgrades.buffDurationMultiplier).toBe(3); // 初始 1 + 2
+    });
+
+    it("應能增加換彈時間減少（好餓好餓）", () => {
+      gameState.incrementReloadTimeReduction(0.5);
+
+      expect(gameState.upgrades.reloadTimeReduction).toBe(0.5);
+    });
+
+    it("應能乘以夜市總匯連鎖倍率（總匯吃到飽）", () => {
+      gameState.multiplyNightMarketChain(2);
+
+      expect(gameState.upgrades.nightMarketChainMultiplier).toBe(2); // 初始 1 × 2
+    });
+
+    it("應能增加夜市總匯衰減減少（總匯吃到飽）", () => {
+      gameState.incrementNightMarketDecayReduction(0.1);
+
+      expect(gameState.upgrades.nightMarketDecayReduction).toBe(0.1);
+    });
+
+    it("升級效果應可堆疊", () => {
+      gameState.incrementStinkyTofuDamage(0.5);
+      gameState.incrementStinkyTofuDamage(0.5);
+
+      expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(1.0);
+    });
+
+    it("夜市總匯連鎖倍率應以乘法堆疊", () => {
+      gameState.multiplyNightMarketChain(2);
+      gameState.multiplyNightMarketChain(2);
+
+      expect(gameState.upgrades.nightMarketChainMultiplier).toBe(4); // 1 × 2 × 2
+    });
+  });
+
+  describe("Resource provider", () => {
+    it("應能設定 resource provider", () => {
+      const mockProvider = () => ({
+        pearl: 3,
+        tofu: 2,
+        bloodCake: 1,
+      });
+
+      gameState.setResourceProvider(mockProvider);
+
+      expect(gameState.resources.pearl).toBe(3);
+      expect(gameState.resources.tofu).toBe(2);
+      expect(gameState.resources.bloodCake).toBe(1);
+    });
+
+    it("resource provider 應反映即時資料", () => {
+      let pearlCount = 0;
+      const mockProvider = () => ({
+        pearl: pearlCount,
+        tofu: 0,
+        bloodCake: 0,
+      });
+
+      gameState.setResourceProvider(mockProvider);
+      expect(gameState.resources.pearl).toBe(0);
+
+      pearlCount = 5;
+      expect(gameState.resources.pearl).toBe(5);
     });
   });
 });

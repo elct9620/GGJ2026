@@ -6,6 +6,7 @@ import { EventType } from "./event-queue";
 import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";
+import type { GameStateManager } from "../core/game-state";
 
 /**
  * Booth system for storing food ingredients
@@ -22,6 +23,7 @@ export class BoothSystem extends InjectableSystem {
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue, false); // Optional dependency
+    this.declareDependency(DependencyKeys.GameState, false); // Optional for resource provider
     this.container = new Container();
     this.initializeBackground();
     this.initializeBooths();
@@ -66,6 +68,18 @@ export class BoothSystem extends InjectableSystem {
    */
   public initialize(): void {
     // Booths are already initialized in constructor
+
+    // Register resource provider with GameStateManager
+    const gameState = this.getOptionalDependency<GameStateManager>(
+      DependencyKeys.GameState,
+    );
+    if (gameState) {
+      gameState.setResourceProvider(() => ({
+        pearl: this.getFoodCount(BoothId.Pearl),
+        tofu: this.getFoodCount(BoothId.Tofu),
+        bloodCake: this.getFoodCount(BoothId.BloodCake),
+      }));
+    }
   }
 
   /**

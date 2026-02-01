@@ -8,20 +8,24 @@ import { UpgradeSystem } from "./upgrade";
 import { EventQueue, EventType } from "./event-queue";
 import { BoothSystem } from "./booth";
 import { FoodType } from "../core/types";
+import { GameStateManager } from "../core/game-state";
 
 describe("UpgradeSystem", () => {
   let upgradeSystem: UpgradeSystem;
   let eventQueue: EventQueue;
   let boothSystem: BoothSystem;
+  let gameState: GameStateManager;
 
   beforeEach(() => {
     upgradeSystem = new UpgradeSystem();
     eventQueue = new EventQueue();
     boothSystem = new BoothSystem();
+    gameState = new GameStateManager();
 
     // Inject dependencies using new API
     upgradeSystem.inject("EventQueue", eventQueue);
     upgradeSystem.inject("BoothSystem", boothSystem);
+    upgradeSystem.inject("GameState", gameState);
     upgradeSystem.validateDependencies();
     upgradeSystem.initialize();
     eventQueue.initialize();
@@ -375,7 +379,9 @@ describe("UpgradeSystem", () => {
       const secondOptions = upgradeSystem.getCurrentOptions();
       upgradeSystem.selectUpgrade(secondOptions[0].id);
 
+      // Reset both UpgradeSystem and GameStateManager
       upgradeSystem.reset();
+      gameState.reset(); // Upgrade state is now managed by GameStateManager
 
       const state = upgradeSystem.getState();
       expect(state.stinkyTofuDamageBonus).toBe(0);
