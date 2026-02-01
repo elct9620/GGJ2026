@@ -204,6 +204,68 @@ describe("BulletVisualEffects", () => {
       expect(finalCount).toBeLessThanOrEqual(initialCount);
     });
 
+    it("should remove hit effects after lifetime expires via update loop", () => {
+      visualEffects.createHitEffect(
+        new Vector(100, 100),
+        SpecialBulletType.None,
+      );
+
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with time less than hit duration (0.15s)
+      visualEffects.update(0.1);
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with enough time to expire (total 0.2s > 0.15s)
+      visualEffects.update(0.1);
+      expect(visualEffects.getContainer().children.length).toBe(0);
+    });
+
+    it("should remove chain effects after lifetime expires via update loop", () => {
+      visualEffects.createChainEffect(
+        new Vector(100, 100),
+        new Vector(200, 200),
+      );
+
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with time less than flash duration (0.2s)
+      visualEffects.update(0.15);
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with enough time to expire (total 0.3s > 0.2s)
+      visualEffects.update(0.15);
+      expect(visualEffects.getContainer().children.length).toBe(0);
+    });
+
+    it("should remove pierce effects after lifetime expires via update loop", () => {
+      visualEffects.createPierceEffect(new Vector(100, 100));
+
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with time less than pierce duration (0.3s)
+      visualEffects.update(0.2);
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with enough time to expire (total 0.4s > 0.3s)
+      visualEffects.update(0.2);
+      expect(visualEffects.getContainer().children.length).toBe(0);
+    });
+
+    it("should remove explosion effects after lifetime expires via update loop", () => {
+      visualEffects.createExplosionEffect(new Vector(100, 100));
+
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with time less than explosion duration (0.4s)
+      visualEffects.update(0.3);
+      expect(visualEffects.getContainer().children.length).toBe(1);
+
+      // Update with enough time to expire (total 0.5s > 0.4s)
+      visualEffects.update(0.2);
+      expect(visualEffects.getContainer().children.length).toBe(0);
+    });
+
     it("should clear all trails for a specific bullet", () => {
       const bulletId = "bullet6";
 

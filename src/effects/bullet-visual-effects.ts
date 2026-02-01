@@ -23,6 +23,16 @@ interface TrailParticle {
 }
 
 /**
+ * Temporary effect with lifetime-based cleanup
+ * Used for hit effects, pierce clouds, chain lightning, explosions
+ */
+interface TemporaryEffect {
+  graphics: Graphics;
+  lifetime: number;
+  maxLifetime: number;
+}
+
+/**
  * Visual Effects configuration based on SPEC § 2.6.3
  */
 const VISUAL_EFFECTS_CONFIG = {
@@ -89,8 +99,7 @@ const VISUAL_EFFECTS_CONFIG = {
 export class BulletVisualEffects {
   private container: Container;
   private trails: Map<string, TrailParticle[]> = new Map();
-  private hitEffects: Graphics[] = [];
-  private chainEffects: Graphics[] = [];
+  private temporaryEffects: TemporaryEffect[] = [];
 
   constructor() {
     this.container = new Container();
@@ -167,20 +176,7 @@ export class BulletVisualEffects {
     hitEffect.position.set(position.x, position.y);
 
     this.container.addChild(hitEffect);
-    this.hitEffects.push(hitEffect);
-
-    // Auto-remove after duration
-    setTimeout(
-      () => {
-        this.container.removeChild(hitEffect);
-        hitEffect.destroy();
-        const index = this.hitEffects.indexOf(hitEffect);
-        if (index > -1) {
-          this.hitEffects.splice(index, 1);
-        }
-      },
-      (config.hitDuration || 0.15) * 1000,
-    );
+    this.addTemporaryEffect(hitEffect, config.hitDuration || 0.15);
   }
 
   /**
@@ -197,12 +193,7 @@ export class BulletVisualEffects {
     pierceCloud.position.set(position.x, position.y);
 
     this.container.addChild(pierceCloud);
-
-    // Fade out and remove
-    setTimeout(() => {
-      this.container.removeChild(pierceCloud);
-      pierceCloud.destroy();
-    }, config.pierceDuration * 1000);
+    this.addTemporaryEffect(pierceCloud, config.pierceDuration);
   }
 
   /**
@@ -219,17 +210,7 @@ export class BulletVisualEffects {
     lightning.stroke({ color: config.chainColor, width: config.chainWidth });
 
     this.container.addChild(lightning);
-    this.chainEffects.push(lightning);
-
-    // Flash and remove
-    setTimeout(() => {
-      this.container.removeChild(lightning);
-      lightning.destroy();
-      const index = this.chainEffects.indexOf(lightning);
-      if (index > -1) {
-        this.chainEffects.splice(index, 1);
-      }
-    }, config.flashDuration * 1000);
+    this.addTemporaryEffect(lightning, config.flashDuration);
   }
 
   /**
@@ -246,12 +227,7 @@ export class BulletVisualEffects {
     explosion.position.set(position.x, position.y);
 
     this.container.addChild(explosion);
-
-    // Fade out and remove
-    setTimeout(() => {
-      this.container.removeChild(explosion);
-      explosion.destroy();
-    }, config.explosionDuration * 1000);
+    this.addTemporaryEffect(explosion, config.explosionDuration);
   }
 
   /**
@@ -268,6 +244,18 @@ export class BulletVisualEffects {
       magnitude: config.screenShakeMagnitude,
       duration: config.screenShakeDuration,
     };
+  }
+
+  /**
+   * Add a temporary effect with lifetime-based cleanup
+   * Replaces setTimeout pattern for update-loop lifecycle management
+   */
+  private addTemporaryEffect(graphics: Graphics, duration: number): void {
+    this.temporaryEffects.push({
+      graphics,
+      lifetime: 0,
+      maxLifetime: duration,
+    });
   }
 
   /**
@@ -297,6 +285,18 @@ export class BulletVisualEffects {
         this.trails.delete(bulletId);
       }
     }
+
+    // Update temporary effects (hit effects, pierce clouds, chain lightning, explosions)
+    for (let i = this.temporaryEffects.length - 1; i >= 0; i--) {
+      const effect = this.temporaryEffects[i];
+      effect.lifetime += deltaTime;
+
+      if (effect.lifetime >= effect.maxLifetime) {
+        this.container.removeChild(effect.graphics);
+        effect.graphics.destroy();
+        this.temporaryEffects.splice(i, 1);
+      }
+    }
   }
 
   /**
@@ -323,19 +323,12 @@ export class BulletVisualEffects {
       this.clearBulletTrails(bulletId);
     }
 
-    // Clear hit effects
-    for (const hitEffect of this.hitEffects) {
-      this.container.removeChild(hitEffect);
-      hitEffect.destroy();
+    // Clear all temporary effects
+    for (const effect of this.temporaryEffects) {
+      this.container.removeChild(effect.graphics);
+      effect.graphics.destroy();
     }
-    this.hitEffects = [];
-
-    // Clear chain effects
-    for (const chainEffect of this.chainEffects) {
-      this.container.removeChild(chainEffect);
-      chainEffect.destroy();
-    }
-    this.chainEffects = [];
+    this.temporaryEffects = [];
 
     this.container.destroy();
   }
