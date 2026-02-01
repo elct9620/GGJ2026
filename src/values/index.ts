@@ -26,6 +26,23 @@ export type { Recipe, RecipeDisplayConfig, HUDColorType } from "./recipes";
 export { SpecialBulletType } from "./special-bullet";
 export type { SpecialBulletType as SpecialBulletTypeValue } from "./special-bullet";
 
+// 子彈類型註冊表
+export {
+  BulletTypeRegistry,
+  getBulletProperties,
+  getBulletSize,
+  getBulletColor,
+  getHitEffectConfigKey,
+  getVisualEffectConfig,
+  getPlayerAssetForBuff,
+  getDirHintAssetForBuff,
+} from "./bullet-type-registry";
+export type {
+  BulletTypeProperties,
+  VisualEffectConfig,
+  HitEffectConfigKey,
+} from "./bullet-type-registry";
+
 // 子彈升級快照
 export type { BulletUpgradeSnapshot } from "./bullet-upgrade-snapshot";
 export { createDefaultUpgradeSnapshot } from "./bullet-upgrade-snapshot";

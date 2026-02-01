@@ -8,6 +8,7 @@ import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
 import { SpecialBulletType } from "../values/special-bullet";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
+import { getBulletSize, getBulletColor } from "../values/bullet-type-registry";
 
 /**
  * Bullet entity fired by player
@@ -77,23 +78,10 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Get bullet size based on type (視覺與碰撞統一)
+   * Uses BulletTypeRegistry for centralized property lookup
    */
   private getBulletSize(): number {
-    const sizes = BULLET_CONFIG.sizes;
-    switch (this.bulletType) {
-      case SpecialBulletType.NightMarket:
-        return sizes.nightMarket;
-      case SpecialBulletType.StinkyTofu:
-        return sizes.stinkyTofu;
-      case SpecialBulletType.BubbleTea:
-        return sizes.bubbleTea;
-      case SpecialBulletType.BloodCake:
-        return sizes.bloodCake;
-      case SpecialBulletType.OysterOmelette:
-        return sizes.oysterOmelette;
-      default:
-        return sizes.normal;
-    }
+    return getBulletSize(this.bulletType);
   }
 
   private createSprite(): Graphics {
@@ -109,23 +97,10 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Get bullet color based on type
+   * Uses BulletTypeRegistry for centralized property lookup
    */
   private getBulletColor(): number {
-    const colors = BULLET_CONFIG.colors;
-    switch (this.bulletType) {
-      case SpecialBulletType.NightMarket:
-        return colors.nightMarket;
-      case SpecialBulletType.StinkyTofu:
-        return colors.stinkyTofu;
-      case SpecialBulletType.BubbleTea:
-        return colors.bubbleTea;
-      case SpecialBulletType.BloodCake:
-        return colors.bloodCake;
-      case SpecialBulletType.OysterOmelette:
-        return colors.oysterOmelette;
-      default:
-        return colors.normal;
-    }
+    return getBulletColor(this.bulletType);
   }
 
   /**

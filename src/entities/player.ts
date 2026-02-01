@@ -4,43 +4,23 @@ import { Health } from "../values/health";
 import { Ammo } from "../values/ammo";
 import type { CollisionBox } from "../values/collision";
 import { Container, Sprite } from "pixi.js";
-import { getTexture, AssetKeys, type AssetKey } from "../core/assets";
+import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
 import { SpecialBulletType } from "../values/special-bullet";
+import {
+  getPlayerAssetForBuff,
+  getDirHintAssetForBuff,
+} from "../values/bullet-type-registry";
 
 /**
  * Player entity with keyboard controls and shooting capability
  * Spec: § 2.6.1 Player
+ *
+ * Buff type to sprite mappings are now centralized in BulletTypeRegistry
+ * (src/values/bullet-type-registry.ts)
  */
 export class Player extends SpriteEntity {
-  /**
-   * Buff type to player sprite asset key mapping
-   * SPEC § 2.6.1: Player appearance changes based on active buff
-   */
-  private static readonly BUFF_SPRITE_MAP: Record<SpecialBulletType, AssetKey> =
-    {
-      [SpecialBulletType.None]: AssetKeys.playerBase,
-      [SpecialBulletType.NightMarket]: AssetKeys.playerNightMarket,
-      [SpecialBulletType.StinkyTofu]: AssetKeys.playerStinkyTofu,
-      [SpecialBulletType.BubbleTea]: AssetKeys.playerBubbleTea,
-      [SpecialBulletType.BloodCake]: AssetKeys.playerBloodCake,
-      [SpecialBulletType.OysterOmelette]: AssetKeys.playerOysterOmelette,
-    };
-
-  /**
-   * Buff type to direction hint sprite asset key mapping
-   * DirHint01: Normal single shot indicator (default)
-   * DirHint02: Scatter/spread shot indicator (BubbleTea)
-   */
-  private static readonly DIR_HINT_MAP: Record<SpecialBulletType, AssetKey> = {
-    [SpecialBulletType.None]: AssetKeys.playerDirHint01,
-    [SpecialBulletType.NightMarket]: AssetKeys.playerDirHint01,
-    [SpecialBulletType.StinkyTofu]: AssetKeys.playerDirHint01,
-    [SpecialBulletType.BubbleTea]: AssetKeys.playerDirHint02, // Scatter indicator
-    [SpecialBulletType.BloodCake]: AssetKeys.playerDirHint01,
-    [SpecialBulletType.OysterOmelette]: AssetKeys.playerDirHint01,
-  };
   public position: Vector;
   public readonly speed: number = PLAYER_CONFIG.speed;
 
@@ -248,13 +228,14 @@ export class Player extends SpriteEntity {
    * Update player appearance based on active buff
    * SPEC § 2.6.1: Player visual changes based on buff state
    * Updates both player sprite and direction hint indicator
+   * Uses BulletTypeRegistry for centralized property lookup
    * @param buffType The current active buff type
    */
   public updateAppearanceForBuff(buffType: SpecialBulletType): void {
-    const playerAssetKey = Player.BUFF_SPRITE_MAP[buffType];
+    const playerAssetKey = getPlayerAssetForBuff(buffType);
     this.playerSprite.texture = getTexture(playerAssetKey);
 
-    const dirHintAssetKey = Player.DIR_HINT_MAP[buffType];
+    const dirHintAssetKey = getDirHintAssetForBuff(buffType);
     this.dirHintSprite.texture = getTexture(dirHintAssetKey);
   }
 

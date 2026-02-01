@@ -5,6 +5,12 @@
 
 import type { ISystem } from "./system.interface";
 import { SystemPriority } from "./system.interface";
+import type {
+  EventQueue,
+  EventType,
+  EventData,
+} from "../../systems/event-queue";
+import { DependencyKeys } from "./dependency-keys";
 
 /**
  * Dependency injection error
@@ -87,6 +93,26 @@ export abstract class InjectableSystem implements ISystem {
       return this.getDependency<T>(key);
     }
     return null;
+  }
+
+  /**
+   * Publish an event via EventQueue (standardized pattern)
+   * This method provides a unified way to publish events across all systems,
+   * reducing code duplication and ensuring consistent event handling.
+   *
+   * @param eventType The type of event to publish
+   * @param data The event data payload (must match EventData[eventType])
+   * @param delay Optional delay in milliseconds before the event is processed
+   */
+  protected publishEvent<T extends EventType>(
+    eventType: T,
+    data: EventData[T],
+    delay?: number,
+  ): void {
+    const eventQueue = this.getOptionalDependency<EventQueue>(
+      DependencyKeys.EventQueue,
+    );
+    eventQueue?.publish(eventType, data, delay);
   }
 
   /**

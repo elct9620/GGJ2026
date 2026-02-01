@@ -2,7 +2,6 @@ import { Container, Sprite, Text } from "pixi.js";
 import { FoodType, BoothId } from "../entities/booth";
 import { SystemPriority } from "../core/systems/system.interface";
 import { InjectableSystem } from "../core/systems/injectable";
-import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
@@ -29,21 +28,11 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Get EventQueue dependency (optional)
-   */
-  private get eventQueue(): EventQueue | null {
-    if (this.hasDependency(DependencyKeys.EventQueue)) {
-      return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
-    }
-    return null;
-  }
-
-  /**
    * Publish FoodStored event (SPEC § 2.3.7)
-   * Helper method to reduce code duplication
+   * Uses standardized publishEvent from InjectableSystem
    */
   private publishFoodStored(boothId: BoothId, foodType: FoodType): void {
-    this.eventQueue?.publish(EventType.FoodStored, {
+    this.publishEvent(EventType.FoodStored, {
       boothId: String(boothId),
       foodType,
     });
@@ -51,10 +40,10 @@ export class BoothSystem extends InjectableSystem {
 
   /**
    * Publish FoodConsumed event (SPEC § 2.3.7)
-   * Helper method to reduce code duplication
+   * Uses standardized publishEvent from InjectableSystem
    */
   private publishFoodConsumed(boothId: BoothId, amount: number): void {
-    this.eventQueue?.publish(EventType.FoodConsumed, {
+    this.publishEvent(EventType.FoodConsumed, {
       boothId: String(boothId),
       amount,
     });

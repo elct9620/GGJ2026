@@ -6,11 +6,11 @@
 
 import type { CollisionHandler, CollisionContext } from "../collision-handler";
 import type { SpecialBulletType } from "../../values/special-bullet";
-import { SpecialBulletType as BulletType } from "../../values/special-bullet";
 import { HIT_EFFECTS_CONFIG } from "../../config";
-
-/** Config key type for HIT_EFFECTS_CONFIG */
-type HitEffectConfigKey = keyof typeof HIT_EFFECTS_CONFIG.flash;
+import {
+  getHitEffectConfigKey,
+  type HitEffectConfigKey,
+} from "../../values/bullet-type-registry";
 
 /**
  * Abstract base class for collision handlers
@@ -76,21 +76,9 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
 
   /**
    * Get config key based on bullet type
+   * Uses BulletTypeRegistry for centralized property lookup
    */
   private getConfigKey(): HitEffectConfigKey {
-    switch (this.bulletType) {
-      case BulletType.NightMarket:
-        return "nightMarket";
-      case BulletType.StinkyTofu:
-        return "stinkyTofu";
-      case BulletType.BubbleTea:
-        return "bubbleTea";
-      case BulletType.BloodCake:
-        return "bloodCake";
-      case BulletType.OysterOmelette:
-        return "oysterOmelette";
-      default:
-        return "normal";
-    }
+    return getHitEffectConfigKey(this.bulletType);
   }
 }

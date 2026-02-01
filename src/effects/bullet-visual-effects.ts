@@ -10,7 +10,11 @@
 import { Graphics, Container } from "pixi.js";
 import { Vector } from "../values/vector";
 import { SpecialBulletType } from "../values/special-bullet";
-import { BULLET_CONFIG } from "../config";
+import {
+  getBulletSize,
+  getVisualEffectConfig,
+  type VisualEffectConfig,
+} from "../values/bullet-type-registry";
 
 /**
  * Trail particle for bullet flight effects
@@ -35,7 +39,8 @@ interface TemporaryEffect {
 }
 
 /**
- * Visual Effects configuration based on SPEC § 2.6.3
+ * Visual Effects configuration is now centralized in BulletTypeRegistry
+ * (src/values/bullet-type-registry.ts)
  *
  * 尾跡長度規範 (SPEC § 2.6.3 通用視覺效果規則)：
  * - 普通: 32px
@@ -44,53 +49,6 @@ interface TemporaryEffect {
  *
  * 粒子寬度與子彈大小成比例（子彈大小約為 256px 怪物的 1/16 ~ 1/2）
  */
-const VISUAL_EFFECTS_CONFIG = {
-  normal: {
-    trailColor: 0xffffff, // White trail
-    trailLength: 8, // 粒子數量（加倍）
-    trailLifetime: 0.2, // seconds
-    hitColor: 0xffffff, // White pop
-    hitDuration: 0.15, // seconds
-  },
-  nightMarket: {
-    trailColor: 0xffd700, // Golden electric
-    trailLength: 8, // 粒子數量（加倍）
-    trailLifetime: 0.3,
-    hitColor: 0xffd700, // Golden lightning
-    chainColor: 0xffd700,
-    chainWidth: 4, // 閃電鏈寬度
-    flashDuration: 0.2,
-  },
-  stinkyTofu: {
-    trailColor: 0x27ae60, // Green gas
-    trailLength: 14, // 粒子數量（加倍）
-    trailLifetime: 0.4,
-    pierceColor: 0x27ae60, // Green stink cloud
-    pierceRadius: 48, // 貫穿臭氣雲
-    pierceDuration: 0.3,
-  },
-  bubbleTea: {
-    trailColor: 0xffffff, // White milk tea mist
-    trailLength: 6, // 粒子數量（加倍）
-    trailLifetime: 0.25,
-  },
-  bloodCake: {
-    trailColor: 0x1a1a1a, // Black sticky residue
-    trailLength: 14, // 粒子數量（加倍）
-    trailLifetime: 0.5, // Longer lasting sticky trail
-    residueAlpha: 0.6,
-  },
-  oysterOmelette: {
-    trailColor: 0xe67e22, // Orange
-    trailLength: 10, // 粒子數量（加倍）
-    trailLifetime: 0.3,
-    explosionColor: 0xff4444, // Red explosion
-    explosionRadius: 128, // 爆炸半徑
-    explosionDuration: 0.4,
-    screenShakeMagnitude: 8,
-    screenShakeDuration: 0.5,
-  },
-} as const;
 
 /**
  * Bullet Visual Effects Manager
@@ -114,24 +72,11 @@ export class BulletVisualEffects {
   }
 
   /**
-   * Get bullet size based on type (mirrors Bullet.getBulletSize)
+   * Get bullet size based on type
+   * Uses BulletTypeRegistry for centralized property lookup
    */
   private getBulletSize(bulletType: SpecialBulletType): number {
-    const sizes = BULLET_CONFIG.sizes;
-    switch (bulletType) {
-      case SpecialBulletType.NightMarket:
-        return sizes.nightMarket;
-      case SpecialBulletType.StinkyTofu:
-        return sizes.stinkyTofu;
-      case SpecialBulletType.BubbleTea:
-        return sizes.bubbleTea;
-      case SpecialBulletType.BloodCake:
-        return sizes.bloodCake;
-      case SpecialBulletType.OysterOmelette:
-        return sizes.oysterOmelette;
-      default:
-        return sizes.normal;
-    }
+    return getBulletSize(bulletType);
   }
 
   /**
@@ -211,16 +156,16 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3.3: Green stink cloud when piercing
    */
   public createPierceEffect(position: Vector): void {
-    const config = VISUAL_EFFECTS_CONFIG.stinkyTofu;
+    const config = getVisualEffectConfig(SpecialBulletType.StinkyTofu);
     const pierceCloud = new Graphics();
 
     // Draw wavy green gas cloud
-    pierceCloud.circle(0, 0, config.pierceRadius);
-    pierceCloud.fill({ color: config.pierceColor, alpha: 0.6 });
+    pierceCloud.circle(0, 0, config.pierceRadius ?? 48);
+    pierceCloud.fill({ color: config.pierceColor ?? 0x27ae60, alpha: 0.6 });
     pierceCloud.position.set(position.x, position.y);
 
     this.container.addChild(pierceCloud);
-    this.addTemporaryEffect(pierceCloud, config.pierceDuration);
+    this.addTemporaryEffect(pierceCloud, config.pierceDuration ?? 0.3);
   }
 
   /**
@@ -228,16 +173,19 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3.2: Golden lightning chain jumping between enemies
    */
   public createChainEffect(from: Vector, to: Vector): void {
-    const config = VISUAL_EFFECTS_CONFIG.nightMarket;
+    const config = getVisualEffectConfig(SpecialBulletType.NightMarket);
     const lightning = new Graphics();
 
     // Draw lightning bolt line
     lightning.moveTo(from.x, from.y);
     lightning.lineTo(to.x, to.y);
-    lightning.stroke({ color: config.chainColor, width: config.chainWidth });
+    lightning.stroke({
+      color: config.chainColor ?? 0xffd700,
+      width: config.chainWidth ?? 4,
+    });
 
     this.container.addChild(lightning);
-    this.addTemporaryEffect(lightning, config.flashDuration);
+    this.addTemporaryEffect(lightning, config.flashDuration ?? 0.2);
   }
 
   /**
@@ -245,16 +193,16 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3.6: Red explosion on impact
    */
   public createExplosionEffect(position: Vector): void {
-    const config = VISUAL_EFFECTS_CONFIG.oysterOmelette;
+    const config = getVisualEffectConfig(SpecialBulletType.OysterOmelette);
     const explosion = new Graphics();
 
     // Draw expanding circle explosion
-    explosion.circle(0, 0, config.explosionRadius);
-    explosion.fill({ color: config.explosionColor, alpha: 0.7 });
+    explosion.circle(0, 0, config.explosionRadius ?? 128);
+    explosion.fill({ color: config.explosionColor ?? 0xff4444, alpha: 0.7 });
     explosion.position.set(position.x, position.y);
 
     this.container.addChild(explosion);
-    this.addTemporaryEffect(explosion, config.explosionDuration);
+    this.addTemporaryEffect(explosion, config.explosionDuration ?? 0.4);
   }
 
   /**
@@ -271,10 +219,10 @@ export class BulletVisualEffects {
     magnitude: number;
     duration: number;
   } {
-    const config = VISUAL_EFFECTS_CONFIG.oysterOmelette;
+    const config = getVisualEffectConfig(SpecialBulletType.OysterOmelette);
     return {
-      magnitude: magnitude ?? config.screenShakeMagnitude,
-      duration: duration ?? config.screenShakeDuration,
+      magnitude: magnitude ?? config.screenShakeMagnitude ?? 8,
+      duration: duration ?? config.screenShakeDuration ?? 0.5,
     };
   }
 
@@ -374,21 +322,9 @@ export class BulletVisualEffects {
 
   /**
    * Get configuration for bullet type
+   * Uses BulletTypeRegistry for centralized property lookup
    */
-  private getConfigForType(bulletType: SpecialBulletType): any {
-    switch (bulletType) {
-      case SpecialBulletType.NightMarket:
-        return VISUAL_EFFECTS_CONFIG.nightMarket;
-      case SpecialBulletType.StinkyTofu:
-        return VISUAL_EFFECTS_CONFIG.stinkyTofu;
-      case SpecialBulletType.BubbleTea:
-        return VISUAL_EFFECTS_CONFIG.bubbleTea;
-      case SpecialBulletType.BloodCake:
-        return VISUAL_EFFECTS_CONFIG.bloodCake;
-      case SpecialBulletType.OysterOmelette:
-        return VISUAL_EFFECTS_CONFIG.oysterOmelette;
-      default:
-        return VISUAL_EFFECTS_CONFIG.normal;
-    }
+  private getConfigForType(bulletType: SpecialBulletType): VisualEffectConfig {
+    return getVisualEffectConfig(bulletType);
   }
 }

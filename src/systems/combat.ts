@@ -212,13 +212,11 @@ export class CombatSystem extends InjectableSystem {
       this.shootCooldown = this.shootCooldownTime;
 
       // Publish BulletFired event for audio system
-      if (this.eventQueue) {
-        this.eventQueue.publish(EventType.BulletFired, {});
-      }
+      this.publishEvent(EventType.BulletFired, {});
 
       // Check if reload was triggered (SPEC § 2.3.2)
-      if (this.player.isReloading && this.eventQueue) {
-        this.eventQueue.publish(
+      if (this.player.isReloading) {
+        this.publishEvent(
           EventType.ReloadComplete,
           {},
           COMBAT_CONFIG.reloadDelayMs,
@@ -415,12 +413,10 @@ export class CombatSystem extends InjectableSystem {
       // Reset player appearance to base when buff expires
       this.player?.updateAppearanceForBuff(SpecialBulletType.None);
 
-      if (this.eventQueue) {
-        // GameStateManager already cleared the buff, just publish the event
-        this.eventQueue.publish(EventType.BuffExpired, {
-          buffType: SpecialBulletType.None, // Already cleared
-        });
-      }
+      // GameStateManager already cleared the buff, just publish the event
+      this.publishEvent(EventType.BuffExpired, {
+        buffType: SpecialBulletType.None, // Already cleared
+      });
     }
   }
 
@@ -547,12 +543,10 @@ export class CombatSystem extends InjectableSystem {
     const died = enemy.takeDamage(damage);
 
     // Publish EnemyHit event for audio system
-    if (this.eventQueue) {
-      this.eventQueue.publish(EventType.EnemyHit, {});
-    }
+    this.publishEvent(EventType.EnemyHit, {});
 
-    if (died && this.eventQueue) {
-      this.eventQueue.publish(EventType.EnemyDeath, {
+    if (died) {
+      this.publishEvent(EventType.EnemyDeath, {
         enemyId: enemy.id,
         position: { x: enemy.position.x, y: enemy.position.y },
       });
@@ -586,13 +580,11 @@ export class CombatSystem extends InjectableSystem {
     this.player?.updateAppearanceForBuff(buffType);
 
     // Publish BuffExpired event with delay (SPEC § 2.3.6)
-    if (this.eventQueue) {
-      this.eventQueue.publish(
-        EventType.BuffExpired,
-        { buffType },
-        effectiveDuration * 1000,
-      );
-    }
+    this.publishEvent(
+      EventType.BuffExpired,
+      { buffType },
+      effectiveDuration * 1000,
+    );
   }
 
   /**
