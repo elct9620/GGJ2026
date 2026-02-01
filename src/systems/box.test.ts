@@ -135,9 +135,8 @@ describe("BoxSystem", () => {
 
       boxSystem.update();
 
-      // Note: Enemy collision doesn't consume food from BoothSystem
-      // Food is only consumed via synthesis/retrieval
-      expect(boxSystem.getTotalFoodCount()).toBe(3);
+      // SPEC § 2.3.7: Enemy collision consumes 1 food from booth
+      expect(boxSystem.getTotalFoodCount()).toBe(2);
       expect(enemy.active).toBe(false);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
@@ -152,10 +151,10 @@ describe("BoxSystem", () => {
 
       boxSystem.update();
 
-      // Box still has 1 food (enemy collision doesn't consume booth food)
-      expect(boxSystem.getTotalFoodCount()).toBe(1);
+      // SPEC § 2.3.7: Last food consumed, box despawns
+      expect(boxSystem.getTotalFoodCount()).toBe(0);
       expect(enemy.active).toBe(false);
-      expect(boxSystem.isBoxActive()).toBe(true);
+      expect(boxSystem.isBoxActive()).toBe(false);
     });
 
     it("BX-10: 遠距離敵人不觸發碰撞", () => {
@@ -203,7 +202,8 @@ describe("BoxSystem", () => {
       // Only 1 enemy should be deactivated per frame
       const activeEnemies = enemies.filter((e) => e.active);
       expect(activeEnemies.length).toBe(2);
-      expect(boxSystem.getTotalFoodCount()).toBe(5); // Unchanged (collision doesn't consume booth food)
+      // SPEC § 2.3.7: 1 food consumed per collision
+      expect(boxSystem.getTotalFoodCount()).toBe(4);
     });
 
     it("BX-13: 非活躍敵人不觸發碰撞", () => {

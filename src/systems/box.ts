@@ -12,6 +12,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
 import type { Enemy } from "../entities/enemy";
+import { BoothId } from "../entities/booth";
 import { Container } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";
@@ -114,7 +115,10 @@ export class BoxSystem extends InjectableSystem {
         enemyY <= this.poolStartY + BOOTH_POOL_HEIGHT * 3;
 
       if (inPoolX && inPoolY) {
-        // Deactivate enemy (SPEC § 2.3.7: 不掉落食材)
+        // Consume food from booth (SPEC § 2.3.7: 攤位食材 -1)
+        this.consumeBoothFood();
+
+        // Deactivate enemy (SPEC § 2.3.7: 敵人立即消失，不掉落食材)
         enemy.active = false;
 
         // Publish EnemyReachedEnd event (for statistics tracking)
@@ -122,8 +126,7 @@ export class BoxSystem extends InjectableSystem {
           enemyId: enemy.id,
         });
 
-        // Update box state based on BoothSystem's total count
-        // Note: Food consumption happens via events, not directly here
+        // Check if box should despawn after food consumption
         if (this.getTotalFoodCount() === 0) {
           this.boxExists = false;
         }
@@ -167,6 +170,33 @@ export class BoxSystem extends InjectableSystem {
    */
   public isBoxActive(): boolean {
     return this.boxExists;
+  }
+
+  /**
+   * Consume food from booth when enemy collides with box
+   * SPEC § 2.3.7: 攤位食材 -1
+   * Randomly selects a booth with food to steal from
+   */
+  private consumeBoothFood(): void {
+    // Find all booths with food
+    const boothsWithFood: BoothId[] = [];
+    for (const boothId of [BoothId.Pearl, BoothId.Tofu, BoothId.BloodCake]) {
+      if (this.boothSystem.getFoodCount(boothId) > 0) {
+        boothsWithFood.push(boothId);
+      }
+    }
+
+    // If no booths have food, box shouldn't exist
+    if (boothsWithFood.length === 0) {
+      return;
+    }
+
+    // Randomly select a booth with food to steal from
+    const randomIndex = Math.floor(Math.random() * boothsWithFood.length);
+    const targetBooth = boothsWithFood[randomIndex];
+
+    // Steal food from selected booth
+    this.boothSystem.stealFood(targetBooth);
   }
 
   /**
