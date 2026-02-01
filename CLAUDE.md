@@ -126,7 +126,8 @@ Application.stage
 │   ├── Food Drops Container (dynamic, auto-collected)
 │   ├── Player Sprite (256×256 collision box)
 │   ├── Enemies Container (Ghosts + Bosses)
-│   └── Bullets Container (Normal + Special)
+│   ├── Bullets Container (Normal + Special)
+│   └── Bullet Visual Effects Container (trails, hit effects, particles)
 └── UI Layer (z-index: 2)
     ├── Top HUD - HUDSystem.getTopHUD()
     │   └── Wave, Enemy Count, Health
@@ -189,6 +190,14 @@ interface ISystem {
 **Entities** (`src/entities/`):
 - All extend `Entity` base class (id generation, active state)
 - `Player`, `Enemy` (Ghost/Boss), `Bullet`, `Food`
+
+**Visual Effects** (`src/effects/`):
+- **BulletVisualEffects**: Lightweight particle system for bullet visual feedback (SPEC § 2.6.3)
+  - Trail effects: White wind切線條 (normal), golden electric (night market), green gas (stinky tofu), black sticky (blood cake)
+  - Hit effects: Pop animations, pierce clouds, chain lightning, explosions
+  - Screen shake support for ultimate abilities (oyster omelette)
+  - No external dependencies (@pixi/particle-emitter not required)
+  - Performance: < 500ms test runtime, designed for 60 FPS
 
 ### Object Pool Pattern
 

@@ -28,6 +28,13 @@ export class Bullet extends SpriteEntity {
   // Bullet type for visual differentiation
   private bulletType: SpecialBulletType = SpecialBulletType.None;
 
+  /**
+   * Get bullet type (for visual effects)
+   */
+  public get type(): SpecialBulletType {
+    return this.bulletType;
+  }
+
   // Backward compatible getter/setter
   public get damage(): number {
     return this._damage.toNumber();
