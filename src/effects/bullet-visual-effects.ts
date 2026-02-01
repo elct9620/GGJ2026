@@ -9,12 +9,8 @@
 
 import { Graphics, Container } from "pixi.js";
 import { Vector } from "../values/vector";
-import { SpecialBulletType } from "../core/types";
-import {
-  getBulletSize,
-  getVisualEffectConfig,
-  type VisualEffectConfig,
-} from "../values";
+import { SpecialBulletType, type VisualEffectConfig } from "../core/types";
+import { bulletData } from "../data";
 
 /**
  * Trail particle for bullet flight effects
@@ -39,8 +35,8 @@ interface TemporaryEffect {
 }
 
 /**
- * Visual Effects configuration is now centralized in BulletTypeRegistry
- * (src/values/bullet-type-registry.ts)
+ * Visual Effects configuration is now centralized in BulletData
+ * (src/data/bullet-data.ts)
  *
  * 尾跡長度規範 (SPEC § 2.6.3 通用視覺效果規則)：
  * - 普通: 32px
@@ -73,10 +69,10 @@ export class BulletVisualEffects {
 
   /**
    * Get bullet size based on type
-   * Uses BulletTypeRegistry for centralized property lookup
+   * Uses BulletData for centralized property lookup
    */
   private getBulletSize(bulletType: SpecialBulletType): number {
-    return getBulletSize(bulletType);
+    return bulletData.getSize(bulletType);
   }
 
   /**
@@ -156,7 +152,9 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3.3: Green stink cloud when piercing
    */
   public createPierceEffect(position: Vector): void {
-    const config = getVisualEffectConfig(SpecialBulletType.StinkyTofu);
+    const config = bulletData.getVisualEffectConfig(
+      SpecialBulletType.StinkyTofu,
+    );
     const pierceCloud = new Graphics();
 
     // Draw wavy green gas cloud
@@ -173,7 +171,9 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3.2: Golden lightning chain jumping between enemies
    */
   public createChainEffect(from: Vector, to: Vector): void {
-    const config = getVisualEffectConfig(SpecialBulletType.NightMarket);
+    const config = bulletData.getVisualEffectConfig(
+      SpecialBulletType.NightMarket,
+    );
     const lightning = new Graphics();
 
     // Draw lightning bolt line
@@ -193,7 +193,9 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3.6: Red explosion on impact
    */
   public createExplosionEffect(position: Vector): void {
-    const config = getVisualEffectConfig(SpecialBulletType.OysterOmelette);
+    const config = bulletData.getVisualEffectConfig(
+      SpecialBulletType.OysterOmelette,
+    );
     const explosion = new Graphics();
 
     // Draw expanding circle explosion
@@ -219,7 +221,9 @@ export class BulletVisualEffects {
     magnitude: number;
     duration: number;
   } {
-    const config = getVisualEffectConfig(SpecialBulletType.OysterOmelette);
+    const config = bulletData.getVisualEffectConfig(
+      SpecialBulletType.OysterOmelette,
+    );
     return {
       magnitude: magnitude ?? config.screenShakeMagnitude ?? 8,
       duration: duration ?? config.screenShakeDuration ?? 0.5,
@@ -322,9 +326,9 @@ export class BulletVisualEffects {
 
   /**
    * Get configuration for bullet type
-   * Uses BulletTypeRegistry for centralized property lookup
+   * Uses BulletData for centralized property lookup
    */
   private getConfigForType(bulletType: SpecialBulletType): VisualEffectConfig {
-    return getVisualEffectConfig(bulletType);
+    return bulletData.getVisualEffectConfig(bulletType);
   }
 }

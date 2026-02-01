@@ -8,7 +8,8 @@
 import type { CollisionContext } from "../collision-handler";
 import { BaseCollisionHandler } from "./base-collision-handler";
 import { SpecialBulletType } from "../../core/types";
-import { RECIPE_CONFIG, HIT_EFFECTS_CONFIG } from "../../config";
+import { RECIPE_CONFIG } from "../../config";
+import { hitEffectData } from "../../data";
 import type { Enemy } from "../../entities/enemy";
 
 export class NightMarketCollisionHandler extends BaseCollisionHandler {
@@ -68,9 +69,9 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
     let currentDamage = baseDamage;
 
     // Get flash config for chain hits
-    const flashConfig = HIT_EFFECTS_CONFIG.flash.nightMarket;
-    const knockbackConfig = HIT_EFFECTS_CONFIG.knockback;
-    const shakeConfig = HIT_EFFECTS_CONFIG.screenShake.nightMarket;
+    const flashConfig = hitEffectData.getFlash("nightMarket");
+    const knockbackConfig = hitEffectData.knockback;
+    const shakeConfig = hitEffectData.getScreenShake("nightMarket");
 
     for (let i = 0; i < maxTargets && currentTarget !== null; i++) {
       // Create chain lightning effect from previous to current target

@@ -8,11 +8,7 @@ import { getTexture } from "../core/assets";
 import type { FoodType } from "../core/types";
 import { LAYOUT } from "../utils/constants";
 import { EnemyType, isEliteType } from "../core/types";
-import {
-  getEnemyProperties,
-  getEnemyFoodDrop,
-  shouldShowHealthBar,
-} from "../values";
+import { enemyData } from "../data";
 
 // Re-export for backwards compatibility
 export { EnemyType, isEliteType } from "../core/types";
@@ -72,8 +68,8 @@ export class Enemy extends SpriteEntity {
     this.type = type;
     this.position = initialPosition;
 
-    // Get properties from registry (SPEC § 2.6.2)
-    const props = getEnemyProperties(type);
+    // Get properties from data catalog (SPEC § 2.6.2)
+    const props = enemyData.get(type);
     this.baseSpeed = props.speed;
 
     // HP scales with wave number
@@ -90,7 +86,7 @@ export class Enemy extends SpriteEntity {
     this.sprite.addChild(this.enemySprite);
 
     // Add health bar if needed
-    if (shouldShowHealthBar(type)) {
+    if (enemyData.shouldShowHealthBar(type)) {
       this.healthBarContainer = new Graphics();
       this.sprite.addChild(this.healthBarContainer);
       this.updateHealthBar();
@@ -100,7 +96,7 @@ export class Enemy extends SpriteEntity {
   }
 
   private createSprite(): Sprite {
-    const props = getEnemyProperties(this.type);
+    const props = enemyData.get(this.type);
     const sprite = new Sprite(getTexture(props.assetKey));
 
     sprite.width = props.size;
@@ -196,7 +192,7 @@ export class Enemy extends SpriteEntity {
     this._health = this._health.takeDamage(damage);
 
     // Update health bar if applicable
-    if (shouldShowHealthBar(this.type)) {
+    if (enemyData.shouldShowHealthBar(this.type)) {
       this.updateHealthBar();
     }
 
@@ -221,23 +217,24 @@ export class Enemy extends SpriteEntity {
    * SPEC § 4.2.5: AABB 碰撞檢測，使用 EnemyTypeRegistry 取得尺寸
    */
   public get collisionBox(): CollisionBox {
-    const size = getEnemyProperties(this.type).size;
+    const size = enemyData.getSize(this.type);
     return { width: size, height: size };
   }
 
   /**
    * Drop food item when defeated (or null if no drop)
-   * SPEC § 2.6.2: Uses EnemyTypeRegistry for food drop mapping
+   * SPEC § 2.6.2: Uses EnemyData for food drop mapping
    */
   public dropFood(): FoodType | null {
-    return getEnemyFoodDrop(this.type);
+    return enemyData.getFoodDrop(this.type);
   }
 
   /**
    * Update health bar visualization for Boss and Elite enemies
    */
   private updateHealthBar(): void {
-    if (!shouldShowHealthBar(this.type) || !this.healthBarContainer) return;
+    if (!enemyData.shouldShowHealthBar(this.type) || !this.healthBarContainer)
+      return;
 
     this.healthBarContainer.clear();
 
@@ -247,8 +244,8 @@ export class Enemy extends SpriteEntity {
     const totalWidth =
       this.maxHealth * barWidth + (this.maxHealth - 1) * barSpacing;
     const startX = -totalWidth / 2;
-    // Health bar position based on sprite size from registry
-    const spriteHeight = getEnemyProperties(this.type).size;
+    // Health bar position based on sprite size from data catalog
+    const spriteHeight = enemyData.getSize(this.type);
     const startY = -spriteHeight / 2 - 15;
 
     // Draw health bars (green for remaining health, gray for lost health)

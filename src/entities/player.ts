@@ -8,14 +8,14 @@ import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
 import { SpecialBulletType } from "../core/types";
-import { getPlayerAssetForBuff, getDirHintAssetForBuff } from "../values";
+import { bulletData } from "../data";
 
 /**
  * Player entity with keyboard controls and shooting capability
  * Spec: § 2.6.1 Player
  *
- * Buff type to sprite mappings are now centralized in BulletTypeRegistry
- * (src/values/bullet-type-registry.ts)
+ * Buff type to sprite mappings are now centralized in BulletData
+ * (src/data/bullet-data.ts)
  */
 export class Player extends SpriteEntity {
   public position: Vector;
@@ -225,14 +225,14 @@ export class Player extends SpriteEntity {
    * Update player appearance based on active buff
    * SPEC § 2.6.1: Player visual changes based on buff state
    * Updates both player sprite and direction hint indicator
-   * Uses BulletTypeRegistry for centralized property lookup
+   * Uses BulletData for centralized property lookup
    * @param buffType The current active buff type
    */
   public updateAppearanceForBuff(buffType: SpecialBulletType): void {
-    const playerAssetKey = getPlayerAssetForBuff(buffType);
+    const playerAssetKey = bulletData.getPlayerAssetForBuff(buffType);
     this.playerSprite.texture = getTexture(playerAssetKey);
 
-    const dirHintAssetKey = getDirHintAssetForBuff(buffType);
+    const dirHintAssetKey = bulletData.getDirHintAssetForBuff(buffType);
     this.dirHintSprite.texture = getTexture(dirHintAssetKey);
   }
 

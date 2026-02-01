@@ -22,7 +22,7 @@ import { AudioSystem } from "./systems/audio-system";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
-import { RECIPES, RECIPE_DISPLAY, FOOD_HUD_COLOR } from "./values";
+import { recipeData, FOOD_HUD_COLOR } from "./data";
 import { PLAYER_CONFIG, RECIPE_CONFIG } from "./config";
 import { SpecialBulletType } from "./core/types";
 import { GameStateManager, type GameStats } from "./core/game-state";
@@ -474,8 +474,8 @@ export class GameScene {
     boothSystem: BoothSystem,
     killCounterSystem: KillCounterSystem,
   ): RecipeStatus[] {
-    return Object.values(RECIPES).map((recipe) => {
-      const displayConfig = RECIPE_DISPLAY[recipe.id];
+    return Object.values(recipeData.entries).map((recipe) => {
+      const displayConfig = recipeData.getDisplay(recipe.id);
       const requirements = this.getRequirementStatuses(
         recipe.id,
         displayConfig.costs,

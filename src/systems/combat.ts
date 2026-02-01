@@ -11,7 +11,7 @@ import { Enemy } from "../entities/enemy";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
-import { RECIPE_BUFF_MAPPING } from "../values";
+import { recipeData } from "../data";
 import { SpecialBulletType } from "../core/types";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
@@ -591,6 +591,10 @@ export class CombatSystem extends InjectableSystem {
    * Map recipe ID (1-5) to buff type (SPEC § 2.3.3)
    */
   private mapRecipeToBuffType(recipeId: string): SpecialBulletType {
-    return RECIPE_BUFF_MAPPING[recipeId] ?? SpecialBulletType.None;
+    try {
+      return recipeData.getBuffType(recipeId);
+    } catch {
+      return SpecialBulletType.None;
+    }
   }
 }

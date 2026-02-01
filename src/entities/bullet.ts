@@ -8,7 +8,7 @@ import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
 import { SpecialBulletType } from "../core/types";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
-import { getBulletSize, getBulletColor } from "../values";
+import { bulletData } from "../data";
 
 /**
  * Bullet entity fired by player
@@ -78,10 +78,10 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Get bullet size based on type (視覺與碰撞統一)
-   * Uses BulletTypeRegistry for centralized property lookup
+   * Uses BulletData for centralized property lookup
    */
   private getBulletSize(): number {
-    return getBulletSize(this.bulletType);
+    return bulletData.getSize(this.bulletType);
   }
 
   private createSprite(): Graphics {
@@ -97,10 +97,10 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Get bullet color based on type
-   * Uses BulletTypeRegistry for centralized property lookup
+   * Uses BulletData for centralized property lookup
    */
   private getBulletColor(): number {
-    return getBulletColor(this.bulletType);
+    return bulletData.getColor(this.bulletType);
   }
 
   /**

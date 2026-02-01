@@ -9,12 +9,11 @@ import {
   ENEMY_CONFIG,
   BULLET_CONFIG,
   COMBAT_CONFIG,
-  WAVE_CONFIG,
   BOOTH_CONFIG,
   KILL_COUNTER_CONFIG,
   RECIPE_CONFIG,
-  UPGRADE_CONFIG,
 } from "./config";
+import { waveData, upgradeData } from "./data";
 
 describe("Game Balance Config", () => {
   describe("PLAYER_CONFIG", () => {
@@ -100,21 +99,21 @@ describe("Game Balance Config", () => {
     });
   });
 
-  describe("WAVE_CONFIG", () => {
+  describe("waveData (WAVE_CONFIG)", () => {
     it("Boss 應每 5 波出現 (SPEC § 2.3.5)", () => {
-      expect(WAVE_CONFIG.bossWaveInterval).toBe(5);
+      expect(waveData.bossWaveInterval).toBe(5);
     });
 
     it("敵人數量倍率應為 2 (SPEC § 2.3.5)", () => {
-      expect(WAVE_CONFIG.enemyMultiplier).toBe(2);
+      expect(waveData.enemyMultiplier).toBe(2);
     });
 
     it("生成機率總和應為 100%", () => {
       const totalProbability =
-        WAVE_CONFIG.spawnProbability.ghost +
-        WAVE_CONFIG.spawnProbability.redGhost +
-        WAVE_CONFIG.spawnProbability.greenGhost +
-        WAVE_CONFIG.spawnProbability.blueGhost;
+        waveData.spawnProbability.ghost +
+        waveData.spawnProbability.redGhost +
+        waveData.spawnProbability.greenGhost +
+        waveData.spawnProbability.blueGhost;
       expect(totalProbability).toBeCloseTo(1.0);
     });
   });
@@ -169,29 +168,29 @@ describe("Game Balance Config", () => {
     });
   });
 
-  describe("UPGRADE_CONFIG", () => {
+  describe("upgradeData (UPGRADE_CONFIG)", () => {
     it("加辣應加 0.5 傷害 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.normal.spicy.damageBonus).toBe(0.5);
+      expect(upgradeData.getNormal("spicy").damageBonus).toBe(0.5);
     });
 
     it("加椰果應加 1 子彈 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.normal.coconut.bulletBonus).toBe(1);
+      expect(upgradeData.getNormal("coconut").bulletBonus).toBe(1);
     });
 
     it("加香菜應加 100px 追蹤範圍 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.normal.cilantro.rangeBonus).toBe(100);
+      expect(upgradeData.getNormal("cilantro").rangeBonus).toBe(100);
     });
 
     it("大胃王應加 6 彈夾容量 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.boss.bigEater.magazineBonus).toBe(6);
+      expect(upgradeData.getBoss("bigEater").magazineBonus).toBe(6);
     });
 
     it("飢餓三十應加 2 秒 Buff 時長 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.boss.hunger30.durationBonus).toBe(2);
+      expect(upgradeData.getBoss("hunger30").durationBonus).toBe(2);
     });
 
     it("升級選項數量應為 2 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.optionsCount).toBe(2);
+      expect(upgradeData.optionsCount).toBe(2);
     });
   });
 });

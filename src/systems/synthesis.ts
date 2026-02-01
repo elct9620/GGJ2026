@@ -11,7 +11,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { KillCounterSystem } from "./kill-counter";
 import { type FoodType, getBoothIdForFood } from "../core/types";
-import { type Recipe, RECIPES } from "../values";
+import { type Recipe, recipeData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
 
@@ -119,8 +119,13 @@ export class SynthesisSystem extends InjectableSystem {
    * SPEC § 2.3.3: 按鍵觸發檢查食材並消耗
    */
   private trySynthesize(recipeId: string): void {
-    const recipe = RECIPES[recipeId];
-    if (!recipe) return;
+    // Get recipe from data catalog (returns undefined if not found)
+    let recipe: Recipe;
+    try {
+      recipe = recipeData.get(recipeId);
+    } catch {
+      return; // Recipe not found
+    }
 
     // Check kill counter requirement (蚵仔煎)
     // SPEC § 2.3.8: 蚵仔煎需要消耗 20 擊殺數

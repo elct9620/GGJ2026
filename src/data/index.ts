@@ -4,19 +4,12 @@
  * 統一匯出所有遊戲資料目錄
  */
 
+// Core Data Interface
+export type { Data } from "./data";
+export { createData } from "./data";
+
 // BulletData Catalog
-export {
-  BulletData,
-  bulletData,
-  BulletTypeRegistry,
-  getBulletProperties,
-  getBulletSize,
-  getBulletColor,
-  getHitEffectConfigKey,
-  getVisualEffectConfig,
-  getPlayerAssetForBuff,
-  getDirHintAssetForBuff,
-} from "./bullet-data";
+export { BulletData, bulletData } from "./bullet-data";
 export type {
   BulletTypeProperties,
   VisualEffectConfig,
@@ -24,33 +17,15 @@ export type {
 } from "./bullet-data";
 
 // EnemyData Catalog
-export {
-  EnemyData,
-  enemyData,
-  EnemyTypeRegistry,
-  getEnemyProperties,
-  getEnemyAssetKey,
-  getEnemySpeed,
-  getEnemySize,
-  getEnemyFoodDrop,
-  shouldShowHealthBar,
-  getEnemyHealthForWave,
-} from "./enemy-data";
+export { EnemyData, enemyData } from "./enemy-data";
 export type { EnemyTypeProperties } from "./enemy-data";
 
 // RecipeData Catalog
-export {
-  RecipeData,
-  recipeData,
-  RECIPES,
-  RECIPE_BUFF_MAPPING,
-  RECIPE_DISPLAY,
-  FOOD_HUD_COLOR,
-} from "./recipe-data";
+export { RecipeData, recipeData, FOOD_HUD_COLOR } from "./recipe-data";
 export type { Recipe, RecipeDisplayConfig, HUDColorType } from "./recipe-data";
 
 // UpgradeData Catalog
-export { UpgradeData, upgradeData, UPGRADE_CONFIG } from "./upgrade-data";
+export { UpgradeData, upgradeData } from "./upgrade-data";
 export type {
   NormalUpgrade,
   BossUpgrade,
@@ -60,15 +35,11 @@ export type {
 } from "./upgrade-data";
 
 // WaveData Catalog
-export { WaveData, waveData, WAVE_CONFIG } from "./wave-data";
+export { WaveData, waveData } from "./wave-data";
 export type { SpawnProbability } from "./wave-data";
 
 // HitEffectData Catalog
-export {
-  HitEffectData,
-  hitEffectData,
-  HIT_EFFECTS_CONFIG,
-} from "./hit-effect-data";
+export { HitEffectData, hitEffectData } from "./hit-effect-data";
 export type {
   FlashConfig,
   KnockbackConfig,

@@ -2,6 +2,9 @@
  * Value Objects Barrel Export
  *
  * 統一匯出所有值物件，方便引用
+ *
+ * NOTE: Data Catalogs (BulletData, EnemyData, RecipeData, etc.) should be
+ * imported directly from "src/data" instead of this module.
  */
 
 // 幾何相關
@@ -13,7 +16,7 @@ export { Damage } from "./damage";
 export { Health } from "./health";
 export { Ammo } from "./ammo";
 
-// 核心型別 (re-export from core/data)
+// 核心型別 (re-export from core/types for convenience)
 export {
   EnemyType,
   isEliteType,
@@ -21,14 +24,8 @@ export {
   FoodType,
   BoothId,
   getBoothIdForFood,
-  createData,
-  // Backwards compatibility
-  createRegistry,
-} from "../core/data";
+} from "../core/types";
 export type {
-  Data,
-  // Backwards compatibility
-  TypeRegistry,
   EnemyType as EnemyTypeValue,
   SpecialBulletType as SpecialBulletTypeValue,
   FoodType as FoodTypeValue,
@@ -37,66 +34,11 @@ export type {
   VisualEffectConfig,
   HitEffectConfigKey,
   EnemyTypeProperties,
-} from "../core/data";
+} from "../core/types";
 
-// Data Catalogs (re-export from src/data/)
-export {
-  // BulletData
-  BulletData,
-  bulletData,
-  BulletTypeRegistry,
-  getBulletProperties,
-  getBulletSize,
-  getBulletColor,
-  getHitEffectConfigKey,
-  getVisualEffectConfig,
-  getPlayerAssetForBuff,
-  getDirHintAssetForBuff,
-  // EnemyData
-  EnemyData,
-  enemyData,
-  EnemyTypeRegistry,
-  getEnemyProperties,
-  getEnemyAssetKey,
-  getEnemySpeed,
-  getEnemySize,
-  getEnemyFoodDrop,
-  shouldShowHealthBar,
-  getEnemyHealthForWave,
-  // RecipeData
-  RecipeData,
-  recipeData,
-  RECIPES,
-  RECIPE_BUFF_MAPPING,
-  RECIPE_DISPLAY,
-  FOOD_HUD_COLOR,
-  // UpgradeData
-  UpgradeData,
-  upgradeData,
-  UPGRADE_CONFIG,
-  // WaveData
-  WaveData,
-  waveData,
-  WAVE_CONFIG,
-  // HitEffectData
-  HitEffectData,
-  hitEffectData,
-  HIT_EFFECTS_CONFIG,
-} from "../data";
-export type {
-  Recipe,
-  RecipeDisplayConfig,
-  HUDColorType,
-  NormalUpgrade,
-  BossUpgrade,
-  NormalUpgradeType,
-  BossUpgradeType,
-  UpgradeCost,
-  SpawnProbability,
-  FlashConfig,
-  KnockbackConfig,
-  ScreenShakeConfig,
-} from "../data";
+// Data interface (re-export from data/)
+export { createData } from "../data";
+export type { Data } from "../data";
 
 // 子彈升級快照
 export type { BulletUpgradeSnapshot } from "./bullet-upgrade-snapshot";

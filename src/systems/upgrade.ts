@@ -9,7 +9,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
 import { type FoodType, getBoothIdForFood } from "../core/types";
-import { UPGRADE_CONFIG, WAVE_CONFIG } from "../config";
+import { upgradeData, waveData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
@@ -111,28 +111,31 @@ export class UpgradeSystem extends InjectableSystem {
     {
       id: "spicy",
       name: "加辣",
-      description: `臭豆腐傷害 +${UPGRADE_CONFIG.normal.spicy.damageBonus}`,
+      description: `臭豆腐傷害 +${upgradeData.getNormal("spicy").damageBonus}`,
       cost: null, // SPEC § 2.3.4: 無消耗
       effect: (state) => {
-        state.stinkyTofuDamageBonus += UPGRADE_CONFIG.normal.spicy.damageBonus;
+        state.stinkyTofuDamageBonus +=
+          upgradeData.getNormal("spicy").damageBonus ?? 0;
       },
     },
     {
       id: "coconut",
       name: "加椰果",
-      description: `珍珠奶茶子彈 +${UPGRADE_CONFIG.normal.coconut.bulletBonus}`,
+      description: `珍珠奶茶子彈 +${upgradeData.getNormal("coconut").bulletBonus}`,
       cost: null, // SPEC § 2.3.4: 無消耗
       effect: (state) => {
-        state.bubbleTeaBulletBonus += UPGRADE_CONFIG.normal.coconut.bulletBonus;
+        state.bubbleTeaBulletBonus +=
+          upgradeData.getNormal("coconut").bulletBonus ?? 0;
       },
     },
     {
       id: "cilantro",
       name: "加香菜",
-      description: `豬血糕範圍 +${UPGRADE_CONFIG.normal.cilantro.rangeBonus}`,
+      description: `豬血糕範圍 +${upgradeData.getNormal("cilantro").rangeBonus}`,
       cost: null, // SPEC § 2.3.4: 無消耗
       effect: (state) => {
-        state.bloodCakeRangeBonus += UPGRADE_CONFIG.normal.cilantro.rangeBonus;
+        state.bloodCakeRangeBonus +=
+          upgradeData.getNormal("cilantro").rangeBonus ?? 0;
       },
     },
   ];
@@ -141,60 +144,63 @@ export class UpgradeSystem extends InjectableSystem {
     {
       id: "discount",
       name: "打折",
-      description: `臭豆腐/珍珠奶茶/豬血糕消耗 -${UPGRADE_CONFIG.boss.discount.costReduction}`,
+      description: `臭豆腐/珍珠奶茶/豬血糕消耗 -${upgradeData.getBoss("discount").costReduction}`,
       cost: null,
       effect: (state) => {
-        state.recipeCostReduction += UPGRADE_CONFIG.boss.discount.costReduction;
+        state.recipeCostReduction +=
+          upgradeData.getBoss("discount").costReduction ?? 0;
       },
     },
     {
       id: "bigEater",
       name: "大胃王",
-      description: `彈匣容量 +${UPGRADE_CONFIG.boss.bigEater.magazineBonus}`,
+      description: `彈匣容量 +${upgradeData.getBoss("bigEater").magazineBonus}`,
       cost: null,
       effect: (state) => {
-        state.magazineMultiplier += UPGRADE_CONFIG.boss.bigEater.magazineBonus;
+        state.magazineMultiplier +=
+          upgradeData.getBoss("bigEater").magazineBonus ?? 0;
       },
     },
     {
       id: "fastEat",
       name: "快吃",
-      description: `蚵仔煎傷害 +${UPGRADE_CONFIG.boss.fastEat.damageBonus * 100}%`,
+      description: `蚵仔煎傷害 +${(upgradeData.getBoss("fastEat").damageBonus ?? 0) * 100}%`,
       cost: null,
       effect: (state) => {
-        state.killThresholdDivisor += UPGRADE_CONFIG.boss.fastEat.damageBonus;
+        state.killThresholdDivisor +=
+          upgradeData.getBoss("fastEat").damageBonus ?? 0;
       },
     },
     {
       id: "hunger30",
       name: "飢餓三十",
-      description: `特殊子彈 Buff 時間 +${UPGRADE_CONFIG.boss.hunger30.durationBonus}s`,
+      description: `特殊子彈 Buff 時間 +${upgradeData.getBoss("hunger30").durationBonus}s`,
       cost: null,
       effect: (state) => {
         state.buffDurationMultiplier +=
-          UPGRADE_CONFIG.boss.hunger30.durationBonus;
+          upgradeData.getBoss("hunger30").durationBonus ?? 0;
       },
     },
     {
       id: "veryHungry",
       name: "好餓好餓",
-      description: `換彈時間 -${UPGRADE_CONFIG.boss.veryHungry.reloadReduction}s`,
+      description: `換彈時間 -${upgradeData.getBoss("veryHungry").reloadReduction}s`,
       cost: null,
       effect: (state) => {
         state.reloadTimeReduction +=
-          UPGRADE_CONFIG.boss.veryHungry.reloadReduction;
+          upgradeData.getBoss("veryHungry").reloadReduction ?? 0;
       },
     },
     {
       id: "buffet",
       name: "總匯吃到飽",
-      description: `夜市總匯連鎖 ×${UPGRADE_CONFIG.boss.buffet.chainMultiplier}、衰減 -${UPGRADE_CONFIG.boss.buffet.decayReduction * 100}%`,
+      description: `夜市總匯連鎖 ×${upgradeData.getBoss("buffet").chainMultiplier}、衰減 -${(upgradeData.getBoss("buffet").decayReduction ?? 0) * 100}%`,
       cost: null,
       effect: (state) => {
         state.nightMarketChainMultiplier *=
-          UPGRADE_CONFIG.boss.buffet.chainMultiplier;
+          upgradeData.getBoss("buffet").chainMultiplier ?? 1;
         state.nightMarketDecayReduction +=
-          UPGRADE_CONFIG.boss.buffet.decayReduction;
+          upgradeData.getBoss("buffet").decayReduction ?? 0;
       },
     },
   ];
@@ -254,13 +260,13 @@ export class UpgradeSystem extends InjectableSystem {
     this.isPendingUpgrade = true;
 
     // Determine upgrade pool based on wave type
-    const isBossWave = data.waveNumber % WAVE_CONFIG.bossWaveInterval === 0;
+    const isBossWave = data.waveNumber % waveData.bossWaveInterval === 0;
     const pool = isBossWave ? this.bossUpgrades : this.normalUpgrades;
 
     // Randomly select options (SPEC § 2.3.4)
     this.currentOptions = this.selectRandomUpgrades(
       pool,
-      UPGRADE_CONFIG.optionsCount,
+      upgradeData.optionsCount,
     );
   }
 

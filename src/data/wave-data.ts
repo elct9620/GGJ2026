@@ -76,14 +76,3 @@ export class WaveData {
 
 /** Default WaveData instance */
 export const waveData = new WaveData();
-
-// Backwards compatibility exports
-/** @deprecated Use waveData directly */
-export const WAVE_CONFIG = {
-  bossWaveInterval: waveData.bossWaveInterval,
-  enemyMultiplier: waveData.enemyMultiplier,
-  waveCompleteDelayMs: waveData.waveCompleteDelayMs,
-  spawnIntervalMin: waveData.spawnIntervalMin,
-  spawnIntervalMax: waveData.spawnIntervalMax,
-  spawnProbability: waveData.spawnProbability,
-};

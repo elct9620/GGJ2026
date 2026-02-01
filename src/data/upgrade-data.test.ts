@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { UpgradeData, upgradeData, UPGRADE_CONFIG } from "./upgrade-data";
+import { UpgradeData, upgradeData } from "./upgrade-data";
 
 describe("UpgradeData", () => {
   describe("normal upgrades", () => {
@@ -133,14 +133,6 @@ describe("UpgradeData", () => {
       const customUpgradeData = new UpgradeData(customJson);
       expect(customUpgradeData.getNormal("spicy").damageBonus).toBe(1.0);
       expect(customUpgradeData.optionsCount).toBe(3);
-    });
-  });
-
-  describe("backwards compatibility", () => {
-    it("UPGRADE_CONFIG should work", () => {
-      expect(UPGRADE_CONFIG.normal.spicy.damageBonus).toBe(0.5);
-      expect(UPGRADE_CONFIG.boss.discount.costReduction).toBe(1);
-      expect(UPGRADE_CONFIG.optionsCount).toBe(2);
     });
   });
 });

@@ -4,11 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  HitEffectData,
-  hitEffectData,
-  HIT_EFFECTS_CONFIG,
-} from "./hit-effect-data";
+import { HitEffectData, hitEffectData } from "./hit-effect-data";
 
 describe("HitEffectData", () => {
   describe("flash configs", () => {
@@ -115,14 +111,6 @@ describe("HitEffectData", () => {
       const customHitEffectData = new HitEffectData(customJson);
       expect(customHitEffectData.getFlash("normal").color).toBe(0xff0000);
       expect(customHitEffectData.knockback.distance).toBe(30);
-    });
-  });
-
-  describe("backwards compatibility", () => {
-    it("HIT_EFFECTS_CONFIG should work", () => {
-      expect(HIT_EFFECTS_CONFIG.flash.normal.color).toBe(16764108); // 0xffcccc
-      expect(HIT_EFFECTS_CONFIG.knockback.distance).toBe(15);
-      expect(HIT_EFFECTS_CONFIG.screenShake.normal.magnitude).toBe(2);
     });
   });
 });

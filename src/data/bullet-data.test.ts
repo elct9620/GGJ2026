@@ -4,19 +4,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { SpecialBulletType } from "../core/data";
+import { SpecialBulletType } from "../core/types";
 import { AssetKeys } from "../core/assets";
-import {
-  BulletData,
-  bulletData,
-  getBulletProperties,
-  getBulletSize,
-  getBulletColor,
-  getHitEffectConfigKey,
-  getVisualEffectConfig,
-  getPlayerAssetForBuff,
-  getDirHintAssetForBuff,
-} from "./bullet-data";
+import { BulletData, bulletData } from "./bullet-data";
 
 describe("BulletData", () => {
   describe("data structure", () => {
@@ -246,43 +236,6 @@ describe("BulletData", () => {
 
       const customBulletData = new BulletData(customJson);
       expect(customBulletData.getSize(SpecialBulletType.None)).toBe(100);
-    });
-  });
-
-  describe("backwards compatibility", () => {
-    it("getBulletProperties should work", () => {
-      const props = getBulletProperties(SpecialBulletType.NightMarket);
-      expect(props.size).toBe(48);
-      expect(props.configKey).toBe("nightMarket");
-    });
-
-    it("getBulletSize should work", () => {
-      expect(getBulletSize(SpecialBulletType.None)).toBe(24);
-    });
-
-    it("getBulletColor should work", () => {
-      expect(getBulletColor(SpecialBulletType.None)).toBe(16376591); // 0xf1c40f
-    });
-
-    it("getHitEffectConfigKey should work", () => {
-      expect(getHitEffectConfigKey(SpecialBulletType.None)).toBe("normal");
-    });
-
-    it("getVisualEffectConfig should work", () => {
-      const config = getVisualEffectConfig(SpecialBulletType.None);
-      expect(config.trailColor).toBe(16777215); // 0xffffff
-    });
-
-    it("getPlayerAssetForBuff should work", () => {
-      expect(getPlayerAssetForBuff(SpecialBulletType.None)).toBe(
-        AssetKeys.playerBase,
-      );
-    });
-
-    it("getDirHintAssetForBuff should work", () => {
-      expect(getDirHintAssetForBuff(SpecialBulletType.BubbleTea)).toBe(
-        AssetKeys.playerDirHint02,
-      );
     });
   });
 });

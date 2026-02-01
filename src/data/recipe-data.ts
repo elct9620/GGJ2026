@@ -4,12 +4,8 @@
  * SPEC § 2.3.3: 特殊子彈配方
  */
 
-import {
-  createData,
-  type Data,
-  FoodType,
-  SpecialBulletType,
-} from "../core/data";
+import { createData, type Data } from "./data";
+import { FoodType, SpecialBulletType } from "../core/types";
 import recipesJson from "./recipes.json";
 
 /**
@@ -169,31 +165,3 @@ export class RecipeData {
 
 /** Default RecipeData instance */
 export const recipeData = new RecipeData();
-
-// Backwards compatibility exports
-/** @deprecated Use recipeData.entries instead */
-export const RECIPES = recipeData.entries;
-
-/**
- * Recipe ID to SpecialBulletType mapping (SPEC § 2.3.3)
- * @deprecated Use recipeData.getBuffType() instead
- */
-export const RECIPE_BUFF_MAPPING: Record<string, SpecialBulletType> =
-  Object.fromEntries(
-    Object.entries(recipeData.entries).map(([id, recipe]) => [
-      id,
-      recipe.buffType,
-    ]),
-  );
-
-/**
- * Recipe display configurations for HUD (SPEC § 2.3.3)
- * @deprecated Use recipeData.getDisplay() instead
- */
-export const RECIPE_DISPLAY: Record<string, RecipeDisplayConfig> =
-  Object.fromEntries(
-    Object.entries(recipeData.entries).map(([id, recipe]) => [
-      id,
-      recipe.display,
-    ]),
-  );

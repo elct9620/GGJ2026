@@ -7,7 +7,7 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
-import { WAVE_CONFIG, ENEMY_CONFIG } from "../config";
+import { waveData, enemyData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import type { GameStateManager } from "../core/game-state";
@@ -159,13 +159,13 @@ export class WaveSystem extends InjectableSystem {
     this.eventQueue.publish(EventType.WaveStart, { waveNumber });
 
     // Calculate enemy count (SPEC § 2.3.5)
-    const enemyCount = waveNumber * WAVE_CONFIG.enemyMultiplier;
+    const enemyCount = waveNumber * waveData.enemyMultiplier;
 
     // Setup progressive spawning (SPEC § 2.3.5)
     this.enemiesToSpawn = enemyCount;
     this.spawnTimer = 0;
     this.nextSpawnInterval = 0; // First enemy spawns immediately
-    this.shouldSpawnBoss = waveNumber % WAVE_CONFIG.bossWaveInterval === 0;
+    this.shouldSpawnBoss = waveNumber % waveData.bossWaveInterval === 0;
 
     // Calculate total enemies for tracking
     const totalEnemies = enemyCount + (this.shouldSpawnBoss ? 1 : 0);
@@ -215,7 +215,7 @@ export class WaveSystem extends InjectableSystem {
    * SPEC § 2.3.5: Ghost 40%, RedGhost 20%, GreenGhost 20%, BlueGhost 20%
    */
   private selectEnemyType(): SpawnableEnemyType {
-    const { spawnProbability } = WAVE_CONFIG;
+    const { spawnProbability } = waveData;
     const roll = Math.random();
 
     // Cumulative probability check
@@ -243,7 +243,7 @@ export class WaveSystem extends InjectableSystem {
     if (!this.onSpawnEnemy) return;
 
     // SPEC § 2.3.5: X = spawn position (off-screen right)
-    const xPosition = ENEMY_CONFIG.spawnX;
+    const xPosition = enemyData.spawnX;
 
     // SPEC § 2.3.5: Y = random 0~1080
     const yPosition = this.getRandomYPosition();
@@ -260,10 +260,7 @@ export class WaveSystem extends InjectableSystem {
    * SPEC § 2.3.5: 2-3 seconds
    */
   private getRandomSpawnInterval(): number {
-    const { spawnIntervalMin, spawnIntervalMax } = WAVE_CONFIG;
-    return (
-      spawnIntervalMin + Math.random() * (spawnIntervalMax - spawnIntervalMin)
-    );
+    return waveData.getRandomSpawnInterval();
   }
 
   /**
@@ -309,7 +306,7 @@ export class WaveSystem extends InjectableSystem {
     this.eventQueue.publish(
       EventType.WaveComplete,
       { waveNumber: currentWave },
-      WAVE_CONFIG.waveCompleteDelayMs,
+      waveData.waveCompleteDelayMs,
     );
   }
 

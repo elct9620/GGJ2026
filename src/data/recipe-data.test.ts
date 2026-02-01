@@ -4,15 +4,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  RecipeData,
-  recipeData,
-  RECIPES,
-  RECIPE_BUFF_MAPPING,
-  RECIPE_DISPLAY,
-  FOOD_HUD_COLOR,
-} from "./recipe-data";
-import { FoodType, SpecialBulletType } from "../core/data";
+import { RecipeData, recipeData, FOOD_HUD_COLOR } from "./recipe-data";
+import { FoodType, SpecialBulletType } from "../core/types";
 
 describe("RecipeData", () => {
   describe("data structure", () => {
@@ -152,20 +145,6 @@ describe("RecipeData", () => {
 
       const customRecipeData = new RecipeData(customJson);
       expect(customRecipeData.get("1").name).toBe("Custom Recipe");
-    });
-  });
-
-  describe("backwards compatibility", () => {
-    it("RECIPES should work", () => {
-      expect(RECIPES["1"].name).toBe("夜市總匯");
-    });
-
-    it("RECIPE_BUFF_MAPPING should work", () => {
-      expect(RECIPE_BUFF_MAPPING["1"]).toBe(SpecialBulletType.NightMarket);
-    });
-
-    it("RECIPE_DISPLAY should work", () => {
-      expect(RECIPE_DISPLAY["1"].label).toBe("技能1");
     });
   });
 });

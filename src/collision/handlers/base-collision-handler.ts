@@ -5,9 +5,8 @@
  */
 
 import type { CollisionHandler, CollisionContext } from "../collision-handler";
-import type { SpecialBulletType } from "../../core/types";
-import { HIT_EFFECTS_CONFIG } from "../../config";
-import { getHitEffectConfigKey, type HitEffectConfigKey } from "../../values";
+import type { SpecialBulletType, HitEffectConfigKey } from "../../core/types";
+import { hitEffectData, bulletData } from "../../data";
 
 /**
  * Abstract base class for collision handlers
@@ -35,7 +34,7 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    */
   protected applyFlashEffect(context: CollisionContext): void {
     const configKey = this.getConfigKey();
-    const config = HIT_EFFECTS_CONFIG.flash[configKey];
+    const config = hitEffectData.getFlash(configKey);
     context.enemy.flashHit(config.color, config.duration);
   }
 
@@ -44,7 +43,7 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * Universal: 15px rightward displacement over 80ms
    */
   protected applyKnockback(context: CollisionContext): void {
-    const { distance, duration } = HIT_EFFECTS_CONFIG.knockback;
+    const { distance, duration } = hitEffectData.knockback;
     context.enemy.applyKnockback(distance, duration);
   }
 
@@ -54,7 +53,7 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    */
   protected triggerScreenShake(context: CollisionContext): void {
     const configKey = this.getConfigKey();
-    const config = HIT_EFFECTS_CONFIG.screenShake[configKey];
+    const config = hitEffectData.getScreenShake(configKey);
     context.visualEffects?.triggerScreenShake(
       config.magnitude,
       config.duration,
@@ -73,9 +72,9 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
 
   /**
    * Get config key based on bullet type
-   * Uses BulletTypeRegistry for centralized property lookup
+   * Uses BulletData for centralized property lookup
    */
   private getConfigKey(): HitEffectConfigKey {
-    return getHitEffectConfigKey(this.bulletType);
+    return bulletData.getHitEffectConfigKey(this.bulletType);
   }
 }

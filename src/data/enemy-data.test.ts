@@ -4,18 +4,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  EnemyData,
-  enemyData,
-  getEnemyProperties,
-  getEnemyAssetKey,
-  getEnemySpeed,
-  getEnemySize,
-  getEnemyFoodDrop,
-  shouldShowHealthBar,
-  getEnemyHealthForWave,
-} from "./enemy-data";
-import { EnemyType, FoodType } from "../core/data";
+import { EnemyData, enemyData } from "./enemy-data";
+import { EnemyType, FoodType } from "../core/types";
 import { AssetKeys } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
 
@@ -251,37 +241,6 @@ describe("EnemyData", () => {
       const customEnemyData = new EnemyData(customJson);
       expect(customEnemyData.get(EnemyType.Ghost).baseHealth).toBe(5);
       expect(customEnemyData.spawnX).toBe(2000);
-    });
-  });
-
-  describe("backwards compatibility", () => {
-    it("getEnemyProperties should work", () => {
-      const props = getEnemyProperties(EnemyType.Ghost);
-      expect(props.baseHealth).toBe(1);
-    });
-
-    it("getEnemyAssetKey should work", () => {
-      expect(getEnemyAssetKey(EnemyType.Ghost)).toBe(AssetKeys.ghost);
-    });
-
-    it("getEnemySpeed should work", () => {
-      expect(getEnemySpeed(EnemyType.Ghost)).toBe(50);
-    });
-
-    it("getEnemySize should work", () => {
-      expect(getEnemySize(EnemyType.Ghost)).toBe(LAYOUT.ENEMY_SIZE);
-    });
-
-    it("getEnemyFoodDrop should work", () => {
-      expect(getEnemyFoodDrop(EnemyType.RedGhost)).toBe(FoodType.Tofu);
-    });
-
-    it("shouldShowHealthBar should work", () => {
-      expect(shouldShowHealthBar(EnemyType.Ghost)).toBe(false);
-    });
-
-    it("getEnemyHealthForWave should work", () => {
-      expect(getEnemyHealthForWave(EnemyType.Ghost, 1)).toBe(1);
     });
   });
 });

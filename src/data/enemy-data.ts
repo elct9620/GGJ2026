@@ -4,19 +4,18 @@
  * SPEC § 2.6.2: Enemy types and their properties
  */
 
+import { createData, type Data } from "./data";
 import {
-  createData,
-  type Data,
   EnemyType,
   isEliteType,
   FoodType,
   type EnemyTypeProperties,
-} from "../core/data";
+} from "../core/types";
 import { type AssetKey } from "../core/assets";
 import enemyJson from "./enemies.json";
 
 // Re-export types for backwards compatibility
-export type { EnemyTypeProperties } from "../core/data";
+export type { EnemyTypeProperties } from "../core/types";
 
 /**
  * HP scaling configuration
@@ -157,45 +156,3 @@ export class EnemyData {
 
 /** Default EnemyData instance */
 export const enemyData = new EnemyData();
-
-// Backwards compatibility exports
-/** @deprecated Use enemyData.entries instead */
-export const EnemyTypeRegistry = enemyData;
-
-/** @deprecated Use enemyData.get() instead */
-export function getEnemyProperties(enemyType: EnemyType): EnemyTypeProperties {
-  return enemyData.get(enemyType);
-}
-
-/** @deprecated Use enemyData.getAssetKey() instead */
-export function getEnemyAssetKey(enemyType: EnemyType): AssetKey {
-  return enemyData.getAssetKey(enemyType);
-}
-
-/** @deprecated Use enemyData.getSpeed() instead */
-export function getEnemySpeed(enemyType: EnemyType): number {
-  return enemyData.getSpeed(enemyType);
-}
-
-/** @deprecated Use enemyData.getSize() instead */
-export function getEnemySize(enemyType: EnemyType): number {
-  return enemyData.getSize(enemyType);
-}
-
-/** @deprecated Use enemyData.getFoodDrop() instead */
-export function getEnemyFoodDrop(enemyType: EnemyType): FoodType | null {
-  return enemyData.getFoodDrop(enemyType);
-}
-
-/** @deprecated Use enemyData.shouldShowHealthBar() instead */
-export function shouldShowHealthBar(enemyType: EnemyType): boolean {
-  return enemyData.shouldShowHealthBar(enemyType);
-}
-
-/** @deprecated Use enemyData.getHealthForWave() instead */
-export function getEnemyHealthForWave(
-  enemyType: EnemyType,
-  wave: number,
-): number {
-  return enemyData.getHealthForWave(enemyType, wave);
-}

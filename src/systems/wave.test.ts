@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { WaveSystem } from "./wave";
 import { EventQueue, EventType } from "./event-queue";
-import { WAVE_CONFIG } from "../config";
+import { waveData } from "../data";
 import { LAYOUT } from "../utils/constants";
 import { GameStateManager } from "../core/game-state";
 
@@ -20,8 +20,8 @@ function simulateFullWaveSpawn(
   waveSystem: WaveSystem,
   waveNumber: number,
 ): void {
-  const hasBoss = waveNumber % WAVE_CONFIG.bossWaveInterval === 0;
-  const regularEnemies = waveNumber * WAVE_CONFIG.enemyMultiplier;
+  const hasBoss = waveNumber % waveData.bossWaveInterval === 0;
+  const regularEnemies = waveNumber * waveData.enemyMultiplier;
   const totalEnemies = regularEnemies + (hasBoss ? 1 : 0);
 
   // First enemy spawns immediately
@@ -29,7 +29,7 @@ function simulateFullWaveSpawn(
 
   // Spawn remaining enemies one by one
   for (let i = 1; i < totalEnemies; i++) {
-    waveSystem.update(WAVE_CONFIG.spawnIntervalMax);
+    waveSystem.update(waveData.spawnIntervalMax);
   }
 }
 
@@ -166,7 +166,7 @@ describe("WaveSystem", () => {
 
       // Spawn enemies 2-9 (8 more, need 9 more for total 10)
       for (let i = 1; i < 9; i++) {
-        waveSystem.update(WAVE_CONFIG.spawnIntervalMax);
+        waveSystem.update(waveData.spawnIntervalMax);
       }
 
       // At this point we should have 9 regular enemies, and still 1 to spawn
@@ -175,7 +175,7 @@ describe("WaveSystem", () => {
       expect(waveSystem.isBossSpawnPending()).toBe(true);
 
       // Spawn the 10th regular enemy
-      waveSystem.update(WAVE_CONFIG.spawnIntervalMax);
+      waveSystem.update(waveData.spawnIntervalMax);
       const regularEnemies = spawnedEnemies.filter((e) =>
         isRegularEnemy(e.type),
       );

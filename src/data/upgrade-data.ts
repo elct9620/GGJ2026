@@ -4,7 +4,7 @@
  * SPEC § 2.3.4: Upgrade System
  */
 
-import { type FoodType } from "../core/data";
+import { type FoodType } from "../core/types";
 import upgradesJson from "./upgrades.json";
 
 /**
@@ -132,26 +132,3 @@ export class UpgradeData {
 
 /** Default UpgradeData instance */
 export const upgradeData = new UpgradeData();
-
-// Backwards compatibility exports
-/** @deprecated Use upgradeData.normal and upgradeData.boss instead */
-export const UPGRADE_CONFIG = upgradesJson as {
-  normal: {
-    spicy: { damageBonus: number; cost: UpgradeCost };
-    coconut: { bulletBonus: number; cost: UpgradeCost };
-    cilantro: { rangeBonus: number; cost: UpgradeCost };
-  };
-  boss: {
-    discount: { costReduction: number; maxStacks: number };
-    bigEater: { magazineBonus: number; maxStacks: number };
-    fastEat: { damageBonus: number; maxStacks: number };
-    hunger30: { durationBonus: number; maxStacks: number };
-    buffet: {
-      chainMultiplier: number;
-      decayReduction: number;
-      maxStacks: number;
-    };
-    veryHungry: { reloadReduction: number; maxStacks: number };
-  };
-  optionsCount: number;
-};

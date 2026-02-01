@@ -6,17 +6,8 @@
  * 參考 SPEC.md § 2.3 - § 2.6 的設計規格
  *
  * NOTE: 大部分遊戲資料已外部化到 src/data/*.json
- * 以下 re-export 供向後相容使用，建議直接使用 src/data/ 中的 Data Catalog
+ * 請直接使用 src/data/ 中的 Data Catalog (upgradeData, waveData, hitEffectData 等)
  */
-
-// =============================================================================
-// RE-EXPORTS FROM DATA CATALOGS (向後相容)
-// =============================================================================
-
-// Re-export from data catalogs for backwards compatibility
-export { UPGRADE_CONFIG } from "./data/upgrade-data";
-export { WAVE_CONFIG } from "./data/wave-data";
-export { HIT_EFFECTS_CONFIG } from "./data/hit-effect-data";
 
 // =============================================================================
 // PLAYER CONFIG (SPEC § 2.6.1) - 系統常數，保留在此
@@ -33,8 +24,8 @@ export const PLAYER_CONFIG = {
 } as const;
 
 // =============================================================================
-// ENEMY CONFIG (SPEC § 2.6.2) - 已外部化到 src/data/enemies.json
-// 向後相容：保留匯出，但建議使用 enemyData
+// ENEMY CONFIG (SPEC § 2.6.2) - 系統常數，保留在此
+// NOTE: 詳細資料請使用 enemyData from "src/data"
 // =============================================================================
 export const ENEMY_CONFIG = {
   ghost: {
@@ -69,15 +60,15 @@ export const ENEMY_CONFIG = {
 } as const;
 
 // =============================================================================
-// BULLET CONFIG (SPEC § 2.6.3) - 部分外部化到 src/data/bullets.json
-// 向後相容：保留匯出，但建議使用 bulletData
+// BULLET CONFIG (SPEC § 2.6.3) - 系統常數，保留在此
+// NOTE: 詳細資料請使用 bulletData from "src/data"
 // =============================================================================
 export const BULLET_CONFIG = {
   /** 普通子彈速度 (px/s) */
   speed: 400,
   /** 普通子彈傷害 */
   normalDamage: 1,
-  /** 子彈顏色 (各種類型) - 已外部化到 bullets.json */
+  /** 子彈顏色 (各種類型) - 建議使用 bulletData.getColor() */
   colors: {
     normal: 0xf1c40f,
     nightMarket: 0x9b59b6,
@@ -86,7 +77,7 @@ export const BULLET_CONFIG = {
     bloodCake: 0xe74c3c,
     oysterOmelette: 0xe67e22,
   },
-  /** 各子彈類型尺寸配置 - 已外部化到 bullets.json */
+  /** 各子彈類型尺寸配置 - 建議使用 bulletData.getSize() */
   sizes: {
     normal: 24,
     nightMarket: 48,
@@ -128,8 +119,8 @@ export const KILL_COUNTER_CONFIG = {
 } as const;
 
 // =============================================================================
-// RECIPE CONFIG (SPEC § 2.3.3) - 已外部化到 src/data/recipes.json
-// 向後相容：保留匯出，但建議使用 recipeData
+// RECIPE CONFIG (SPEC § 2.3.3) - 系統常數，保留在此
+// NOTE: 詳細資料請使用 recipeData from "src/data"
 // =============================================================================
 export const RECIPE_CONFIG = {
   /** 夜市總匯 */
@@ -178,11 +169,3 @@ export type CombatConfig = typeof COMBAT_CONFIG;
 export type BoothConfig = typeof BOOTH_CONFIG;
 export type KillCounterConfig = typeof KILL_COUNTER_CONFIG;
 export type RecipeConfig = typeof RECIPE_CONFIG;
-
-// Re-exported types from data catalogs
-import type { WAVE_CONFIG as WaveConfigType } from "./data/wave-data";
-import type { UPGRADE_CONFIG as UpgradeConfigType } from "./data/upgrade-data";
-import type { HIT_EFFECTS_CONFIG as HitEffectsConfigType } from "./data/hit-effect-data";
-export type WaveConfig = typeof WaveConfigType;
-export type UpgradeConfig = typeof UpgradeConfigType;
-export type HitEffectsConfig = typeof HitEffectsConfigType;

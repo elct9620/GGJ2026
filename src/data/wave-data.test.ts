@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { WaveData, waveData, WAVE_CONFIG } from "./wave-data";
+import { WaveData, waveData } from "./wave-data";
 
 describe("WaveData", () => {
   describe("configuration values", () => {
@@ -103,14 +103,6 @@ describe("WaveData", () => {
       expect(customWaveData.isBossWave(10)).toBe(true);
       expect(customWaveData.isBossWave(5)).toBe(false);
       expect(customWaveData.getEnemyCount(5)).toBe(15);
-    });
-  });
-
-  describe("backwards compatibility", () => {
-    it("WAVE_CONFIG should work", () => {
-      expect(WAVE_CONFIG.bossWaveInterval).toBe(5);
-      expect(WAVE_CONFIG.enemyMultiplier).toBe(2);
-      expect(WAVE_CONFIG.spawnProbability.ghost).toBe(0.4);
     });
   });
 });

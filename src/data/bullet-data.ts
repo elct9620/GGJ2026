@@ -4,14 +4,13 @@
  * SPEC § 2.6.3: Bullet visual and collision properties
  */
 
+import { createData, type Data } from "./data";
 import {
-  createData,
-  type Data,
   SpecialBulletType,
   type BulletTypeProperties,
   type VisualEffectConfig,
   type HitEffectConfigKey,
-} from "../core/data";
+} from "../core/types";
 import { type AssetKey } from "../core/assets";
 import bulletJson from "./bullets.json";
 
@@ -20,7 +19,7 @@ export type {
   BulletTypeProperties,
   VisualEffectConfig,
   HitEffectConfigKey,
-} from "../core/data";
+} from "../core/types";
 
 /**
  * JSON representation of bullet properties (asset keys as strings)
@@ -118,52 +117,3 @@ export class BulletData {
 
 /** Default BulletData instance */
 export const bulletData = new BulletData();
-
-// Backwards compatibility exports
-/** @deprecated Use bulletData.entries instead */
-export const BulletTypeRegistry = bulletData;
-
-/** @deprecated Use bulletData.get() instead */
-export function getBulletProperties(
-  bulletType: SpecialBulletType,
-): BulletTypeProperties {
-  return bulletData.get(bulletType);
-}
-
-/** @deprecated Use bulletData.getSize() instead */
-export function getBulletSize(bulletType: SpecialBulletType): number {
-  return bulletData.getSize(bulletType);
-}
-
-/** @deprecated Use bulletData.getColor() instead */
-export function getBulletColor(bulletType: SpecialBulletType): number {
-  return bulletData.getColor(bulletType);
-}
-
-/** @deprecated Use bulletData.getHitEffectConfigKey() instead */
-export function getHitEffectConfigKey(
-  bulletType: SpecialBulletType,
-): HitEffectConfigKey {
-  return bulletData.getHitEffectConfigKey(bulletType);
-}
-
-/** @deprecated Use bulletData.getVisualEffectConfig() instead */
-export function getVisualEffectConfig(
-  bulletType: SpecialBulletType,
-): VisualEffectConfig {
-  return bulletData.getVisualEffectConfig(bulletType);
-}
-
-/** @deprecated Use bulletData.getPlayerAssetForBuff() instead */
-export function getPlayerAssetForBuff(
-  buffType: SpecialBulletType,
-): BulletTypeProperties["playerAsset"] {
-  return bulletData.getPlayerAssetForBuff(buffType);
-}
-
-/** @deprecated Use bulletData.getDirHintAssetForBuff() instead */
-export function getDirHintAssetForBuff(
-  buffType: SpecialBulletType,
-): BulletTypeProperties["dirHintAsset"] {
-  return bulletData.getDirHintAssetForBuff(buffType);
-}

@@ -4,7 +4,7 @@
  * SPEC § 2.6.3: Hit visual effects
  */
 
-import { type HitEffectConfigKey } from "../core/data";
+import { type HitEffectConfigKey } from "../core/types";
 import hitEffectsJson from "./hit-effects.json";
 
 /**
@@ -97,11 +97,3 @@ export class HitEffectData {
 
 /** Default HitEffectData instance */
 export const hitEffectData = new HitEffectData();
-
-// Backwards compatibility exports
-/** @deprecated Use hitEffectData directly */
-export const HIT_EFFECTS_CONFIG = {
-  flash: hitEffectData.flash,
-  knockback: hitEffectData.knockback,
-  screenShake: hitEffectData.screenShake,
-};
