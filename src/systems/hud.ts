@@ -54,26 +54,30 @@ export class HUDSystem extends InjectableSystem {
     this.bottomHUD = new Container();
 
     // Top HUD text elements (SPEC § 2.7.3: 86px height)
-    const topHudY = 33;
+    // Based on ui_rough_pixelSpec.png layout:
+    // - Center-top: "剩餘敵人:20" 50px font
+    // - Center-bottom: "餓鬼人潮:1/3" 33px font (512×56px area)
+    // - Right: "分數:9999" 50px font
 
-    // Left: "剩餘敵人:20" - 50px font (from ui_rough_pixelSpec.png)
-    this.enemyCountText = this.createText("剩餘敵人: 0", 50, topHudY, 50);
+    // Center-top: "剩餘敵人:20" - 50px font
+    this.enemyCountText = this.createText(
+      "剩餘敵人: 0",
+      CANVAS_WIDTH / 2 - 100,
+      10,
+      50,
+    );
 
-    // Center: "餓鬼人潮:1/3" (512×56px area, centered) - 33px font
+    // Center-bottom: "餓鬼人潮:1/3" (512×56px area) - 33px font
     this.waveText = this.createText(
       "餓鬼人潮: 1/1",
       CANVAS_WIDTH / 2 - 80,
-      topHudY,
+      50,
       33,
     );
 
-    // Right: "分數:9999" - 50px font
-    this.scoreText = this.createText(
-      "分數: 0",
-      CANVAS_WIDTH - 150,
-      topHudY,
-      50,
-    );
+    // Right: "分數:9999" - 50px font (right-aligned to prevent overflow)
+    this.scoreText = this.createText("分數: 0", CANVAS_WIDTH - 20, 10, 50);
+    this.scoreText.anchor.set(1, 0); // Right-align
 
     // Create bottom UI base sprites
     this.upgradeBaseSprite = this.createUpgradeBaseSprite();
