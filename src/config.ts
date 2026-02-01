@@ -175,6 +175,8 @@ export const RECIPE_CONFIG = {
     baseDamage: 2,
     /** 命中減速效果 */
     slowEffect: 0.1, // -10% 敵人移速
+    /** 追蹤範圍 (px) - 基礎範圍約為遊戲區域寬度的 1/3 */
+    trackingRange: 500,
   },
   /** 蚵仔煎 - 百分比傷害 (SPEC § 2.3.3) */
   oysterOmelet: {
@@ -205,7 +207,7 @@ export const UPGRADE_CONFIG = {
     },
     /** 加香菜 - 豬血糕範圍加成 */
     cilantro: {
-      rangeBonus: 0.5,
+      rangeBonus: 100, // +100px per upgrade
       cost: { foodType: "BloodCake" as const, amount: 3 },
     },
   },

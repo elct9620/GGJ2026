@@ -548,7 +548,7 @@ describe("CombatSystem", () => {
       const spawnedBullets: Bullet[] = [];
       combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
 
-      // Add an enemy to track
+      // Add an enemy to track (within tracking range)
       const enemy = new Enemy(EnemyType.Ghost, new Vector(800, 540));
       enemies.push(enemy);
 
@@ -562,6 +562,52 @@ describe("CombatSystem", () => {
       expect(spawnedBullets).toHaveLength(1);
       expect(spawnedBullets[0].isTracking).toBe(true);
       expect(spawnedBullets[0].trackingTarget).toBe(enemy);
+    });
+
+    it("should not track enemy beyond tracking range (Issue #59)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Player at default position (assume center: ~960, 540)
+      // Add an enemy far beyond tracking range (500px base range)
+      // Enemy at x=1500 is ~540px away, beyond 500px range
+      const farEnemy = new Enemy(EnemyType.Ghost, new Vector(1500, 540));
+      enemies.push(farEnemy);
+
+      // Activate BloodCake buff
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
+      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+
+      const result = combatSystem.performShoot();
+
+      expect(result).toHaveLength(1);
+      expect(spawnedBullets).toHaveLength(1);
+      // Bullet should not track (target too far)
+      expect(spawnedBullets[0].isTracking).toBe(false);
+      expect(spawnedBullets[0].trackingTarget).toBeNull();
+    });
+
+    it("should track nearest enemy within range when multiple enemies exist (Issue #59)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Add enemies at different distances
+      const farEnemy = new Enemy(EnemyType.Ghost, new Vector(1500, 540)); // Beyond range
+      const nearEnemy = new Enemy(EnemyType.Ghost, new Vector(700, 540)); // Within range
+      enemies.push(farEnemy);
+      enemies.push(nearEnemy);
+
+      // Activate BloodCake buff
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
+      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+
+      const result = combatSystem.performShoot();
+
+      expect(result).toHaveLength(1);
+      expect(spawnedBullets).toHaveLength(1);
+      // Should track the nearest enemy within range
+      expect(spawnedBullets[0].isTracking).toBe(true);
+      expect(spawnedBullets[0].trackingTarget).toBe(nearEnemy);
     });
 
     it("should return empty array when no spawner is set", () => {
