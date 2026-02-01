@@ -11,6 +11,7 @@ import { EventQueue, EventType } from "./event-queue";
 import { Enemy } from "../entities/enemy";
 import { Vector } from "../values/vector";
 import { LAYOUT } from "../utils/constants";
+import { GameStateManager } from "../core/game-state";
 
 // Booth Pool position based on LAYOUT constants (SPEC § 2.7.2)
 // Pool area: x=340 to x=468 (128px wide), y=136 to y=904 (768px tall, 3x256)
@@ -25,12 +26,15 @@ describe("BoxSystem", () => {
   let boxSystem: BoxSystem;
   let boothSystem: BoothSystem;
   let eventQueue: EventQueue;
+  let gameState: GameStateManager;
   let enemies: Enemy[];
 
   beforeEach(() => {
     boxSystem = new BoxSystem();
     boothSystem = new BoothSystem();
     eventQueue = new EventQueue();
+    gameState = new GameStateManager();
+    gameState.initializeBooths();
     enemies = [];
 
     // Setup dependencies using injection API
@@ -39,8 +43,9 @@ describe("BoxSystem", () => {
     boxSystem.validateDependencies();
     boxSystem.setEnemies(enemies);
 
-    // Connect BoothSystem to EventQueue for food events
+    // Connect BoothSystem to EventQueue and GameState
     boothSystem.inject("EventQueue", eventQueue);
+    boothSystem.inject("GameState", gameState);
 
     boxSystem.initialize();
     boothSystem.initialize();

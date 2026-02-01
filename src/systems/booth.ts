@@ -1,37 +1,36 @@
-import { Container, Sprite, Text } from "pixi.js";
 import { FoodType, BoothId } from "../core/types";
 import { SystemPriority } from "../core/systems/system.interface";
 import { InjectableSystem } from "../core/systems/injectable";
 import { EventType } from "./event-queue";
-import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
-import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { GameStateManager } from "../core/game-state";
 
 /**
  * Booth system for storing food ingredients
  * Spec: § 2.3.1 Booth System
+ *
+ * This system operates on centralized booth state in GameStateManager.
+ * Rendering is handled by BoothRenderer (separation of concerns).
  */
 export class BoothSystem extends InjectableSystem {
   public readonly name = "BoothSystem";
   public readonly priority = SystemPriority.BOOTH;
 
-  private booths: Map<BoothId, Booth> = new Map();
-  private container: Container;
-  private backgroundSprite: Sprite | null = null;
-
   constructor() {
     super();
-    this.declareDependency(DependencyKeys.EventQueue, false); // Optional dependency
-    this.declareDependency(DependencyKeys.GameState, false); // Optional for resource provider
-    this.container = new Container();
-    this.initializeBackground();
-    this.initializeBooths();
+    this.declareDependency(DependencyKeys.EventQueue, false);
+    this.declareDependency(DependencyKeys.GameState, true);
+  }
+
+  /**
+   * Get GameState dependency
+   */
+  private get gameState(): GameStateManager {
+    return this.getDependency<GameStateManager>(DependencyKeys.GameState);
   }
 
   /**
    * Publish FoodStored event (SPEC § 2.3.7)
-   * Uses standardized publishEvent from InjectableSystem
    */
   private publishFoodStored(boothId: BoothId, foodType: FoodType): void {
     this.publishEvent(EventType.FoodStored, {
@@ -42,7 +41,6 @@ export class BoothSystem extends InjectableSystem {
 
   /**
    * Publish FoodConsumed event (SPEC § 2.3.7)
-   * Uses standardized publishEvent from InjectableSystem
    */
   private publishFoodConsumed(boothId: BoothId, amount: number): void {
     this.publishEvent(EventType.FoodConsumed, {
@@ -52,91 +50,24 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Initialize stalls background sprite
-   * SPEC § 2.7.2: 340×868 positioned at (0, 86)
-   */
-  private initializeBackground(): void {
-    this.backgroundSprite = new Sprite(getTexture(AssetKeys.stalls));
-    this.backgroundSprite.position.set(0, LAYOUT.GAME_AREA_Y);
-    this.backgroundSprite.width = LAYOUT.BOOTH_AREA_WIDTH;
-    this.backgroundSprite.height = LAYOUT.BOOTH_AREA_HEIGHT;
-    this.container.addChild(this.backgroundSprite);
-  }
-
-  /**
    * Initialize booth system (System lifecycle)
    */
   public initialize(): void {
-    // Booths are already initialized in constructor
-
-    // Register resource provider with GameStateManager
-    const gameState = this.getOptionalDependency<GameStateManager>(
-      DependencyKeys.GameState,
-    );
-    if (gameState) {
-      gameState.setResourceProvider(() => ({
-        pearl: this.getFoodCount(BoothId.Pearl),
-        tofu: this.getFoodCount(BoothId.Tofu),
-        bloodCake: this.getFoodCount(BoothId.BloodCake),
-      }));
-    }
+    // Booth state is initialized by GameScene via GameState.initializeBooths()
   }
 
   /**
    * Update method (System lifecycle)
-   * Booth state updates are triggered by external events
    */
   public update(_deltaTime: number): void {
-    // Booth updates are event-driven
-    // No per-frame update needed
+    // Booth updates are event-driven, no per-frame update needed
   }
 
   /**
-   * Clean up booth resources (System lifecycle)
+   * Clean up resources (System lifecycle)
    */
   public destroy(): void {
-    this.container.destroy({ children: true });
-    this.booths.clear();
-  }
-
-  private initializeBooths(): void {
-    // Create 3 booths (SPEC § 2.3.1)
-    // Booth 1: Tofu (豆腐)
-    // Booth 2: Pearl (珍珠)
-    // Booth 3: Blood Cake (米血)
-
-    // Layout based on ui_rough_pixelSpec.png (SPEC § 2.7.2)
-    // DropPool sprites are positioned right of baseline with 11px gap
-    const boothHeight = LAYOUT.BOOTH_HEIGHT;
-    const boothGap = LAYOUT.BOOTH_GAP; // 11px spacing (vertical between booths, horizontal from baseline)
-    const startX = LAYOUT.BASELINE_X + boothGap; // 340 + 11 = 351
-    // Y position: 129px from top of game area (from design spec)
-    const startY = LAYOUT.GAME_AREA_Y + LAYOUT.BOOTH_TOP_MARGIN; // 86 + 129 = 215
-
-    this.booths.set(
-      BoothId.Tofu,
-      new Booth(BoothId.Tofu, FoodType.Tofu, startX, startY, this.container),
-    );
-    this.booths.set(
-      BoothId.Pearl,
-      new Booth(
-        BoothId.Pearl,
-        FoodType.Pearl,
-        startX,
-        startY + boothHeight + boothGap,
-        this.container,
-      ),
-    );
-    this.booths.set(
-      BoothId.BloodCake,
-      new Booth(
-        BoothId.BloodCake,
-        FoodType.BloodCake,
-        startX,
-        startY + (boothHeight + boothGap) * 2,
-        this.container,
-      ),
-    );
+    // No resources to clean up (rendering handled by BoothRenderer)
   }
 
   /**
@@ -144,25 +75,24 @@ export class BoothSystem extends InjectableSystem {
    * Returns true if successful, false if booth is full
    */
   public storeFood(foodType: FoodType): boolean {
-    for (const [id, booth] of this.booths) {
-      if (booth.foodType === foodType) {
-        const success = booth.addFood();
-        if (success) {
-          this.publishFoodStored(id, foodType);
-        }
-        return success;
-      }
+    const success = this.gameState.storeFood(foodType);
+    if (success) {
+      const boothId = this.getBoothIdForFood(foodType);
+      this.publishFoodStored(boothId, foodType);
     }
-    return false;
+    return success;
   }
 
   /**
    * Retrieve food from booth for synthesis
-   * Returns true if successful, false if booth is empty
+   * Returns food type if successful, null if booth is empty
    */
   public retrieveFood(boothId: BoothId): FoodType | null {
-    const booth = this.booths.get(boothId);
-    if (booth && booth.removeFood()) {
+    const booth = this.gameState.booths.get(boothId);
+    if (!booth) return null;
+
+    const success = this.gameState.consumeFood(boothId, 1);
+    if (success) {
       this.publishFoodConsumed(boothId, 1);
       return booth.foodType;
     }
@@ -175,26 +105,18 @@ export class BoothSystem extends InjectableSystem {
    * SPEC § 2.3.3: 合成時消耗食材
    */
   public consumeFood(boothId: BoothId, amount: number): boolean {
-    const booth = this.booths.get(boothId);
-    if (!booth || booth.count < amount) {
-      return false;
+    const success = this.gameState.consumeFood(boothId, amount);
+    if (success) {
+      this.publishFoodConsumed(boothId, amount);
     }
-
-    for (let i = 0; i < amount; i++) {
-      booth.removeFood();
-    }
-
-    this.publishFoodConsumed(boothId, amount);
-
-    return true;
+    return success;
   }
 
   /**
    * Enemy steals food from booth
    */
   public stealFood(boothId: BoothId): boolean {
-    const booth = this.booths.get(boothId);
-    const success = booth ? booth.removeFood() : false;
+    const success = this.gameState.stealFood(boothId);
     if (success) {
       this.publishFoodConsumed(boothId, 1);
     }
@@ -202,178 +124,37 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Get booth container for rendering
-   */
-  public getContainer(): Container {
-    return this.container;
-  }
-
-  /**
    * Get food count for specific booth
    */
   public getFoodCount(boothId: BoothId): number {
-    return this.booths.get(boothId)?.count ?? 0;
+    return this.gameState.getBoothFoodCount(boothId);
   }
 
   /**
    * Reset all booths to empty state
    */
   public reset(): void {
-    for (const [_id, booth] of this.booths) {
-      booth.reset();
-    }
+    this.gameState.resetBooths();
   }
 
   /**
    * Get total food count across all booths
-   * Single Source of Truth for total food count
    */
   public getTotalFoodCount(): number {
-    let total = 0;
-    for (const booth of this.booths.values()) {
-      total += booth.count;
-    }
-    return total;
-  }
-}
-
-/**
- * Individual booth for storing one food type
- * Uses DropItemPool_*.png sprites at x=340 (baseline)
- * Exported for testing purposes
- */
-export class Booth {
-  public readonly id: BoothId;
-  public readonly foodType: FoodType;
-  public count: number = 0;
-  public readonly maxCapacity: number = 6; // SPEC § 2.3.1
-
-  private sprite: Sprite;
-  private countText: Text;
-  private nameText: Text;
-
-  constructor(
-    id: BoothId,
-    foodType: FoodType,
-    x: number,
-    y: number,
-    parent: Container,
-  ) {
-    this.id = id;
-    this.foodType = foodType;
-
-    // Create DropItemPool sprite
-    this.sprite = this.createSprite();
-    this.sprite.position.set(x, y);
-
-    this.countText = new Text({
-      text: "0/6",
-      style: {
-        fontFamily: GAME_FONT_FAMILY,
-        fontSize: 24,
-        fill: 0xffffff,
-      },
-    });
-
-    this.nameText = new Text({
-      text: this.getFoodName(),
-      style: {
-        fontFamily: GAME_FONT_FAMILY,
-        fontSize: 18,
-        fill: 0xffffff,
-      },
-    });
-
-    this.setupTextPositions(x, y);
-    parent.addChild(this.sprite);
-    parent.addChild(this.countText);
-    parent.addChild(this.nameText);
+    return this.gameState.getBoothTotalFoodCount();
   }
 
-  private createSprite(): Sprite {
-    // Map booth id to DropItemPool asset
-    // SPEC § 2.3.1: Booth color matches Elite enemy color
-    // - Tofu (Booth 1) = Red (RedGhost drops Tofu) → DropItemPool_0.png
-    // - Pearl (Booth 2) = Green (GreenGhost drops Pearl) → DropItemPool_2.png
-    // - BloodCake (Booth 3) = Blue (BlueGhost drops BloodCake) → DropItemPool_1.png
-    let assetKey: keyof typeof AssetKeys;
-    switch (this.id) {
-      case BoothId.Tofu:
-        assetKey = "boothPool0"; // Red
-        break;
-      case BoothId.Pearl:
-        assetKey = "boothPool2"; // Green
-        break;
-      case BoothId.BloodCake:
-        assetKey = "boothPool1"; // Blue
-        break;
-      default:
-        assetKey = "boothPool0";
-    }
-
-    const sprite = new Sprite(getTexture(AssetKeys[assetKey]));
-    sprite.width = LAYOUT.BOOTH_WIDTH; // 128
-    sprite.height = LAYOUT.BOOTH_HEIGHT; // 256
-    return sprite;
-  }
-
-  private getFoodName(): string {
-    switch (this.foodType) {
-      case FoodType.Pearl:
-        return "珍珠 (1)";
+  /**
+   * Get booth ID for a food type
+   */
+  private getBoothIdForFood(foodType: FoodType): BoothId {
+    switch (foodType) {
       case FoodType.Tofu:
-        return "豆腐 (2)";
+        return BoothId.Tofu;
+      case FoodType.Pearl:
+        return BoothId.Pearl;
       case FoodType.BloodCake:
-        return "米血 (3)";
+        return BoothId.BloodCake;
     }
-  }
-
-  private setupTextPositions(x: number, y: number): void {
-    // Position texts relative to DropItemPool sprite
-    this.nameText.position.set(x + 10, y + 10);
-    this.countText.position.set(x + 10, y + 220);
-  }
-
-  /**
-   * Add food to booth
-   * Returns true if successful, false if full
-   */
-  public addFood(): boolean {
-    if (this.count >= this.maxCapacity) {
-      return false; // Booth is full, food is lost (SPEC § 2.3.1)
-    }
-
-    this.count++;
-    this.updateVisuals();
-    return true;
-  }
-
-  /**
-   * Remove food from booth
-   * Returns true if successful, false if empty
-   */
-  public removeFood(): boolean {
-    if (this.count <= 0) {
-      return false; // Booth is empty
-    }
-
-    this.count--;
-    this.updateVisuals();
-    return true;
-  }
-
-  /**
-   * Update visual representation
-   */
-  private updateVisuals(): void {
-    this.countText.text = `${this.count}/${this.maxCapacity}`;
-  }
-
-  /**
-   * Reset booth to empty state
-   */
-  public reset(): void {
-    this.count = 0;
-    this.updateVisuals();
   }
 }

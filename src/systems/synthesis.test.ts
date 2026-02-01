@@ -27,6 +27,7 @@ describe("SynthesisSystem", () => {
     killCounterSystem = new KillCounterSystem();
     eventQueue = new EventQueue();
     gameState = new GameStateManager();
+    gameState.initializeBooths();
 
     // Inject dependencies using new API
     synthesisSystem.inject("InputSystem", inputSystem);
@@ -34,6 +35,10 @@ describe("SynthesisSystem", () => {
     synthesisSystem.inject("EventQueue", eventQueue);
     synthesisSystem.inject("KillCounterSystem", killCounterSystem);
     synthesisSystem.validateDependencies();
+
+    // Connect BoothSystem to GameState
+    boothSystem.inject("EventQueue", eventQueue);
+    boothSystem.inject("GameState", gameState);
 
     killCounterSystem.inject("EventQueue", eventQueue);
     killCounterSystem.inject("GameState", gameState);

@@ -3,7 +3,7 @@
  * Spec: § 2.4.2 User Journey, § 2.8.2 Defeat Condition
  */
 
-import { SpecialBulletType } from "./types";
+import { SpecialBulletType, FoodType, BoothId } from "./types";
 
 // ============================================
 // Upgrade State (SPEC § 2.3.4)
@@ -122,6 +122,20 @@ export interface ResourceState {
   bloodCake: number;
 }
 
+// ============================================
+// Booth State (SPEC § 2.3.1)
+// ============================================
+
+/**
+ * Individual booth state
+ * Stores food type, count, and max capacity
+ */
+export interface BoothState {
+  foodType: FoodType;
+  count: number;
+  maxCapacity: number; // Fixed at 6 per SPEC
+}
+
 /**
  * Centralized game state interface
  */
@@ -149,6 +163,9 @@ export interface GameStateInterface {
 
   // Resources (SPEC § 2.3.1) - read-only snapshot
   resources: ResourceState;
+
+  // Booths (SPEC § 2.3.1) - centralized booth state
+  booths: ReadonlyMap<BoothId, BoothState>;
 }
 
 /**
@@ -200,7 +217,7 @@ export class GameStateManager implements GameStateInterface {
   private _kills: number = 0;
   private _stats: GameStats = createGameStats();
   private _upgrades: UpgradeState = createDefaultUpgradeState();
-  private _resourceProvider: (() => ResourceState) | null = null;
+  private _booths: Map<BoothId, BoothState> = new Map();
 
   // ============================================
   // Read-only getters
@@ -235,10 +252,16 @@ export class GameStateManager implements GameStateInterface {
   }
 
   get resources(): ResourceState {
-    if (this._resourceProvider) {
-      return this._resourceProvider();
-    }
-    return { pearl: 0, tofu: 0, bloodCake: 0 };
+    // Compute from booths (centralized state)
+    return {
+      pearl: this._booths.get(BoothId.Pearl)?.count ?? 0,
+      tofu: this._booths.get(BoothId.Tofu)?.count ?? 0,
+      bloodCake: this._booths.get(BoothId.BloodCake)?.count ?? 0,
+    };
+  }
+
+  get booths(): ReadonlyMap<BoothId, BoothState> {
+    return this._booths;
   }
 
   // ============================================
@@ -527,15 +550,89 @@ export class GameStateManager implements GameStateInterface {
   }
 
   // ============================================
-  // Resource provider (SPEC § 2.3.1)
+  // Booth state management (SPEC § 2.3.1)
   // ============================================
 
   /**
-   * Set resource provider callback
-   * BoothSystem registers this to provide real-time resource snapshot
+   * Initialize three booths with default state
+   * Should be called once at game start
    */
-  setResourceProvider(provider: () => ResourceState): void {
-    this._resourceProvider = provider;
+  initializeBooths(): void {
+    this._booths = new Map([
+      [BoothId.Tofu, { foodType: FoodType.Tofu, count: 0, maxCapacity: 6 }],
+      [BoothId.Pearl, { foodType: FoodType.Pearl, count: 0, maxCapacity: 6 }],
+      [
+        BoothId.BloodCake,
+        { foodType: FoodType.BloodCake, count: 0, maxCapacity: 6 },
+      ],
+    ]);
+  }
+
+  /**
+   * Store food in appropriate booth (based on food type)
+   * Returns true if successful, false if booth is full
+   */
+  storeFood(foodType: FoodType): boolean {
+    for (const [_id, booth] of this._booths) {
+      if (booth.foodType === foodType && booth.count < booth.maxCapacity) {
+        booth.count++;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Consume food from specific booth
+   * Returns true if successful, false if insufficient food
+   */
+  consumeFood(boothId: BoothId, amount: number): boolean {
+    const booth = this._booths.get(boothId);
+    if (booth && booth.count >= amount) {
+      booth.count -= amount;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Steal one food from booth (enemy action)
+   * Returns true if successful, false if booth is empty
+   */
+  stealFood(boothId: BoothId): boolean {
+    const booth = this._booths.get(boothId);
+    if (booth && booth.count > 0) {
+      booth.count--;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get food count for specific booth
+   */
+  getBoothFoodCount(boothId: BoothId): number {
+    return this._booths.get(boothId)?.count ?? 0;
+  }
+
+  /**
+   * Get total food count across all booths
+   */
+  getBoothTotalFoodCount(): number {
+    let total = 0;
+    for (const booth of this._booths.values()) {
+      total += booth.count;
+    }
+    return total;
+  }
+
+  /**
+   * Reset all booths to empty state
+   */
+  resetBooths(): void {
+    for (const booth of this._booths.values()) {
+      booth.count = 0;
+    }
   }
 
   // ============================================
@@ -550,6 +647,6 @@ export class GameStateManager implements GameStateInterface {
     this._kills = 0;
     this._stats = createGameStats();
     this._upgrades = createDefaultUpgradeState();
-    // Note: _resourceProvider is not reset as it's a BoothSystem reference
+    this.resetBooths();
   }
 }

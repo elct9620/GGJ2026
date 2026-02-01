@@ -1,13 +1,19 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BoothSystem } from "./booth";
 import { FoodType, BoothId } from "../core/types";
 import { SystemPriority } from "../core/systems/system.interface";
+import { GameStateManager } from "../core/game-state";
 
 describe("BoothSystem", () => {
   let boothSystem: BoothSystem;
+  let gameState: GameStateManager;
 
   beforeEach(() => {
+    gameState = new GameStateManager();
+    gameState.initializeBooths();
+
     boothSystem = new BoothSystem();
+    boothSystem.inject("GameState", gameState);
   });
 
   describe("System Interface", () => {
@@ -27,16 +33,8 @@ describe("BoothSystem", () => {
       expect(() => boothSystem.update(0.016)).not.toThrow();
     });
 
-    it("destroy 應清理資源", () => {
+    it("destroy 應可被呼叫", () => {
       expect(() => boothSystem.destroy()).not.toThrow();
-    });
-  });
-
-  describe("Booth Container", () => {
-    it("應提供渲染容器", () => {
-      const container = boothSystem.getContainer();
-      expect(container).toBeDefined();
-      expect(container.children.length).toBeGreaterThan(0);
     });
   });
 
@@ -193,6 +191,41 @@ describe("BoothSystem", () => {
       boothSystem.reset();
 
       expect(boothSystem.getTotalFoodCount()).toBe(0);
+    });
+  });
+
+  describe("Event Publishing", () => {
+    it("應在儲存食材時發佈 FoodStored 事件", () => {
+      const mockEventQueue = { publish: vi.fn() };
+      boothSystem.inject("EventQueue", mockEventQueue);
+
+      boothSystem.storeFood(FoodType.Pearl);
+
+      expect(mockEventQueue.publish).toHaveBeenCalledWith(
+        "FoodStored",
+        expect.objectContaining({
+          boothId: String(BoothId.Pearl),
+          foodType: FoodType.Pearl,
+        }),
+        undefined,
+      );
+    });
+
+    it("應在消耗食材時發佈 FoodConsumed 事件", () => {
+      const mockEventQueue = { publish: vi.fn() };
+      boothSystem.inject("EventQueue", mockEventQueue);
+
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.consumeFood(BoothId.Pearl, 1);
+
+      expect(mockEventQueue.publish).toHaveBeenCalledWith(
+        "FoodConsumed",
+        expect.objectContaining({
+          boothId: String(BoothId.Pearl),
+          amount: 1,
+        }),
+        undefined,
+      );
     });
   });
 });

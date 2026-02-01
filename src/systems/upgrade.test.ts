@@ -21,6 +21,11 @@ describe("UpgradeSystem", () => {
     eventQueue = new EventQueue();
     boothSystem = new BoothSystem();
     gameState = new GameStateManager();
+    gameState.initializeBooths();
+
+    // Connect BoothSystem to GameState
+    boothSystem.inject("EventQueue", eventQueue);
+    boothSystem.inject("GameState", gameState);
 
     // Inject dependencies using new API
     upgradeSystem.inject("EventQueue", eventQueue);

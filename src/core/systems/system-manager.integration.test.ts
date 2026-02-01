@@ -10,6 +10,24 @@ import { InputSystem } from "../../systems/input";
 import { HUDSystem } from "../../systems/hud";
 import { BoothSystem } from "../../systems/booth";
 import { SystemPriority } from "./system.interface";
+import { GameStateManager } from "../game-state";
+
+/**
+ * Helper to create a BoothSystem with GameState injected
+ */
+function createBoothSystem(eventQueue?: EventQueue): {
+  boothSystem: BoothSystem;
+  gameState: GameStateManager;
+} {
+  const gameState = new GameStateManager();
+  gameState.initializeBooths();
+  const boothSystem = new BoothSystem();
+  if (eventQueue) {
+    boothSystem.inject("EventQueue", eventQueue);
+  }
+  boothSystem.inject("GameState", gameState);
+  return { boothSystem, gameState };
+}
 
 describe("SystemManager Integration", () => {
   let manager: SystemManager;
@@ -94,7 +112,7 @@ describe("SystemManager Integration", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
       const hudSystem = new HUDSystem();
-      const boothSystem = new BoothSystem();
+      const { boothSystem } = createBoothSystem(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
@@ -108,7 +126,7 @@ describe("SystemManager Integration", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
       const hudSystem = new HUDSystem();
-      const boothSystem = new BoothSystem();
+      const { boothSystem } = createBoothSystem(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
@@ -122,7 +140,7 @@ describe("SystemManager Integration", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
       const hudSystem = new HUDSystem();
-      const boothSystem = new BoothSystem();
+      const { boothSystem } = createBoothSystem(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
@@ -138,7 +156,7 @@ describe("SystemManager Integration", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
       const hudSystem = new HUDSystem();
-      const boothSystem = new BoothSystem();
+      const { boothSystem } = createBoothSystem(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);
@@ -160,7 +178,7 @@ describe("SystemManager Integration", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
       const hudSystem = new HUDSystem();
-      const boothSystem = new BoothSystem();
+      const { boothSystem } = createBoothSystem(eventQueue);
 
       // Wrap update methods to track execution order
       const originalEventQueueUpdate = eventQueue.update.bind(eventQueue);
@@ -212,7 +230,7 @@ describe("SystemManager Integration", () => {
       const eventQueue = new EventQueue();
       const inputSystem = new InputSystem();
       const hudSystem = new HUDSystem();
-      const boothSystem = new BoothSystem();
+      const { boothSystem } = createBoothSystem(eventQueue);
 
       manager.register(eventQueue);
       manager.register(inputSystem);

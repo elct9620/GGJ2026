@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { GameStateManager, ScreenState, createGameStats } from "./game-state";
-import { SpecialBulletType } from "./types";
+import { SpecialBulletType, FoodType } from "./types";
 
 describe("ScreenState", () => {
   it("should have correct state values", () => {
@@ -414,33 +414,30 @@ describe("GameStateManager", () => {
     });
   });
 
-  describe("Resource provider", () => {
-    it("應能設定 resource provider", () => {
-      const mockProvider = () => ({
-        pearl: 3,
-        tofu: 2,
-        bloodCake: 1,
-      });
-
-      gameState.setResourceProvider(mockProvider);
+  describe("Resources (from booth state)", () => {
+    it("應從 booth 狀態計算 resources", () => {
+      gameState.initializeBooths();
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Tofu);
+      gameState.storeFood(FoodType.Tofu);
+      gameState.storeFood(FoodType.BloodCake);
 
       expect(gameState.resources.pearl).toBe(3);
       expect(gameState.resources.tofu).toBe(2);
       expect(gameState.resources.bloodCake).toBe(1);
     });
 
-    it("resource provider 應反映即時資料", () => {
-      let pearlCount = 0;
-      const mockProvider = () => ({
-        pearl: pearlCount,
-        tofu: 0,
-        bloodCake: 0,
-      });
-
-      gameState.setResourceProvider(mockProvider);
+    it("resources 應反映即時 booth 狀態", () => {
+      gameState.initializeBooths();
       expect(gameState.resources.pearl).toBe(0);
 
-      pearlCount = 5;
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Pearl);
+      gameState.storeFood(FoodType.Pearl);
       expect(gameState.resources.pearl).toBe(5);
     });
   });

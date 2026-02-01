@@ -28,6 +28,7 @@ import { PLAYER_CONFIG, RECIPE_CONFIG } from "./config";
 import { SpecialBulletType } from "./core/types";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
+import { BoothRenderer } from "./renderers/booth-renderer";
 
 /**
  * Main game scene managing all game entities and systems
@@ -62,6 +63,9 @@ export class GameScene {
   private isPaused: boolean = false;
   private pendingWaveNumber: number = 0;
 
+  // Renderers
+  private boothRenderer: BoothRenderer;
+
   constructor(
     playerContainer: Container,
     enemiesContainer: Container,
@@ -81,6 +85,10 @@ export class GameScene {
 
     // Initialize centralized game state
     this.gameState = new GameStateManager();
+    this.gameState.initializeBooths();
+
+    // Initialize renderers
+    this.boothRenderer = new BoothRenderer();
 
     // Initialize SystemManager and register all systems
     this.systemManager = new SystemManager();
@@ -180,8 +188,8 @@ export class GameScene {
     // Connect Bullet Visual Effects System with bullets (SPEC § 2.6.3)
     bulletVisualEffects.setBullets(this.bullets);
 
-    // Setup booth visualization
-    this.boothContainer.addChild(boothSystem.getContainer());
+    // Setup booth visualization (using BoothRenderer)
+    this.boothContainer.addChild(this.boothRenderer.getContainer());
 
     // Setup box visualization (SPEC § 2.3.7)
     this.boothContainer.addChild(boxSystem.getContainer());
@@ -257,9 +265,17 @@ export class GameScene {
     this.updateEnemies(deltaTime);
     this.updateBullets(deltaTime);
     this.updateHUD();
+    this.syncBoothRenderer(); // Sync booth visuals with state
     this.checkFoodCollection(); // Auto-collect dropped food
     this.checkGameOver(); // Check game over condition
     this.applyScreenShake(); // Apply screen shake effect (SPEC § 2.6.3)
+  }
+
+  /**
+   * Sync booth renderer with current booth state
+   */
+  private syncBoothRenderer(): void {
+    this.boothRenderer.sync(this.gameState.booths);
   }
 
   /**
