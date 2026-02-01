@@ -169,7 +169,7 @@ interface ISystem {
 
 1. **EventQueue System**: 事件中樞，替代 setTimeout 的延遲執行機制
    - Priority: `EVENT_QUEUE` (highest, executes first)
-   - 11 event types: WaveStart, WaveComplete, EnemyDeath, SynthesisTriggered, etc.
+   - 14 event types: WaveStart, WaveComplete, EnemyDeath, SynthesisTriggered, BulletFired, EnemyHit, ButtonClicked, etc.
    - Publish/Subscribe pattern for system decoupling
 
 2. **Input System**: 鍵盤輸入處理 (WASD 移動, Space 射擊, 1-5 合成)
@@ -201,9 +201,19 @@ interface ISystem {
 
 10. **HUD System**: UI 顯示 (Wave, Health, Ammo, Enemy Count)
 
+11. **Audio System**: 音效系統 (SPEC § 2.3.9)
+    - 預載入音效（背景非阻塞載入）
+    - 不重疊播放（每個音效 ID 同時只播放一個實例）
+    - 訂閱 BulletFired, EnemyHit, ButtonClicked 事件
+
 **Entities** (`src/entities/`):
 - All extend `Entity` base class (id generation, active state)
 - `Player`, `Enemy` (Ghost/Boss), `Bullet`, `Food`
+
+**Collision Handlers** (`src/collision/`):
+- **CollisionRegistry**: 註冊與取得碰撞處理器
+- **BaseCollisionHandler**: 基底類別，定義共用邏輯
+- 子彈類型專屬 handlers: Normal, StinkyTofu, BloodCake, NightMarket, OysterOmelette
 
 **Visual Effects** (`src/effects/`):
 - **BulletVisualEffects**: Lightweight particle system for bullet visual feedback (SPEC § 2.6.3)
