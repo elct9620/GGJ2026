@@ -56,18 +56,24 @@ export class HUDSystem extends InjectableSystem {
     // Top HUD text elements (SPEC § 2.7.3: 86px height)
     const topHudY = 33;
 
-    // Left: "剩餘敵人:20"
-    this.enemyCountText = this.createText("剩餘敵人: 0", 50, topHudY);
+    // Left: "剩餘敵人:20" - 50px font (from ui_rough_pixelSpec.png)
+    this.enemyCountText = this.createText("剩餘敵人: 0", 50, topHudY, 50);
 
-    // Center: "餓鬼人潮:1/3" (512×56px area, centered)
+    // Center: "餓鬼人潮:1/3" (512×56px area, centered) - 33px font
     this.waveText = this.createText(
       "餓鬼人潮: 1/1",
       CANVAS_WIDTH / 2 - 80,
       topHudY,
+      33,
     );
 
-    // Right: "分數:9999"
-    this.scoreText = this.createText("分數: 0", CANVAS_WIDTH - 150, topHudY);
+    // Right: "分數:9999" - 50px font
+    this.scoreText = this.createText(
+      "分數: 0",
+      CANVAS_WIDTH - 150,
+      topHudY,
+      50,
+    );
 
     // Create bottom UI base sprites
     this.upgradeBaseSprite = this.createUpgradeBaseSprite();
@@ -128,12 +134,17 @@ export class HUDSystem extends InjectableSystem {
     this.bottomHUD.destroy({ children: true });
   }
 
-  private createText(content: string, x: number, y: number): Text {
+  private createText(
+    content: string,
+    x: number,
+    y: number,
+    fontSize: number = 50,
+  ): Text {
     const text = new Text({
       text: content,
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 24,
+        fontSize,
         fill: 0xffffff,
       },
     });
@@ -235,11 +246,12 @@ export class HUDSystem extends InjectableSystem {
       this.skillKeyTips.push(keyTip);
       this.bottomHUD.addChild(keyTip);
 
-      // Add number label on keyBindTip
+      // Add number label on keyBindTip - 30px font (from ui_rough_pixelSpec.png)
       const numberLabel = this.createSmallText(
         `${i + 1}`,
-        buttonCenterX - 5,
-        keyTipY + 13,
+        buttonCenterX - 8,
+        keyTipY + 8,
+        30,
       );
       this.bottomHUD.addChild(numberLabel);
 
@@ -268,22 +280,24 @@ export class HUDSystem extends InjectableSystem {
       }
       this.skillCostIndicators.push(indicators);
 
-      // For skill 5 (大招), add "×10" text next to indicator
+      // For skill 5 (大招), add "×10" text next to indicator - 42px font
       if (i === 4) {
         const killCountLabel = this.createSmallText(
           "×10",
           indicatorStartX + costIndicatorSize + 4,
-          indicatorY + 2,
+          indicatorY - 8,
+          42,
         );
         this.bottomHUD.addChild(killCountLabel);
       }
 
-      // Add skill label below indicators
+      // Add skill label below indicators - 42px font (from ui_rough_pixelSpec.png)
       const labelY = indicatorY + costIndicatorSize + 4;
       const label = this.createSmallText(
         skillLabels[i],
-        buttonCenterX - 16,
+        buttonCenterX - 32,
         labelY,
+        42,
       );
       this.bottomHUD.addChild(label);
     }
@@ -307,12 +321,17 @@ export class HUDSystem extends InjectableSystem {
     }
   }
 
-  private createSmallText(content: string, x: number, y: number): Text {
+  private createSmallText(
+    content: string,
+    x: number,
+    y: number,
+    fontSize: number = 42,
+  ): Text {
     const text = new Text({
       text: content,
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 16,
+        fontSize,
         fill: 0xffffff,
       },
     });
