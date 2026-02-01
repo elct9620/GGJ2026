@@ -17,6 +17,7 @@ import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
 import { UpgradeSystem } from "./systems/upgrade";
 import { BulletVisualEffectsSystem } from "./systems/bullet-visual-effects";
+import { AudioSystem } from "./systems/audio";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -90,6 +91,7 @@ export class GameScene {
     const waveSystem = new WaveSystem();
     const upgradeSystem = new UpgradeSystem();
     const bulletVisualEffects = new BulletVisualEffectsSystem();
+    const audioSystem = new AudioSystem();
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
@@ -102,6 +104,7 @@ export class GameScene {
     this.systemManager.register(boothSystem);
     this.systemManager.register(boxSystem);
     this.systemManager.register(bulletVisualEffects);
+    this.systemManager.register(audioSystem);
 
     // Provide dependencies for InjectableSystem instances (before initialize)
     this.systemManager.provideDependency("EventQueue", eventQueue);
@@ -118,7 +121,13 @@ export class GameScene {
     );
     this.systemManager.provideDependency("GameState", this.gameState);
 
+    // Setup AudioSystem dependency (SPEC § 2.3.9)
+    audioSystem.setEventQueue(eventQueue);
+
     this.systemManager.initialize();
+
+    // Publish GameSceneEnter event to start background music (SPEC § 2.3.9)
+    eventQueue.publish(EventType.GameSceneEnter, {});
 
     // Subscribe to EnemyDeath event for food drops
     eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
@@ -150,11 +159,8 @@ export class GameScene {
 
     // Setup bullet spawner callback (follows same pattern as WaveSystem.setSpawnCallback)
     combatSystem.setBulletSpawner((request: BulletSpawnRequest) => {
-      // CRITICAL: Clone position to prevent shared reference (SPEC § 3.2.1)
-      // Without cloning, all bullets share the same Vector instance and move together
-      const spawnPosition = new Vector(request.position.x, request.position.y);
       const bullet = new Bullet(
-        spawnPosition,
+        request.position,
         request.direction,
         request.bulletType,
       );

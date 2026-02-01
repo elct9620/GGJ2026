@@ -209,6 +209,11 @@ export class CombatSystem extends InjectableSystem {
     if (this.player.shoot()) {
       this.shootCooldown = this.shootCooldownTime;
 
+      // Publish PlayerShoot event for audio system (SPEC § 2.3.9)
+      if (this.eventQueue) {
+        this.eventQueue.publish(EventType.PlayerShoot, {});
+      }
+
       // Check if reload was triggered (SPEC § 2.3.2)
       if (this.player.isReloading && this.eventQueue) {
         this.eventQueue.publish(
@@ -275,7 +280,7 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Spawn BubbleTea spread bullets (SPEC § 2.3.3, § 2.3.4)
-   * Creates 3+ bullets: up (+15°), center (0°), down (-15°), then wider spreads
+   * Creates 3+ bullets: center + extra at alternating ±15°, ±30°, etc.
    */
   private spawnBubbleTeaBullets(): Bullet[] {
     if (!this.bulletSpawner || !this.player) return [];
@@ -286,20 +291,24 @@ export class CombatSystem extends InjectableSystem {
     // Base extra bullets + upgrade bonus (SPEC § 2.3.4: 加椰果)
     const baseExtra = RECIPE_CONFIG.bubbleTea.extraBullets;
     const upgradeBonus = upgradeState?.bubbleTeaBulletBonus ?? 0;
-    const totalBullets = 1 + baseExtra + upgradeBonus; // center + extras
+    const totalExtraBullets = baseExtra + upgradeBonus;
 
-    const spreadAngle = 15; // degrees between each bullet
+    const spreadAngle = 15; // degrees
     const bulletType = SpecialBulletType.BubbleTea;
 
-    // Generate bullets in a symmetric spread pattern
-    // For 3 bullets: up (+15°), center (0°), down (-15°)
-    // For 5 bullets: (+30°), (+15°), (0°), (-15°), (-30°)
-    const halfBullets = Math.floor(totalBullets / 2);
+    // Center bullet
+    const centerBullet = this.bulletSpawner({
+      position: this.player.position,
+      direction: new Vector(1, 0),
+      bulletType,
+    });
+    bullets.push(centerBullet);
 
-    for (let i = 0; i < totalBullets; i++) {
-      // Calculate angle offset from center
-      // i=0 -> top, i=halfBullets -> center, i=totalBullets-1 -> bottom
-      const angleOffset = (halfBullets - i) * spreadAngle;
+    // Extra spread bullets (alternating left/right at increasing angles)
+    for (let i = 0; i < totalExtraBullets; i++) {
+      const angleIndex = Math.floor(i / 2) + 1;
+      const directionSign = i % 2 === 0 ? 1 : -1;
+      const angleOffset = spreadAngle * angleIndex * directionSign;
       const radians = (angleOffset * Math.PI) / 180;
       const dir = new Vector(Math.cos(radians), Math.sin(radians));
 
@@ -531,6 +540,13 @@ export class CombatSystem extends InjectableSystem {
    */
   private applyDamageAndPublishDeath(enemy: Enemy, damage: number): void {
     const died = enemy.takeDamage(damage);
+
+    // Publish EnemyHit event for audio system (SPEC § 2.3.9)
+    if (this.eventQueue) {
+      this.eventQueue.publish(EventType.EnemyHit, {
+        enemyId: enemy.id,
+      });
+    }
 
     if (died && this.eventQueue) {
       this.eventQueue.publish(EventType.EnemyDeath, {
