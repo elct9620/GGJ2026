@@ -117,6 +117,88 @@ describe("GameStateManager", () => {
     });
   });
 
+  describe("Wave spawn state", () => {
+    it("應以空的 waveSpawn 狀態初始化", () => {
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(0);
+      expect(gameState.waveSpawn.spawnTimer).toBe(0);
+      expect(gameState.waveSpawn.nextSpawnInterval).toBe(0);
+      expect(gameState.waveSpawn.shouldSpawnBoss).toBe(false);
+      expect(gameState.waveSpawn.enemiesSpawnedThisWave).toBe(0);
+    });
+
+    it("應能初始化 wave spawn 狀態", () => {
+      gameState.initializeWaveSpawn(10, true);
+
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(10);
+      expect(gameState.waveSpawn.spawnTimer).toBe(0);
+      expect(gameState.waveSpawn.nextSpawnInterval).toBe(0);
+      expect(gameState.waveSpawn.shouldSpawnBoss).toBe(true);
+      expect(gameState.waveSpawn.enemiesSpawnedThisWave).toBe(0);
+    });
+
+    it("應能更新 spawn timer", () => {
+      gameState.initializeWaveSpawn(5, false);
+      gameState.updateSpawnTimer(0.5);
+
+      expect(gameState.waveSpawn.spawnTimer).toBe(0.5);
+    });
+
+    it("應能重置 spawn timer 並設定下次間隔", () => {
+      gameState.initializeWaveSpawn(5, false);
+      gameState.updateSpawnTimer(2.5);
+      gameState.resetSpawnTimer(3.0);
+
+      expect(gameState.waveSpawn.spawnTimer).toBe(0);
+      expect(gameState.waveSpawn.nextSpawnInterval).toBe(3.0);
+    });
+
+    it("應能減少待生成敵人數並增加已生成數", () => {
+      gameState.initializeWaveSpawn(5, false);
+      gameState.decrementEnemiesToSpawn();
+
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(4);
+      expect(gameState.waveSpawn.enemiesSpawnedThisWave).toBe(1);
+    });
+
+    it("應能僅增加已生成敵人數", () => {
+      gameState.initializeWaveSpawn(5, true);
+      gameState.incrementEnemiesSpawned();
+
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(5); // 不變
+      expect(gameState.waveSpawn.enemiesSpawnedThisWave).toBe(1);
+    });
+
+    it("應能清除 boss spawn 旗標", () => {
+      gameState.initializeWaveSpawn(5, true);
+      gameState.clearBossSpawnFlag();
+
+      expect(gameState.waveSpawn.shouldSpawnBoss).toBe(false);
+    });
+
+    it("應能重置 wave spawn 狀態", () => {
+      gameState.initializeWaveSpawn(10, true);
+      gameState.decrementEnemiesToSpawn();
+      gameState.updateSpawnTimer(1.5);
+
+      gameState.resetWaveSpawn();
+
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(0);
+      expect(gameState.waveSpawn.spawnTimer).toBe(0);
+      expect(gameState.waveSpawn.shouldSpawnBoss).toBe(false);
+      expect(gameState.waveSpawn.enemiesSpawnedThisWave).toBe(0);
+    });
+
+    it("reset 應重置 waveSpawn 狀態", () => {
+      gameState.initializeWaveSpawn(10, true);
+      gameState.decrementEnemiesToSpawn();
+
+      gameState.reset();
+
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(0);
+      expect(gameState.waveSpawn.enemiesSpawnedThisWave).toBe(0);
+    });
+  });
+
   describe("Combat state", () => {
     it("應能啟動 buff", () => {
       gameState.activateBuff(SpecialBulletType.StinkyTofu, 2.0);

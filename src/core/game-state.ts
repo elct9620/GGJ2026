@@ -93,6 +93,18 @@ export interface WaveState {
 }
 
 /**
+ * Wave spawn state - internal spawn management (SPEC § 2.3.5)
+ * Tracks progressive enemy spawning within a wave
+ */
+export interface WaveSpawnState {
+  enemiesToSpawn: number; // 剩餘待生成數量
+  spawnTimer: number; // 生成計時器（秒）
+  nextSpawnInterval: number; // 下次生成間隔（秒）
+  shouldSpawnBoss: boolean; // 是否需要生成 Boss
+  enemiesSpawnedThisWave: number; // 本回合已生成敵人數量
+}
+
+/**
  * Combat state (SPEC § 2.3.2)
  */
 export interface CombatState {
@@ -119,6 +131,9 @@ export interface GameStateInterface {
 
   // Wave state
   wave: WaveState;
+
+  // Wave spawn state - internal spawn management
+  waveSpawn: WaveSpawnState;
 
   // Combat state
   combat: CombatState;
@@ -148,6 +163,19 @@ function createInitialWaveState(): WaveState {
 }
 
 /**
+ * Creates initial wave spawn state
+ */
+function createInitialWaveSpawnState(): WaveSpawnState {
+  return {
+    enemiesToSpawn: 0,
+    spawnTimer: 0,
+    nextSpawnInterval: 0,
+    shouldSpawnBoss: false,
+    enemiesSpawnedThisWave: 0,
+  };
+}
+
+/**
  * Creates initial combat state
  */
 function createInitialCombatState(): CombatState {
@@ -167,6 +195,7 @@ function createInitialCombatState(): CombatState {
 export class GameStateManager implements GameStateInterface {
   private _screen: ScreenState = ScreenState.START;
   private _wave: WaveState = createInitialWaveState();
+  private _waveSpawn: WaveSpawnState = createInitialWaveSpawnState();
   private _combat: CombatState = createInitialCombatState();
   private _kills: number = 0;
   private _stats: GameStats = createGameStats();
@@ -183,6 +212,10 @@ export class GameStateManager implements GameStateInterface {
 
   get wave(): Readonly<WaveState> {
     return this._wave;
+  }
+
+  get waveSpawn(): Readonly<WaveSpawnState> {
+    return this._waveSpawn;
   }
 
   get combat(): Readonly<CombatState> {
@@ -240,6 +273,82 @@ export class GameStateManager implements GameStateInterface {
     if (this._wave.enemiesRemaining > 0) {
       this._wave.enemiesRemaining--;
     }
+  }
+
+  // ============================================
+  // Wave spawn state updaters (SPEC § 2.3.5)
+  // ============================================
+
+  /**
+   * Initialize wave spawn state for a new wave
+   */
+  initializeWaveSpawn(enemiesToSpawn: number, shouldSpawnBoss: boolean): void {
+    this._waveSpawn = {
+      enemiesToSpawn,
+      spawnTimer: 0,
+      nextSpawnInterval: 0, // First enemy spawns immediately
+      shouldSpawnBoss,
+      enemiesSpawnedThisWave: 0,
+    };
+  }
+
+  /**
+   * Update spawn timer
+   */
+  updateSpawnTimer(deltaTime: number): void {
+    this._waveSpawn = {
+      ...this._waveSpawn,
+      spawnTimer: this._waveSpawn.spawnTimer + deltaTime,
+    };
+  }
+
+  /**
+   * Reset spawn timer and set next interval
+   */
+  resetSpawnTimer(nextInterval: number): void {
+    this._waveSpawn = {
+      ...this._waveSpawn,
+      spawnTimer: 0,
+      nextSpawnInterval: nextInterval,
+    };
+  }
+
+  /**
+   * Decrement enemies to spawn and increment spawned count
+   */
+  decrementEnemiesToSpawn(): void {
+    this._waveSpawn = {
+      ...this._waveSpawn,
+      enemiesToSpawn: this._waveSpawn.enemiesToSpawn - 1,
+      enemiesSpawnedThisWave: this._waveSpawn.enemiesSpawnedThisWave + 1,
+    };
+  }
+
+  /**
+   * Increment spawned count (for boss or special spawns)
+   */
+  incrementEnemiesSpawned(): void {
+    this._waveSpawn = {
+      ...this._waveSpawn,
+      enemiesSpawnedThisWave: this._waveSpawn.enemiesSpawnedThisWave + 1,
+    };
+  }
+
+  /**
+   * Clear boss spawn flag
+   */
+  clearBossSpawnFlag(): void {
+    this._waveSpawn = {
+      ...this._waveSpawn,
+      shouldSpawnBoss: false,
+    };
+  }
+
+  /**
+   * Reset wave spawn state
+   */
+  resetWaveSpawn(): void {
+    this._waveSpawn = createInitialWaveSpawnState();
   }
 
   // ============================================
@@ -436,6 +545,7 @@ export class GameStateManager implements GameStateInterface {
   reset(): void {
     this._screen = ScreenState.START;
     this._wave = createInitialWaveState();
+    this._waveSpawn = createInitialWaveSpawnState();
     this._combat = createInitialCombatState();
     this._kills = 0;
     this._stats = createGameStats();

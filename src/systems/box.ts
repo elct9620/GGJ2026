@@ -29,11 +29,11 @@ const BOOTH_POOL_HEIGHT = 256;
  * SPEC § 2.3.7: 寶箱防禦系統
  *
  * Responsibilities:
- * - 監聽攤位食材變化（訂閱 FoodStored/FoodConsumed）
  * - 敵人碰撞檢測（在 Booth Pool 區域 x=340~468）
  * - 碰撞時消耗食材並消滅敵人（不掉落）
  *
- * Note: totalFoodCount is now derived from BoothSystem (Single Source of Truth)
+ * Note: Box active state is derived from BoothSystem.getFoodCount() (Single Source of Truth)
+ *       No event subscription needed - stateless design
  */
 export class BoxSystem extends InjectableSystem {
   public readonly name = "BoxSystem";
@@ -41,10 +41,6 @@ export class BoxSystem extends InjectableSystem {
 
   // Enemies reference (for collision detection)
   private enemies: Enemy[] = [];
-
-  // Box state (SPEC § 2.3.7)
-  // 3 separate boxes, one for each booth
-  private boxes: Map<BoothId, boolean> = new Map();
 
   // Booth Pool collision area (SPEC § 2.7.2)
   // Area: x=340 to x=468, y=136 to y=904
@@ -83,11 +79,6 @@ export class BoxSystem extends InjectableSystem {
    * Initialize box system
    */
   public initialize(): void {
-    // Initialize 3 separate boxes (all inactive initially)
-    this.boxes.set(BoothId.Pearl, false);
-    this.boxes.set(BoothId.Tofu, false);
-    this.boxes.set(BoothId.BloodCake, false);
-
     // Setup booth Y position ranges for collision detection
     // Tofu: booth 1 (top), Pearl: booth 2 (middle), BloodCake: booth 3 (bottom)
     const boothHeight = BOOTH_POOL_HEIGHT;
@@ -104,26 +95,15 @@ export class BoxSystem extends InjectableSystem {
       max: this.poolStartY + boothHeight * 3,
     });
 
-    // Subscribe to food events (SPEC § 2.3.7)
-    this.eventQueue.subscribe(
-      EventType.FoodStored,
-      this.onFoodStored.bind(this),
-    );
-    this.eventQueue.subscribe(
-      EventType.FoodConsumed,
-      this.onFoodConsumed.bind(this),
-    );
+    // No event subscription needed - box active state is derived from BoothSystem
   }
 
   /**
    * Update box system - check enemy collisions with booth pool area
    */
   public update(): void {
-    // Check if any boxes are active
-    const hasActiveBox = Array.from(this.boxes.values()).some(
-      (active) => active,
-    );
-    if (!hasActiveBox) return;
+    // Check if any boxes are active (derived from BoothSystem)
+    if (!this.isBoxActive()) return;
 
     // Check enemy collisions with each booth's box (SPEC § 2.3.7)
     for (const enemy of this.enemies) {
@@ -142,7 +122,8 @@ export class BoxSystem extends InjectableSystem {
       for (const [boothId, yRange] of this.boothYPositions.entries()) {
         const inBoothY = enemyY >= yRange.min && enemyY <= yRange.max;
 
-        if (inBoothY && this.boxes.get(boothId)) {
+        // Check if this booth has food (box is active)
+        if (inBoothY && this.isBoothBoxActive(boothId)) {
           // Enemy collided with this booth's box
           // Consume food from the specific booth (SPEC § 2.3.7: 攤位食材 -1)
           this.boothSystem.stealFood(boothId);
@@ -154,11 +135,6 @@ export class BoxSystem extends InjectableSystem {
           this.eventQueue.publish(EventType.EnemyReachedEnd, {
             enemyId: enemy.id,
           });
-
-          // Check if this box should despawn after food consumption
-          if (this.boothSystem.getFoodCount(boothId) === 0) {
-            this.boxes.set(boothId, false);
-          }
 
           break; // Only one collision per frame
         }
@@ -174,7 +150,6 @@ export class BoxSystem extends InjectableSystem {
    */
   public destroy(): void {
     this.enemies = [];
-    this.boxes.clear();
     this.boothYPositions.clear();
   }
 
@@ -200,53 +175,24 @@ export class BoxSystem extends InjectableSystem {
   }
 
   /**
-   * Check if any box exists
+   * Check if any box exists (derived from BoothSystem)
    */
   public isBoxActive(): boolean {
-    return Array.from(this.boxes.values()).some((active) => active);
+    return this.boothSystem.getTotalFoodCount() > 0;
   }
 
   /**
-   * Check if a specific booth's box exists
+   * Check if a specific booth's box exists (derived from BoothSystem)
    */
   public isBoothBoxActive(boothId: BoothId): boolean {
-    return this.boxes.get(boothId) ?? false;
-  }
-
-  /**
-   * Handle FoodStored event (SPEC § 2.3.7)
-   * Event data contains boothId to know which booth received food
-   */
-  private onFoodStored(data?: { boothId: string; foodType: string }): void {
-    if (!data) return;
-
-    const boothId = parseInt(data.boothId, 10) as BoothId;
-    // Spawn box for this booth if it has food
-    if (this.boothSystem.getFoodCount(boothId) > 0) {
-      this.boxes.set(boothId, true);
-    }
-  }
-
-  /**
-   * Handle FoodConsumed event (SPEC § 2.3.7)
-   * Event data contains boothId to know which booth lost food
-   */
-  private onFoodConsumed(data?: { boothId: string; amount: number }): void {
-    if (!data) return;
-
-    const boothId = parseInt(data.boothId, 10) as BoothId;
-    // Despawn box if this booth has no food
-    if (this.boothSystem.getFoodCount(boothId) === 0) {
-      this.boxes.set(boothId, false);
-    }
+    return this.boothSystem.getFoodCount(boothId) > 0;
   }
 
   /**
    * Reset box system for new game
+   * Note: Actual reset is handled by BoothSystem.reset()
    */
   public reset(): void {
-    this.boxes.set(BoothId.Pearl, false);
-    this.boxes.set(BoothId.Tofu, false);
-    this.boxes.set(BoothId.BloodCake, false);
+    // No internal state to reset - box active state is derived from BoothSystem
   }
 }

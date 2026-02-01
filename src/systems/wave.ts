@@ -42,20 +42,12 @@ export type EnemySpawnCallback = (
  *
  * State Management:
  * - Wave state (currentWave, isActive, enemiesRemaining) is stored in GameStateManager
- * - Internal implementation details (spawn timer, etc.) remain in this system
+ * - Wave spawn state (enemiesToSpawn, spawnTimer, etc.) is also in GameStateManager
+ * - This system is now nearly stateless, only holding the spawn callback
  */
 export class WaveSystem extends InjectableSystem {
   public readonly name = "WaveSystem";
   public readonly priority = SystemPriority.WAVE;
-
-  // Enemy tracking (internal counter for spawning)
-  private enemiesSpawnedThisWave = 0;
-
-  // Progressive spawn state (SPEC § 2.3.5) - internal implementation details
-  private enemiesToSpawn = 0; // 剩餘待生成數量
-  private spawnTimer = 0; // 生成計時器（秒）
-  private nextSpawnInterval = 0; // 下次生成間隔（秒）
-  private shouldSpawnBoss = false; // 是否需要生成 Boss
 
   // Spawn callback (GameScene provides this - not injectable)
   private onSpawnEnemy: EnemySpawnCallback | null = null;
@@ -84,8 +76,8 @@ export class WaveSystem extends InjectableSystem {
    * Initialize wave system
    */
   public initialize(): void {
-    this.enemiesSpawnedThisWave = 0;
     // Wave state is initialized by GameStateManager
+    // No internal state to initialize
 
     // Subscribe to enemy events (SPEC § 2.3.6)
     this.eventQueue.subscribe(
@@ -106,29 +98,41 @@ export class WaveSystem extends InjectableSystem {
     const isActive = this.gameState.wave.isActive;
     const enemiesRemaining = this.gameState.wave.enemiesRemaining;
 
-    // Handle progressive enemy spawning
-    if (isActive && this.enemiesToSpawn > 0) {
-      this.spawnTimer += deltaTime;
+    // Read spawn state at the beginning
+    const spawnState = this.gameState.waveSpawn;
 
-      if (this.spawnTimer >= this.nextSpawnInterval) {
-        this.spawnTimer = 0;
+    // Handle progressive enemy spawning
+    if (isActive && spawnState.enemiesToSpawn > 0) {
+      this.gameState.updateSpawnTimer(deltaTime);
+
+      if (spawnState.spawnTimer + deltaTime >= spawnState.nextSpawnInterval) {
         this.spawnNextEnemy();
       }
     }
 
+    // Re-read spawn state after spawning to get updated values
+    const updatedSpawnState = this.gameState.waveSpawn;
+
     // Spawn boss after all regular enemies
-    if (isActive && this.enemiesToSpawn === 0 && this.shouldSpawnBoss) {
+    if (
+      isActive &&
+      updatedSpawnState.enemiesToSpawn === 0 &&
+      updatedSpawnState.shouldSpawnBoss
+    ) {
       this.spawnEnemy("Boss");
-      this.shouldSpawnBoss = false;
+      this.gameState.clearBossSpawnFlag();
     }
+
+    // Re-read for completion check
+    const finalSpawnState = this.gameState.waveSpawn;
 
     // Check wave completion
     if (
       isActive &&
       enemiesRemaining === 0 &&
-      this.enemiesSpawnedThisWave > 0 &&
-      this.enemiesToSpawn === 0 &&
-      !this.shouldSpawnBoss
+      finalSpawnState.enemiesSpawnedThisWave > 0 &&
+      finalSpawnState.enemiesToSpawn === 0 &&
+      !finalSpawnState.shouldSpawnBoss
     ) {
       this.completeWave();
     }
@@ -153,8 +157,6 @@ export class WaveSystem extends InjectableSystem {
    * SPEC § 2.3.5: Enemy count = wave number × 2, progressive spawn every 2-3s
    */
   public startWave(waveNumber: number): void {
-    this.enemiesSpawnedThisWave = 0;
-
     // Publish WaveStart event (SPEC § 2.3.6)
     this.eventQueue.publish(EventType.WaveStart, { waveNumber });
 
@@ -162,13 +164,11 @@ export class WaveSystem extends InjectableSystem {
     const enemyCount = waveNumber * waveData.enemyMultiplier;
 
     // Setup progressive spawning (SPEC § 2.3.5)
-    this.enemiesToSpawn = enemyCount;
-    this.spawnTimer = 0;
-    this.nextSpawnInterval = 0; // First enemy spawns immediately
-    this.shouldSpawnBoss = waveNumber % waveData.bossWaveInterval === 0;
+    const shouldSpawnBoss = waveNumber % waveData.bossWaveInterval === 0;
+    this.gameState.initializeWaveSpawn(enemyCount, shouldSpawnBoss);
 
     // Calculate total enemies for tracking
-    const totalEnemies = enemyCount + (this.shouldSpawnBoss ? 1 : 0);
+    const totalEnemies = enemyCount + (shouldSpawnBoss ? 1 : 0);
 
     // Update GameState
     this.gameState.startWave(waveNumber, totalEnemies);
@@ -200,14 +200,15 @@ export class WaveSystem extends InjectableSystem {
    * SPEC § 2.3.5: Spawn every 2-3 seconds with type probability
    */
   private spawnNextEnemy(): void {
-    if (this.enemiesToSpawn <= 0) return;
+    if (this.gameState.waveSpawn.enemiesToSpawn <= 0) return;
 
     const enemyType = this.selectEnemyType();
     this.spawnEnemy(enemyType);
-    this.enemiesToSpawn--;
+    this.gameState.decrementEnemiesToSpawn();
 
     // Set next spawn interval (2-3 seconds random)
-    this.nextSpawnInterval = this.getRandomSpawnInterval();
+    const nextInterval = this.getRandomSpawnInterval();
+    this.gameState.resetSpawnTimer(nextInterval);
   }
 
   /**
@@ -252,7 +253,7 @@ export class WaveSystem extends InjectableSystem {
     const currentWave = this.gameState.wave.currentWave;
 
     this.onSpawnEnemy(type, xPosition, yPosition, currentWave);
-    this.enemiesSpawnedThisWave++;
+    this.gameState.incrementEnemiesSpawned();
   }
 
   /**
@@ -314,11 +315,8 @@ export class WaveSystem extends InjectableSystem {
    * Reset wave system for new game
    */
   public reset(): void {
-    this.enemiesSpawnedThisWave = 0;
-    this.enemiesToSpawn = 0;
-    this.spawnTimer = 0;
-    this.nextSpawnInterval = 0;
-    this.shouldSpawnBoss = false;
+    // All wave spawn state is managed by GameStateManager
+    this.gameState.resetWaveSpawn();
     // Wave state reset is handled by GameStateManager.reset()
   }
 
@@ -326,13 +324,13 @@ export class WaveSystem extends InjectableSystem {
    * Get remaining enemies to spawn (for testing)
    */
   public getEnemiesToSpawn(): number {
-    return this.enemiesToSpawn;
+    return this.gameState.waveSpawn.enemiesToSpawn;
   }
 
   /**
    * Check if boss spawn is pending (for testing)
    */
   public isBossSpawnPending(): boolean {
-    return this.shouldSpawnBoss;
+    return this.gameState.waveSpawn.shouldSpawnBoss;
   }
 }
