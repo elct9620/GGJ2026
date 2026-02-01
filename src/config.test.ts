@@ -66,13 +66,13 @@ describe("Game Balance Config", () => {
       expect(BULLET_CONFIG.normalDamage).toBe(1);
     });
 
-    it("各類型子彈大小符合 SPEC § 2.6.3（視覺=碰撞統一）", () => {
-      expect(BULLET_CONFIG.sizes.normal).toBe(16);
-      expect(BULLET_CONFIG.sizes.nightMarket).toBe(32);
-      expect(BULLET_CONFIG.sizes.stinkyTofu).toBe(24);
-      expect(BULLET_CONFIG.sizes.bubbleTea).toBe(32);
-      expect(BULLET_CONFIG.sizes.bloodCake).toBe(28);
-      expect(BULLET_CONFIG.sizes.oysterOmelette).toBe(128);
+    it("各類型子彈大小符合 SPEC § 2.6.3（視覺=碰撞統一，1.5x 放大）", () => {
+      expect(BULLET_CONFIG.sizes.normal).toBe(24);
+      expect(BULLET_CONFIG.sizes.nightMarket).toBe(48);
+      expect(BULLET_CONFIG.sizes.stinkyTofu).toBe(36);
+      expect(BULLET_CONFIG.sizes.bubbleTea).toBe(48);
+      expect(BULLET_CONFIG.sizes.bloodCake).toBe(42);
+      expect(BULLET_CONFIG.sizes.oysterOmelette).toBe(192);
     });
 
     it("應定義各類型子彈顏色", () => {

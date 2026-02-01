@@ -76,8 +76,8 @@ describe("BulletVisualEffects", () => {
       }
 
       const container = visualEffects.getContainer();
-      // Should be limited to max trail length (5)
-      expect(container.children.length).toBeLessThanOrEqual(5);
+      // Should be limited to max trail length (8 for normal bullets)
+      expect(container.children.length).toBeLessThanOrEqual(8);
     });
   });
 

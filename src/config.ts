@@ -84,18 +84,18 @@ export const BULLET_CONFIG = {
    * 基礎比例：玩家/怪物 256px，子彈大小需明顯可見
    */
   sizes: {
-    /** Normal: 16×16 px */
-    normal: 16,
-    /** Night Market: 32×32 px */
-    nightMarket: 32,
-    /** Stinky Tofu: 24×24 px */
-    stinkyTofu: 24,
-    /** Bubble Tea: 32×32 px（巨大黑珍珠） */
-    bubbleTea: 32,
-    /** Blood Cake: 28×28 px */
-    bloodCake: 28,
-    /** Oyster Omelette: 128×128 px（巨大投擲物） */
-    oysterOmelette: 128,
+    /** Normal: 24×24 px (原 16 × 1.5) */
+    normal: 24,
+    /** Night Market: 48×48 px (原 32 × 1.5) */
+    nightMarket: 48,
+    /** Stinky Tofu: 36×36 px (原 24 × 1.5) */
+    stinkyTofu: 36,
+    /** Bubble Tea: 48×48 px (原 32 × 1.5，巨大黑珍珠) */
+    bubbleTea: 48,
+    /** Blood Cake: 42×42 px (原 28 × 1.5) */
+    bloodCake: 42,
+    /** Oyster Omelette: 192×192 px (原 128 × 1.5，巨大投擲物) */
+    oysterOmelette: 192,
   },
 } as const;
 

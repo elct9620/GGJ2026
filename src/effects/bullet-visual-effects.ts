@@ -10,6 +10,7 @@
 import { Graphics, Container } from "pixi.js";
 import { Vector } from "../values/vector";
 import { SpecialBulletType } from "../values/special-bullet";
+import { BULLET_CONFIG } from "../config";
 
 /**
  * Trail particle for bullet flight effects
@@ -19,6 +20,7 @@ interface TrailParticle {
   alpha: number;
   lifetime: number;
   maxLifetime: number;
+  initialRadius: number;
   graphics: Graphics;
 }
 
@@ -45,55 +47,48 @@ interface TemporaryEffect {
 const VISUAL_EFFECTS_CONFIG = {
   normal: {
     trailColor: 0xffffff, // White trail
-    trailWidth: 8, // 子彈 16px 的一半
-    trailLength: 4, // ~32px 長度（間距 8px × 4 粒子）
+    trailLength: 8, // 粒子數量（加倍）
     trailLifetime: 0.2, // seconds
     hitColor: 0xffffff, // White pop
-    hitRadius: 16, // 與子彈視覺大小對齊
     hitDuration: 0.15, // seconds
   },
   nightMarket: {
     trailColor: 0xffd700, // Golden electric
-    trailWidth: 16, // 子彈 32px 的一半
-    trailLength: 4, // ~64px 長度
+    trailLength: 8, // 粒子數量（加倍）
     trailLifetime: 0.3,
     hitColor: 0xffd700, // Golden lightning
     chainColor: 0xffd700,
-    chainWidth: 4, // 更粗的閃電鏈
+    chainWidth: 4, // 閃電鏈寬度
     flashDuration: 0.2,
   },
   stinkyTofu: {
     trailColor: 0x27ae60, // Green gas
-    trailWidth: 12, // 子彈 24px 的一半
-    trailLength: 7, // ~80px 長度
+    trailLength: 14, // 粒子數量（加倍）
     trailLifetime: 0.4,
     pierceColor: 0x27ae60, // Green stink cloud
-    pierceRadius: 48, // 貫穿臭氣雲 (子彈 2 倍)
+    pierceRadius: 48, // 貫穿臭氣雲
     pierceDuration: 0.3,
   },
   bubbleTea: {
     trailColor: 0xffffff, // White milk tea mist
-    trailWidth: 16, // 子彈 32px 的一半
-    trailLength: 3, // ~48px 長度
+    trailLength: 6, // 粒子數量（加倍）
     trailLifetime: 0.25,
   },
   bloodCake: {
     trailColor: 0x1a1a1a, // Black sticky residue
-    trailWidth: 14, // 子彈 28px 的一半
-    trailLength: 7, // ~96px 長度
+    trailLength: 14, // 粒子數量（加倍）
     trailLifetime: 0.5, // Longer lasting sticky trail
     residueAlpha: 0.6,
   },
   oysterOmelette: {
     trailColor: 0xe67e22, // Orange
-    trailWidth: 32, // 子彈 128px 的 1/4（火焰尾跡）
-    trailLength: 5, // ~160px 長度
+    trailLength: 10, // 粒子數量（加倍）
     trailLifetime: 0.3,
     explosionColor: 0xff4444, // Red explosion
-    explosionRadius: 128, // 爆炸半徑與子彈大小對齊
+    explosionRadius: 128, // 爆炸半徑
     explosionDuration: 0.4,
     screenShakeMagnitude: 8,
-    screenShakeDuration: 0.5, // 更長的震動
+    screenShakeDuration: 0.5,
   },
 } as const;
 
@@ -119,6 +114,27 @@ export class BulletVisualEffects {
   }
 
   /**
+   * Get bullet size based on type (mirrors Bullet.getBulletSize)
+   */
+  private getBulletSize(bulletType: SpecialBulletType): number {
+    const sizes = BULLET_CONFIG.sizes;
+    switch (bulletType) {
+      case SpecialBulletType.NightMarket:
+        return sizes.nightMarket;
+      case SpecialBulletType.StinkyTofu:
+        return sizes.stinkyTofu;
+      case SpecialBulletType.BubbleTea:
+        return sizes.bubbleTea;
+      case SpecialBulletType.BloodCake:
+        return sizes.bloodCake;
+      case SpecialBulletType.OysterOmelette:
+        return sizes.oysterOmelette;
+      default:
+        return sizes.normal;
+    }
+  }
+
+  /**
    * Create trail effect for bullet flight
    * SPEC § 2.6.3: Different trails for each bullet type
    */
@@ -130,16 +146,20 @@ export class BulletVisualEffects {
     const config = this.getConfigForType(bulletType);
     if (!config) return;
 
+    // 尾跡初始大小與子彈大小相同
+    const bulletSize = this.getBulletSize(bulletType);
+    const radius = bulletSize / 2;
     const particle: TrailParticle = {
       position,
       alpha: 1,
       lifetime: 0,
       maxLifetime: config.trailLifetime,
+      initialRadius: radius,
       graphics: new Graphics(),
     };
 
     // Draw trail particle based on bullet type
-    particle.graphics.circle(0, 0, config.trailWidth / 2);
+    particle.graphics.circle(0, 0, radius);
     particle.graphics.fill({ color: config.trailColor, alpha: 0.8 });
     particle.graphics.position.set(position.x, position.y);
 
@@ -173,7 +193,9 @@ export class BulletVisualEffects {
 
     const hitEffect = new Graphics();
     const color = config.hitColor || 0xffffff;
-    const radius = config.hitRadius || 8;
+    // 命中效果大小與子彈大小相同
+    const bulletSize = this.getBulletSize(bulletType);
+    const radius = bulletSize / 2;
 
     // Simple pop effect - expanding circle that fades
     hitEffect.circle(0, 0, radius);
@@ -267,15 +289,22 @@ export class BulletVisualEffects {
    * Update all active visual effects (trails fade, particles age)
    */
   public update(deltaTime: number): void {
-    // Update all trails (fade out over time)
+    // Update all trails (fade out and shrink over time)
     for (const [bulletId, trails] of this.trails.entries()) {
       for (let i = trails.length - 1; i >= 0; i--) {
         const trail = trails[i];
         trail.lifetime += deltaTime;
 
+        // Calculate progress (0 to 1)
+        const progress = trail.lifetime / trail.maxLifetime;
+
         // Fade alpha based on lifetime
-        trail.alpha = 1 - trail.lifetime / trail.maxLifetime;
+        trail.alpha = 1 - progress;
         trail.graphics.alpha = trail.alpha;
+
+        // Shrink scale based on lifetime (1.0 → 0.0)
+        const scale = 1 - progress;
+        trail.graphics.scale.set(scale, scale);
 
         // Remove expired trails
         if (trail.lifetime >= trail.maxLifetime) {
