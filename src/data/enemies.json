@@ -1,0 +1,48 @@
+{
+  "Ghost": {
+    "baseHealth": 1,
+    "speed": 50,
+    "assetKey": "ghost",
+    "size": 256,
+    "foodDrop": null,
+    "showHealthBar": false
+  },
+  "RedGhost": {
+    "baseHealth": 2,
+    "speed": 40,
+    "assetKey": "redGhost",
+    "size": 256,
+    "foodDrop": "Tofu",
+    "showHealthBar": true
+  },
+  "GreenGhost": {
+    "baseHealth": 2,
+    "speed": 40,
+    "assetKey": "greenGhost",
+    "size": 256,
+    "foodDrop": "Pearl",
+    "showHealthBar": true
+  },
+  "BlueGhost": {
+    "baseHealth": 2,
+    "speed": 40,
+    "assetKey": "blueGhost",
+    "size": 256,
+    "foodDrop": "BloodCake",
+    "showHealthBar": true
+  },
+  "Boss": {
+    "baseHealth": 10,
+    "speed": 30,
+    "assetKey": "boss",
+    "size": 512,
+    "foodDrop": null,
+    "showHealthBar": true
+  },
+  "hpScaling": {
+    "ghostCoefficient": 0.03,
+    "eliteCoefficient": 0.6,
+    "bossCoefficient": 1.5
+  },
+  "spawnX": 1950
+}

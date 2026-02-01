@@ -3,7 +3,8 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
-import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values/recipes";
+import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values";
+import type { FoodType } from "../core/data";
 import { KILL_COUNTER_CONFIG } from "../config";
 
 /**
@@ -270,7 +271,9 @@ export class HUDSystem extends InjectableSystem {
     const recipeIds = ["1", "2", "3", "4", "5"];
     const skillCosts = recipeIds.map((id) => RECIPE_DISPLAY[id].costs.length);
     const skillCostTypes = recipeIds.map((id) =>
-      RECIPE_DISPLAY[id].costs.map((foodType) => FOOD_HUD_COLOR[foodType]),
+      RECIPE_DISPLAY[id].costs.map(
+        (foodType: FoodType) => FOOD_HUD_COLOR[foodType],
+      ),
     );
 
     for (let i = 0; i < buttonCount; i++) {

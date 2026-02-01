@@ -8,10 +8,7 @@ import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
 import { SpecialBulletType } from "../core/types";
-import {
-  getPlayerAssetForBuff,
-  getDirHintAssetForBuff,
-} from "../values/bullet-type-registry";
+import { getPlayerAssetForBuff, getDirHintAssetForBuff } from "../values";
 
 /**
  * Player entity with keyboard controls and shooting capability

@@ -12,7 +12,7 @@ import {
   getEnemyProperties,
   getEnemyFoodDrop,
   shouldShowHealthBar,
-} from "../values/enemy-type-registry";
+} from "../values";
 
 // Re-export for backwards compatibility
 export { EnemyType, isEliteType } from "../core/types";

@@ -11,7 +11,7 @@ import { Enemy } from "../entities/enemy";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
-import { RECIPE_BUFF_MAPPING } from "../values/recipes";
+import { RECIPE_BUFF_MAPPING } from "../values";
 import { SpecialBulletType } from "../core/types";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";

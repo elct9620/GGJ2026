@@ -13,16 +13,7 @@ export { Damage } from "./damage";
 export { Health } from "./health";
 export { Ammo } from "./ammo";
 
-// 遊戲配方
-export {
-  RECIPES,
-  RECIPE_BUFF_MAPPING,
-  RECIPE_DISPLAY,
-  FOOD_HUD_COLOR,
-} from "./recipes";
-export type { Recipe, RecipeDisplayConfig, HUDColorType } from "./recipes";
-
-// 核心型別 (re-export from core/types)
+// 核心型別 (re-export from core/data)
 export {
   EnemyType,
   isEliteType,
@@ -30,9 +21,13 @@ export {
   FoodType,
   BoothId,
   getBoothIdForFood,
+  createData,
+  // Backwards compatibility
   createRegistry,
-} from "../core/types";
+} from "../core/data";
 export type {
+  Data,
+  // Backwards compatibility
   TypeRegistry,
   EnemyType as EnemyTypeValue,
   SpecialBulletType as SpecialBulletTypeValue,
@@ -42,10 +37,13 @@ export type {
   VisualEffectConfig,
   HitEffectConfigKey,
   EnemyTypeProperties,
-} from "../core/types";
+} from "../core/data";
 
-// 子彈類型註冊表
+// Data Catalogs (re-export from src/data/)
 export {
+  // BulletData
+  BulletData,
+  bulletData,
   BulletTypeRegistry,
   getBulletProperties,
   getBulletSize,
@@ -54,10 +52,9 @@ export {
   getVisualEffectConfig,
   getPlayerAssetForBuff,
   getDirHintAssetForBuff,
-} from "./bullet-type-registry";
-
-// 敵人類型註冊表
-export {
+  // EnemyData
+  EnemyData,
+  enemyData,
   EnemyTypeRegistry,
   getEnemyProperties,
   getEnemyAssetKey,
@@ -66,7 +63,40 @@ export {
   getEnemyFoodDrop,
   shouldShowHealthBar,
   getEnemyHealthForWave,
-} from "./enemy-type-registry";
+  // RecipeData
+  RecipeData,
+  recipeData,
+  RECIPES,
+  RECIPE_BUFF_MAPPING,
+  RECIPE_DISPLAY,
+  FOOD_HUD_COLOR,
+  // UpgradeData
+  UpgradeData,
+  upgradeData,
+  UPGRADE_CONFIG,
+  // WaveData
+  WaveData,
+  waveData,
+  WAVE_CONFIG,
+  // HitEffectData
+  HitEffectData,
+  hitEffectData,
+  HIT_EFFECTS_CONFIG,
+} from "../data";
+export type {
+  Recipe,
+  RecipeDisplayConfig,
+  HUDColorType,
+  NormalUpgrade,
+  BossUpgrade,
+  NormalUpgradeType,
+  BossUpgradeType,
+  UpgradeCost,
+  SpawnProbability,
+  FlashConfig,
+  KnockbackConfig,
+  ScreenShakeConfig,
+} from "../data";
 
 // 子彈升級快照
 export type { BulletUpgradeSnapshot } from "./bullet-upgrade-snapshot";

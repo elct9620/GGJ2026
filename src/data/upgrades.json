@@ -1,0 +1,53 @@
+{
+  "normal": {
+    "spicy": {
+      "damageBonus": 0.5,
+      "cost": {
+        "foodType": "Tofu",
+        "amount": 3
+      }
+    },
+    "coconut": {
+      "bulletBonus": 1,
+      "cost": {
+        "foodType": "Pearl",
+        "amount": 3
+      }
+    },
+    "cilantro": {
+      "rangeBonus": 100,
+      "cost": {
+        "foodType": "BloodCake",
+        "amount": 3
+      }
+    }
+  },
+  "boss": {
+    "discount": {
+      "costReduction": 1,
+      "maxStacks": 1
+    },
+    "bigEater": {
+      "magazineBonus": 6,
+      "maxStacks": 3
+    },
+    "fastEat": {
+      "damageBonus": 0.1,
+      "maxStacks": 1
+    },
+    "hunger30": {
+      "durationBonus": 2,
+      "maxStacks": 4
+    },
+    "buffet": {
+      "chainMultiplier": 2,
+      "decayReduction": 0.1,
+      "maxStacks": 2
+    },
+    "veryHungry": {
+      "reloadReduction": 0.5,
+      "maxStacks": 3
+    }
+  },
+  "optionsCount": 2
+}

@@ -4,10 +4,22 @@
  *
  * 此檔案集中管理所有影響遊戲平衡的可調整參數
  * 參考 SPEC.md § 2.3 - § 2.6 的設計規格
+ *
+ * NOTE: 大部分遊戲資料已外部化到 src/data/*.json
+ * 以下 re-export 供向後相容使用，建議直接使用 src/data/ 中的 Data Catalog
  */
 
 // =============================================================================
-// PLAYER CONFIG (SPEC § 2.6.1)
+// RE-EXPORTS FROM DATA CATALOGS (向後相容)
+// =============================================================================
+
+// Re-export from data catalogs for backwards compatibility
+export { UPGRADE_CONFIG } from "./data/upgrade-data";
+export { WAVE_CONFIG } from "./data/wave-data";
+export { HIT_EFFECTS_CONFIG } from "./data/hit-effect-data";
+
+// =============================================================================
+// PLAYER CONFIG (SPEC § 2.6.1) - 系統常數，保留在此
 // =============================================================================
 export const PLAYER_CONFIG = {
   /** 玩家最大生命值 */
@@ -21,7 +33,8 @@ export const PLAYER_CONFIG = {
 } as const;
 
 // =============================================================================
-// ENEMY CONFIG (SPEC § 2.6.2)
+// ENEMY CONFIG (SPEC § 2.6.2) - 已外部化到 src/data/enemies.json
+// 向後相容：保留匯出，但建議使用 enemyData
 // =============================================================================
 export const ENEMY_CONFIG = {
   ghost: {
@@ -56,51 +69,36 @@ export const ENEMY_CONFIG = {
 } as const;
 
 // =============================================================================
-// BULLET CONFIG (SPEC § 2.6.3)
+// BULLET CONFIG (SPEC § 2.6.3) - 部分外部化到 src/data/bullets.json
+// 向後相容：保留匯出，但建議使用 bulletData
 // =============================================================================
 export const BULLET_CONFIG = {
   /** 普通子彈速度 (px/s) */
   speed: 400,
   /** 普通子彈傷害 */
   normalDamage: 1,
-  /** 子彈顏色 (各種類型) */
+  /** 子彈顏色 (各種類型) - 已外部化到 bullets.json */
   colors: {
-    /** 普通子彈 - 黃色 */
     normal: 0xf1c40f,
-    /** 夜市總匯 - 紫色（連鎖閃電） */
     nightMarket: 0x9b59b6,
-    /** 臭豆腐 - 綠色（貫穿） */
     stinkyTofu: 0x27ae60,
-    /** 珍珠奶茶 - 棕色（散射） */
     bubbleTea: 0x8b4513,
-    /** 豬血糕 - 紅色（追蹤） */
     bloodCake: 0xe74c3c,
-    /** 蚵仔煎 - 橙色（百分比傷害） */
     oysterOmelette: 0xe67e22,
   },
-  /**
-   * 各子彈類型尺寸配置 (SPEC § 2.6.3)
-   * 碰撞箱與視覺大小統一（符合 CLAUDE.md § 設計決策）
-   * 基礎比例：玩家/怪物 256px，子彈大小需明顯可見
-   */
+  /** 各子彈類型尺寸配置 - 已外部化到 bullets.json */
   sizes: {
-    /** Normal: 24×24 px (原 16 × 1.5) */
     normal: 24,
-    /** Night Market: 48×48 px (原 32 × 1.5) */
     nightMarket: 48,
-    /** Stinky Tofu: 36×36 px (原 24 × 1.5) */
     stinkyTofu: 36,
-    /** Bubble Tea: 48×48 px (原 32 × 1.5，巨大黑珍珠) */
     bubbleTea: 48,
-    /** Blood Cake: 42×42 px (原 28 × 1.5) */
     bloodCake: 42,
-    /** Oyster Omelette: 192×192 px (原 128 × 1.5，巨大投擲物) */
     oysterOmelette: 192,
   },
 } as const;
 
 // =============================================================================
-// COMBAT CONFIG (SPEC § 2.3.2)
+// COMBAT CONFIG (SPEC § 2.3.2) - 系統常數，保留在此
 // =============================================================================
 export const COMBAT_CONFIG = {
   /** 射擊冷卻時間 (秒) */
@@ -112,29 +110,7 @@ export const COMBAT_CONFIG = {
 } as const;
 
 // =============================================================================
-// WAVE CONFIG (SPEC § 2.3.5)
-// =============================================================================
-export const WAVE_CONFIG = {
-  /** Boss 出現間隔（每 N 波） */
-  bossWaveInterval: 5,
-  /** 敵人數量公式倍率 - 敵人數 = wave × multiplier */
-  enemyMultiplier: 2,
-  /** 回合結束到下一回合的延遲 (毫秒) */
-  waveCompleteDelayMs: 2000,
-  /** 敵人生成間隔（基礎）秒 */
-  spawnIntervalMin: 2,
-  spawnIntervalMax: 3,
-  /** 敵人生成機率 (SPEC § 2.3.5) */
-  spawnProbability: {
-    ghost: 0.4, // 40% 餓鬼
-    redGhost: 0.2, // 20% 紅餓鬼
-    greenGhost: 0.2, // 20% 綠餓鬼
-    blueGhost: 0.2, // 20% 藍餓鬼
-  },
-} as const;
-
-// =============================================================================
-// BOOTH CONFIG (SPEC § 2.3.1)
+// BOOTH CONFIG (SPEC § 2.3.1) - 系統常數，保留在此
 // =============================================================================
 export const BOOTH_CONFIG = {
   /** 每個攤位最大儲存量 */
@@ -144,7 +120,7 @@ export const BOOTH_CONFIG = {
 } as const;
 
 // =============================================================================
-// KILL COUNTER CONFIG (SPEC § 2.3.8)
+// KILL COUNTER CONFIG (SPEC § 2.3.8) - 系統常數，保留在此
 // =============================================================================
 export const KILL_COUNTER_CONFIG = {
   /** 蚵仔煎消耗擊殺數門檻 */
@@ -152,7 +128,8 @@ export const KILL_COUNTER_CONFIG = {
 } as const;
 
 // =============================================================================
-// RECIPE CONFIG (SPEC § 2.3.3)
+// RECIPE CONFIG (SPEC § 2.3.3) - 已外部化到 src/data/recipes.json
+// 向後相容：保留匯出，但建議使用 recipeData
 // =============================================================================
 export const RECIPE_CONFIG = {
   /** 夜市總匯 */
@@ -160,136 +137,34 @@ export const RECIPE_CONFIG = {
     pearl: 1,
     tofu: 1,
     bloodCake: 1,
-    /** 基礎傷害 */
     baseDamage: 2,
-    /** 連鎖目標數 */
     chainTargets: 5,
-    /** 每次命中傷害衰減 */
-    chainDamageDecay: 0.2, // -20%/命中
+    chainDamageDecay: 0.2,
   },
   /** 臭豆腐 */
   stinkyTofu: {
     tofu: 3,
-    /** 基礎傷害 */
     baseDamage: 2,
-    /** 貫穿敵人數 */
     pierceCount: 1,
   },
   /** 珍珠奶茶 */
   bubbleTea: {
     pearl: 3,
-    /** 基礎傷害 */
     baseDamage: 1,
-    /** 額外子彈數（散射）- 三向散射 = 1 中心 + 2 側向 */
     extraBullets: 2,
   },
   /** 豬血糕 */
   bloodCake: {
     bloodCake: 3,
-    /** 基礎傷害 */
     baseDamage: 2,
-    /** 命中減速效果 */
-    slowEffect: 0.1, // -10% 敵人移速
-    /** 追蹤範圍 (px) - SPEC § 2.6.3.5: 距離限制 600px */
+    slowEffect: 0.1,
     trackingRange: 600,
   },
-  /** 蚵仔煎 - 百分比傷害 (SPEC § 2.3.3) */
+  /** 蚵仔煎 - 百分比傷害 */
   oysterOmelet: {
-    /** Boss 傷害百分比 */
-    bossDamagePercent: 0.1, // 10% HP
-    /** 菁英傷害百分比 */
-    eliteDamagePercent: 0.5, // 50% HP
-    /** 小怪傷害百分比 */
-    ghostDamagePercent: 0.7, // 70% HP
-  },
-} as const;
-
-// =============================================================================
-// UPGRADE CONFIG (SPEC § 2.3.4)
-// =============================================================================
-export const UPGRADE_CONFIG = {
-  /** 普通升級 */
-  normal: {
-    /** 加辣 - 臭豆腐傷害加成 */
-    spicy: {
-      damageBonus: 0.5,
-      cost: { foodType: "Tofu" as const, amount: 3 },
-    },
-    /** 加椰果 - 珍珠奶茶子彈加成 */
-    coconut: {
-      bulletBonus: 1, // SPEC 說 +1
-      cost: { foodType: "Pearl" as const, amount: 3 },
-    },
-    /** 加香菜 - 豬血糕範圍加成 */
-    cilantro: {
-      rangeBonus: 100, // +100px per upgrade
-      cost: { foodType: "BloodCake" as const, amount: 3 },
-    },
-  },
-  /** Boss 升級（無消耗） */
-  boss: {
-    /** 打折 - 配方消耗減少 */
-    discount: {
-      costReduction: 1,
-      maxStacks: 1,
-    },
-    /** 大胃王 - 彈匣容量加成 */
-    bigEater: {
-      magazineBonus: 6,
-      maxStacks: 3,
-    },
-    /** 快吃 - 蚵仔煎傷害加成 */
-    fastEat: {
-      damageBonus: 0.1, // +10%
-      maxStacks: 1,
-    },
-    /** 飢餓三十 - Buff 時長加成 */
-    hunger30: {
-      durationBonus: 2, // +2s
-      maxStacks: 4,
-    },
-    /** 總匯吃到飽 - 夜市總匯強化 */
-    buffet: {
-      chainMultiplier: 2,
-      decayReduction: 0.1, // -10%/人
-      maxStacks: 2,
-    },
-    /** 好餓好餓 - 換彈時間減少 */
-    veryHungry: {
-      reloadReduction: 0.5, // -0.5s
-      maxStacks: 3,
-    },
-  },
-  /** 升級選項數量 */
-  optionsCount: 2,
-} as const;
-
-// =============================================================================
-// HIT EFFECTS CONFIG (SPEC § 2.6.3 通用視覺效果)
-// =============================================================================
-export const HIT_EFFECTS_CONFIG = {
-  /** 閃白效果配置（各子彈類型） */
-  flash: {
-    normal: { color: 0xffcccc, duration: 0.12 }, // 淡紅色 120ms（白色在白色 tint 上看不見）
-    nightMarket: { color: 0xffd700, duration: 0.15 }, // 金黃 150ms
-    stinkyTofu: { color: 0x27ae60, duration: 0.12 }, // 綠色 120ms
-    bubbleTea: { color: 0xffcccc, duration: 0.12 }, // 淡紅色 120ms
-    bloodCake: { color: 0x8b0000, duration: 0.13 }, // 黑紅 130ms
-    oysterOmelette: { color: 0xff4444, duration: 0.3 }, // 紅白 300ms
-  },
-  /** 擊退效果配置（通用） */
-  knockback: {
-    distance: 15, // 像素
-    duration: 0.08, // 秒
-  },
-  /** 螢幕震動配置（各子彈類型） */
-  screenShake: {
-    normal: { magnitude: 2, duration: 0.08 }, // 輕微 2px 80ms（1px 太小看不見）
-    nightMarket: { magnitude: 3, duration: 0.1 }, // 3px
-    stinkyTofu: { magnitude: 4, duration: 0.15 }, // 4px
-    bubbleTea: { magnitude: 2, duration: 0.08 }, // 2px
-    bloodCake: { magnitude: 3, duration: 0.1 }, // 3px
-    oysterOmelette: { magnitude: 8, duration: 0.5 }, // 8px（終極）
+    bossDamagePercent: 0.1,
+    eliteDamagePercent: 0.5,
+    ghostDamagePercent: 0.7,
   },
 } as const;
 
@@ -300,9 +175,14 @@ export type PlayerConfig = typeof PLAYER_CONFIG;
 export type EnemyConfig = typeof ENEMY_CONFIG;
 export type BulletConfig = typeof BULLET_CONFIG;
 export type CombatConfig = typeof COMBAT_CONFIG;
-export type WaveConfig = typeof WAVE_CONFIG;
 export type BoothConfig = typeof BOOTH_CONFIG;
 export type KillCounterConfig = typeof KILL_COUNTER_CONFIG;
 export type RecipeConfig = typeof RECIPE_CONFIG;
-export type UpgradeConfig = typeof UPGRADE_CONFIG;
-export type HitEffectsConfig = typeof HIT_EFFECTS_CONFIG;
+
+// Re-exported types from data catalogs
+import type { WAVE_CONFIG as WaveConfigType } from "./data/wave-data";
+import type { UPGRADE_CONFIG as UpgradeConfigType } from "./data/upgrade-data";
+import type { HIT_EFFECTS_CONFIG as HitEffectsConfigType } from "./data/hit-effect-data";
+export type WaveConfig = typeof WaveConfigType;
+export type UpgradeConfig = typeof UpgradeConfigType;
+export type HitEffectsConfig = typeof HitEffectsConfigType;

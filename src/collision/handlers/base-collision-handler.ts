@@ -7,10 +7,7 @@
 import type { CollisionHandler, CollisionContext } from "../collision-handler";
 import type { SpecialBulletType } from "../../core/types";
 import { HIT_EFFECTS_CONFIG } from "../../config";
-import {
-  getHitEffectConfigKey,
-  type HitEffectConfigKey,
-} from "../../values/bullet-type-registry";
+import { getHitEffectConfigKey, type HitEffectConfigKey } from "../../values";
 
 /**
  * Abstract base class for collision handlers

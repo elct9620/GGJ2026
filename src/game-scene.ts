@@ -22,7 +22,7 @@ import { AudioSystem } from "./systems/audio-system";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
-import { RECIPES, RECIPE_DISPLAY, FOOD_HUD_COLOR } from "./values/recipes";
+import { RECIPES, RECIPE_DISPLAY, FOOD_HUD_COLOR } from "./values";
 import { PLAYER_CONFIG, RECIPE_CONFIG } from "./config";
 import { SpecialBulletType } from "./core/types";
 import { GameStateManager, type GameStats } from "./core/game-state";

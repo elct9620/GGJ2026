@@ -14,7 +14,7 @@ import {
   getBulletSize,
   getVisualEffectConfig,
   type VisualEffectConfig,
-} from "../values/bullet-type-registry";
+} from "../values";
 
 /**
  * Trail particle for bullet flight effects

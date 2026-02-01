@@ -1,0 +1,80 @@
+{
+  "1": {
+    "id": "1",
+    "name": "夜市總匯",
+    "buffType": "NightMarket",
+    "foodRequirements": {
+      "Pearl": 1,
+      "Tofu": 1,
+      "BloodCake": 1
+    },
+    "requiresKillCounter": false,
+    "baseDamage": 2,
+    "chainTargets": 5,
+    "chainDamageDecay": 0.2,
+    "display": {
+      "label": "技能1",
+      "costs": ["Pearl", "Tofu", "BloodCake"]
+    }
+  },
+  "2": {
+    "id": "2",
+    "name": "臭豆腐",
+    "buffType": "StinkyTofu",
+    "foodRequirements": {
+      "Tofu": 3
+    },
+    "requiresKillCounter": false,
+    "baseDamage": 2,
+    "pierceCount": 1,
+    "display": {
+      "label": "技能2",
+      "costs": ["Tofu", "Tofu", "Tofu"]
+    }
+  },
+  "3": {
+    "id": "3",
+    "name": "珍珠奶茶",
+    "buffType": "BubbleTea",
+    "foodRequirements": {
+      "Pearl": 3
+    },
+    "requiresKillCounter": false,
+    "baseDamage": 1,
+    "extraBullets": 2,
+    "display": {
+      "label": "技能3",
+      "costs": ["Pearl", "Pearl", "Pearl"]
+    }
+  },
+  "4": {
+    "id": "4",
+    "name": "豬血糕",
+    "buffType": "BloodCake",
+    "foodRequirements": {
+      "BloodCake": 3
+    },
+    "requiresKillCounter": false,
+    "baseDamage": 2,
+    "slowEffect": 0.1,
+    "trackingRange": 600,
+    "display": {
+      "label": "技能4",
+      "costs": ["BloodCake", "BloodCake", "BloodCake"]
+    }
+  },
+  "5": {
+    "id": "5",
+    "name": "蚵仔煎",
+    "buffType": "OysterOmelette",
+    "foodRequirements": {},
+    "requiresKillCounter": true,
+    "bossDamagePercent": 0.1,
+    "eliteDamagePercent": 0.5,
+    "ghostDamagePercent": 0.7,
+    "display": {
+      "label": "大招",
+      "costs": ["Tofu"]
+    }
+  }
+}

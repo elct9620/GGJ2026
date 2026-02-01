@@ -1,0 +1,22 @@
+{
+  "flash": {
+    "normal": { "color": 16764108, "duration": 0.12 },
+    "nightMarket": { "color": 16766720, "duration": 0.15 },
+    "stinkyTofu": { "color": 2600672, "duration": 0.12 },
+    "bubbleTea": { "color": 16764108, "duration": 0.12 },
+    "bloodCake": { "color": 9109504, "duration": 0.13 },
+    "oysterOmelette": { "color": 16728132, "duration": 0.3 }
+  },
+  "knockback": {
+    "distance": 15,
+    "duration": 0.08
+  },
+  "screenShake": {
+    "normal": { "magnitude": 2, "duration": 0.08 },
+    "nightMarket": { "magnitude": 3, "duration": 0.1 },
+    "stinkyTofu": { "magnitude": 4, "duration": 0.15 },
+    "bubbleTea": { "magnitude": 2, "duration": 0.08 },
+    "bloodCake": { "magnitude": 3, "duration": 0.1 },
+    "oysterOmelette": { "magnitude": 8, "duration": 0.5 }
+  }
+}

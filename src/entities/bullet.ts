@@ -8,7 +8,7 @@ import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
 import { SpecialBulletType } from "../core/types";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
-import { getBulletSize, getBulletColor } from "../values/bullet-type-registry";
+import { getBulletSize, getBulletColor } from "../values";
 
 /**
  * Bullet entity fired by player

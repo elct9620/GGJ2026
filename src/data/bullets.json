@@ -1,0 +1,89 @@
+{
+  "None": {
+    "size": 24,
+    "color": 16376591,
+    "configKey": "normal",
+    "playerAsset": "playerBase",
+    "dirHintAsset": "playerDirHint01",
+    "visualConfig": {
+      "trailColor": 16777215,
+      "trailLength": 8,
+      "trailLifetime": 0.2,
+      "hitColor": 16777215,
+      "hitDuration": 0.15
+    }
+  },
+  "NightMarket": {
+    "size": 48,
+    "color": 10181814,
+    "configKey": "nightMarket",
+    "playerAsset": "playerNightMarket",
+    "dirHintAsset": "playerDirHint01",
+    "visualConfig": {
+      "trailColor": 16766720,
+      "trailLength": 8,
+      "trailLifetime": 0.3,
+      "hitColor": 16766720,
+      "chainColor": 16766720,
+      "chainWidth": 4,
+      "flashDuration": 0.2
+    }
+  },
+  "StinkyTofu": {
+    "size": 36,
+    "color": 2600672,
+    "configKey": "stinkyTofu",
+    "playerAsset": "playerStinkyTofu",
+    "dirHintAsset": "playerDirHint01",
+    "visualConfig": {
+      "trailColor": 2600672,
+      "trailLength": 14,
+      "trailLifetime": 0.4,
+      "pierceColor": 2600672,
+      "pierceRadius": 48,
+      "pierceDuration": 0.3
+    }
+  },
+  "BubbleTea": {
+    "size": 48,
+    "color": 9127187,
+    "configKey": "bubbleTea",
+    "playerAsset": "playerBubbleTea",
+    "dirHintAsset": "playerDirHint02",
+    "visualConfig": {
+      "trailColor": 16777215,
+      "trailLength": 6,
+      "trailLifetime": 0.25
+    }
+  },
+  "BloodCake": {
+    "size": 42,
+    "color": 15159340,
+    "configKey": "bloodCake",
+    "playerAsset": "playerBloodCake",
+    "dirHintAsset": "playerDirHint01",
+    "visualConfig": {
+      "trailColor": 1710618,
+      "trailLength": 14,
+      "trailLifetime": 0.5,
+      "residueAlpha": 0.6
+    }
+  },
+  "OysterOmelette": {
+    "size": 192,
+    "color": 15097378,
+    "configKey": "oysterOmelette",
+    "playerAsset": "playerOysterOmelette",
+    "dirHintAsset": "playerDirHint01",
+    "visualConfig": {
+      "trailColor": 15097378,
+      "trailLength": 10,
+      "trailLifetime": 0.3,
+      "explosionColor": 16728132,
+      "explosionRadius": 128,
+      "explosionDuration": 0.4,
+      "screenShakeMagnitude": 8,
+      "screenShakeDuration": 0.5
+    }
+  }
+}

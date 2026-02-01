@@ -11,7 +11,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { KillCounterSystem } from "./kill-counter";
 import { type FoodType, getBoothIdForFood } from "../core/types";
-import { type Recipe, RECIPES } from "../values/recipes";
+import { type Recipe, RECIPES } from "../values";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
 
