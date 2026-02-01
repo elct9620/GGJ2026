@@ -7,7 +7,7 @@ import {
 import { GameLoop } from "./core/game-loop";
 import { GameScene } from "./game-scene";
 import { createBackground } from "./core/background";
-import { GameState } from "./core/game-state";
+import { ScreenState } from "./core/game-state";
 import type { GameStats } from "./core/game-state";
 import { StartScreen } from "./screens/start-screen";
 import { GameOverScreen } from "./screens/game-over-screen";
@@ -44,13 +44,13 @@ async function main() {
   attachGameContainers(layers.game, gameContainers);
 
   // Game state management (Spec: § 2.4.2, § 2.8.2)
-  let currentState: GameState = GameState.START;
+  let currentState: ScreenState = ScreenState.START;
   let gameScene: GameScene | null = null;
 
   // Create screens
   const startScreen = new StartScreen(() => {
     // Start game callback
-    currentState = GameState.PLAYING;
+    currentState = ScreenState.PLAYING;
     startScreen.hide();
 
     // Initialize game scene
@@ -64,7 +64,7 @@ async function main() {
         layers.ui,
         (stats: GameStats) => {
           // Game over callback
-          currentState = GameState.GAME_OVER;
+          currentState = ScreenState.GAME_OVER;
           gameOverScreen.show(stats);
         },
       );
@@ -75,7 +75,7 @@ async function main() {
 
   const gameOverScreen = new GameOverScreen(() => {
     // Restart game callback
-    currentState = GameState.START;
+    currentState = ScreenState.START;
     gameOverScreen.hide();
     startScreen.show();
   });
@@ -93,7 +93,7 @@ async function main() {
 
   gameLoop.setUpdateCallback((deltaTime, _totalTime) => {
     // Only update game scene when in PLAYING state
-    if (currentState === GameState.PLAYING && gameScene) {
+    if (currentState === ScreenState.PLAYING && gameScene) {
       gameScene.update(deltaTime);
     }
   });

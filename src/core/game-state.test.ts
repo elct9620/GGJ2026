@@ -4,21 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import {
-  GameStateManager,
-  ScreenState,
-  GameState,
-  createGameStats,
-} from "./game-state";
+import { GameStateManager, ScreenState, createGameStats } from "./game-state";
 import { SpecialBulletType } from "../values/special-bullet";
-
-describe("GameState (deprecated alias)", () => {
-  it("should have correct state values", () => {
-    expect(GameState.START).toBe("START");
-    expect(GameState.PLAYING).toBe("PLAYING");
-    expect(GameState.GAME_OVER).toBe("GAME_OVER");
-  });
-});
 
 describe("ScreenState", () => {
   it("should have correct state values", () => {

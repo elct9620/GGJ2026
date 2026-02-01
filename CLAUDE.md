@@ -153,10 +153,10 @@ Application.stage
 
 ### Core Game Systems
 
-**System Architecture**: All systems implement `ISystem` interface and are managed by `SystemManager`:
+**System Architecture**: All systems implement `System` interface and are managed by `SystemManager`:
 
 ```typescript
-interface ISystem {
+interface System {
   name: string;
   priority: SystemPriority;  // Execution order (EVENT_QUEUE → BOOTH → DEFAULT)
   initialize(): void;

@@ -15,15 +15,6 @@ export const ScreenState = {
 export type ScreenState = (typeof ScreenState)[keyof typeof ScreenState];
 
 /**
- * @deprecated Use ScreenState instead
- */
-export const GameState = ScreenState;
-/**
- * @deprecated Use ScreenState instead
- */
-export type GameState = ScreenState;
-
-/**
  * Game statistics tracked during gameplay
  */
 export interface GameStats {
@@ -93,11 +84,6 @@ export interface GameStateInterface {
   // Statistics
   stats: GameStats;
 }
-
-/**
- * @deprecated Use GameStateInterface instead
- */
-export type IGameState = GameStateInterface;
 
 /**
  * Creates initial wave state

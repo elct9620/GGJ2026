@@ -36,8 +36,3 @@ export interface System {
   /** 清理系統資源（取消註冊時呼叫） */
   destroy?(): void;
 }
-
-/**
- * @deprecated Use System instead
- */
-export type ISystem = System;
