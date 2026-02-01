@@ -55,7 +55,6 @@ export const AssetKeys = {
   boothPool2: "boothPool2",
   stalls: "stalls",
   player: "player",
-  playerDirHint: "playerDirHint", // Legacy, redirects to playerDirHint01
   playerDirHint01: "playerDirHint01",
   playerDirHint02: "playerDirHint02",
   playerBase: "playerBase",
@@ -100,7 +99,6 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.boothPool2]: dropItemPool2,
   [AssetKeys.stalls]: imageStalls,
   [AssetKeys.player]: playerSprite,
-  [AssetKeys.playerDirHint]: playerDirHint01, // Legacy support
   [AssetKeys.playerDirHint01]: playerDirHint01,
   [AssetKeys.playerDirHint02]: playerDirHint02,
   [AssetKeys.playerBase]: playerBase,
