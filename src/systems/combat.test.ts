@@ -355,6 +355,42 @@ describe("CombatSystem", () => {
       expect(ghost.active).toBe(false);
     });
 
+    it("CS-13e: 蚵仔煎對受傷 Boss 造成當前 HP 10% 傷害", () => {
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "5" });
+
+      // Wave 5 Boss has 10 HP, damage it to 6 HP first
+      const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
+      boss.health = 6; // Injured boss
+      enemies.push(boss);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Boss should take 10% of CURRENT HP (6 × 0.1 = 0.6 → 1)
+      expect(boss.health).toBe(5);
+      expect(bullet.active).toBe(false);
+    });
+
+    it("CS-13f: 蚵仔煎對受傷菁英造成當前 HP 50% 傷害", () => {
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "5" });
+
+      // Elite with 4 HP (Wave 5), damage it to 3 HP first
+      const elite = new Enemy(EnemyType.RedGhost, new Vector(500, 540), 5);
+      elite.health = 3; // Injured elite
+      enemies.push(elite);
+
+      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      bullets.push(bullet);
+
+      combatSystem.update(0.016);
+
+      // Elite should take 50% of CURRENT HP (3 × 0.5 = 1.5 → 2)
+      expect(elite.health).toBe(1);
+      expect(bullet.active).toBe(false);
+    });
+
     it("CS-18: Buff 結束（2 秒後）+ 按 Space → 普通子彈", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "2" });
       expect(combatSystem.isBuffActive()).toBe(true);

@@ -620,6 +620,7 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Calculate percentage damage based on enemy type (SPEC § 2.3.3)
+   * 蚵仔煎：Boss 10% 當前 HP, 菁英 50% 當前 HP, 小怪 70% 當前 HP
    * 快吃升級增加百分比傷害
    */
   private calculatePercentDamage(enemy: Enemy): Damage {
@@ -640,7 +641,7 @@ export class CombatSystem extends InjectableSystem {
       percentage = ghostDamagePercent + bonusPercent;
     }
 
-    return Damage.fromPercentage(enemy.maxHealth, percentage);
+    return Damage.fromPercentage(enemy.health, percentage);
   }
 
   /**
