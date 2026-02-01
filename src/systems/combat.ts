@@ -28,9 +28,6 @@ import {
 } from "../collision";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 
-// Re-export for backwards compatibility
-export { SpecialBulletType } from "../core/types";
-
 /**
  * Bullet spawn request data
  * Contains all information needed to create a bullet

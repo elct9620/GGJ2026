@@ -4,9 +4,6 @@ import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
 import { FoodType } from "../core/types";
 
-// Re-export for backwards compatibility
-export { FoodType, BoothId, getBoothIdForFood } from "../core/types";
-
 /**
  * Food item dropped by enemies
  * Spec: § 2.3.1 Booth System - Food Types

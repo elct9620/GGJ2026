@@ -13,10 +13,6 @@ import { upgradeData, waveData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { GameStateManager, UpgradeState } from "../core/game-state";
 
-// Re-export UpgradeState from game-state for backwards compatibility
-export type { UpgradeState } from "../core/game-state";
-export { createDefaultUpgradeState } from "../core/game-state";
-
 /**
  * Upgrade option definition
  * Effect now takes GameStateManager for centralized state updates

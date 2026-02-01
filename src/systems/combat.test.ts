@@ -4,13 +4,14 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { CombatSystem, SpecialBulletType } from "./combat";
+import { CombatSystem } from "./combat";
 import { Player } from "../entities/player";
-import { Enemy, EnemyType } from "../entities/enemy";
+import { Enemy } from "../entities/enemy";
 import { Bullet } from "../entities/bullet";
 import { EventQueue, EventType } from "./event-queue";
 import { Vector } from "../values/vector";
 import { GameStateManager } from "../core/game-state";
+import { SpecialBulletType, EnemyType } from "../core/types";
 
 describe("CombatSystem", () => {
   let combatSystem: CombatSystem;

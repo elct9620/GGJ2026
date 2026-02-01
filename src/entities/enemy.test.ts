@@ -4,10 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { Enemy, EnemyType, isEliteType } from "./enemy";
+import { Enemy } from "./enemy";
 import { Vector } from "../values/vector";
 import { LAYOUT } from "../utils/constants";
-import { FoodType } from "../core/types";
+import { FoodType, EnemyType, isEliteType } from "../core/types";
 
 describe("Enemy", () => {
   describe("2.7.1 Ghost (餓鬼) - 小怪", () => {

@@ -6,9 +6,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { BoxSystem } from "./box";
 import { BoothSystem } from "./booth";
-import { FoodType } from "../core/types";
+import { FoodType, EnemyType } from "../core/types";
 import { EventQueue, EventType } from "./event-queue";
-import { Enemy, EnemyType } from "../entities/enemy";
+import { Enemy } from "../entities/enemy";
 import { Vector } from "../values/vector";
 import { LAYOUT } from "../utils/constants";
 

@@ -10,9 +10,6 @@ import { LAYOUT } from "../utils/constants";
 import { EnemyType, isEliteType } from "../core/types";
 import { enemyData } from "../data";
 
-// Re-export for backwards compatibility
-export { EnemyType, isEliteType } from "../core/types";
-
 /**
  * Enemy entity (Ghost or Boss)
  * Spec: § 2.6.2 Enemies
