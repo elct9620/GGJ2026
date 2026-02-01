@@ -8,6 +8,7 @@ export const DependencyKeys = {
   BoothSystem: "BoothSystem",
   KillCounterSystem: "KillCounterSystem",
   UpgradeSystem: "UpgradeSystem",
+  BulletVisualEffects: "BulletVisualEffectsSystem",
   GameState: "GameState",
   HUDSystem: "HUDSystem",
   WaveSystem: "WaveSystem",

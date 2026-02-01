@@ -17,6 +17,7 @@ import { Damage } from "../values/damage";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
+import type { BulletVisualEffectsSystem } from "./bullet-visual-effects";
 import type { GameStateManager } from "../core/game-state";
 import { Vector } from "../values/vector";
 
@@ -91,6 +92,7 @@ export class CombatSystem extends InjectableSystem {
     super();
     this.declareDependency(DependencyKeys.EventQueue, false); // Optional for testing
     this.declareDependency(DependencyKeys.UpgradeSystem, false); // Optional for testing
+    this.declareDependency(DependencyKeys.BulletVisualEffects, false); // Optional for testing
     this.declareDependency(DependencyKeys.GameState); // Required
   }
 
@@ -107,6 +109,15 @@ export class CombatSystem extends InjectableSystem {
   private get upgradeSystem(): UpgradeSystem | null {
     return this.getOptionalDependency<UpgradeSystem>(
       DependencyKeys.UpgradeSystem,
+    );
+  }
+
+  /**
+   * Get BulletVisualEffectsSystem dependency (optional)
+   */
+  private get visualEffects(): BulletVisualEffectsSystem | null {
+    return this.getOptionalDependency<BulletVisualEffectsSystem>(
+      DependencyKeys.BulletVisualEffects,
     );
   }
 
@@ -463,6 +474,7 @@ export class CombatSystem extends InjectableSystem {
   private handleNormalCollision(): void {
     this.processFirstHitCollision((bullet, enemy) => {
       this.applyDamageAndPublishDeath(enemy, bullet.damage);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
     });
   }
 
@@ -479,8 +491,10 @@ export class CombatSystem extends InjectableSystem {
     // pierceCount = 1 means hit first + pierce through 1 more = 2 total hits
     const totalHits = RECIPE_CONFIG.stinkyTofu.pierceCount + 1;
 
-    this.processPierceCollision(totalHits, (_bullet, enemy) => {
+    this.processPierceCollision(totalHits, (bullet, enemy) => {
       this.applyDamageAndPublishDeath(enemy, damage);
+      this.visualEffects?.createPierceEffect(enemy.position);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
       return { consumed: false }; // Never consume early, let pierce count handle it
     });
   }
@@ -490,9 +504,11 @@ export class CombatSystem extends InjectableSystem {
    * Boss: 10% HP, Elite: 50% HP, Ghost: 70% HP
    */
   private handleOysterOmeletteCollision(): void {
-    this.processFirstHitCollision((_bullet, enemy) => {
+    this.processFirstHitCollision((bullet, enemy) => {
       const percentDamage = this.calculatePercentDamage(enemy);
       this.applyDamageAndPublishDeath(enemy, percentDamage.toNumber());
+      this.visualEffects?.createExplosionEffect(enemy.position);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
     });
   }
 
@@ -504,8 +520,9 @@ export class CombatSystem extends InjectableSystem {
     const damage = RECIPE_CONFIG.bloodCake.baseDamage;
     const slowPercent = RECIPE_CONFIG.bloodCake.slowEffect;
 
-    this.processFirstHitCollision((_bullet, enemy) => {
+    this.processFirstHitCollision((bullet, enemy) => {
       this.applyDamageAndPublishDeath(enemy, damage);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
 
       // Apply slow debuff if enemy survived
       if (enemy.active) {
@@ -563,17 +580,31 @@ export class CombatSystem extends InjectableSystem {
   ): void {
     const hitEnemies = new Set<string>();
     let currentTarget: Enemy | null = firstTarget;
+    let previousTarget: Enemy | null = null;
     let currentDamage = baseDamage;
 
     for (let i = 0; i < maxTargets && currentTarget !== null; i++) {
+      // Create chain lightning effect from previous to current target
+      if (previousTarget && this.visualEffects) {
+        this.visualEffects.createChainEffect(
+          previousTarget.position,
+          currentTarget.position,
+        );
+      }
+
       // Apply damage to current target
       this.applyDamageAndPublishDeath(currentTarget, Math.round(currentDamage));
+      this.visualEffects?.createHitEffect(
+        currentTarget.position,
+        SpecialBulletType.NightMarket,
+      );
       hitEnemies.add(currentTarget.id);
 
       // Apply damage decay for next hit
       currentDamage = currentDamage * (1 - decayRate);
 
-      // Find next closest enemy within range
+      // Move to next target
+      previousTarget = currentTarget;
       currentTarget = this.findClosestEnemy(
         currentTarget.position,
         hitEnemies,
