@@ -42,7 +42,7 @@ import { Damage, Health, Ammo, Vector } from "../values";
 | 決策                    | 理由                                           |
 | ----------------------- | ---------------------------------------------- |
 | **不可變（Immutable）** | 防止意外修改，支援函數式編程風格，避免副作用   |
-| **整數座標**            | 像素對齊渲染，避免浮點數精度問題               |
+| **浮點座標**            | 支援精確的方向和速度計算（如散射子彈角度）     |
 | **零向量正規化**        | 返回 (0, 0) 而非拋出錯誤，優雅降級處理邊界情況 |
 
 ## 1.3 Properties
@@ -54,10 +54,10 @@ class Vector {
 }
 ```
 
-| 屬性 | 型別     | 說明             |
-| ---- | -------- | ---------------- |
-| `x`  | `number` | X 軸座標（整數） |
-| `y`  | `number` | Y 軸座標（整數） |
+| 屬性 | 型別     | 說明               |
+| ---- | -------- | ------------------ |
+| `x`  | `number` | X 軸座標（浮點數） |
+| `y`  | `number` | Y 軸座標（浮點數） |
 
 ## 1.4 Operations
 
@@ -88,7 +88,6 @@ const newPosition = position.add(velocity); // Vector(110, 195)
 
 **邊界情況**：
 
-- 結果超出整數範圍：返回 JavaScript 最大安全整數範圍內的值
 - `other` 為 null/undefined：拋出 TypeError
 
 ### 1.4.2 subtract
@@ -118,7 +117,6 @@ const direction = enemyPos.subtract(playerPos); // Vector(-200, -100)
 
 **邊界情況**：
 
-- 結果超出整數範圍：返回 JavaScript 最大安全整數範圍內的值
 - `other` 為 null/undefined：拋出 TypeError
 
 ### 1.4.3 multiply
@@ -134,8 +132,8 @@ multiply(scalar: number): Vector
 **行為**：
 
 ```
-result.x = Math.round(this.x * scalar)
-result.y = Math.round(this.y * scalar)
+result.x = this.x * scalar
+result.y = this.y * scalar
 ```
 
 **範例**：
@@ -143,7 +141,7 @@ result.y = Math.round(this.y * scalar)
 ```typescript
 const velocity = new Vector(10, 5);
 const doubleVelocity = velocity.multiply(2); // Vector(20, 10)
-const halfVelocity = velocity.multiply(0.5); // Vector(5, 3)  // 四捨五入
+const halfVelocity = velocity.multiply(0.5); // Vector(5, 2.5)
 ```
 
 **邊界情況**：
@@ -152,7 +150,6 @@ const halfVelocity = velocity.multiply(0.5); // Vector(5, 3)  // 四捨五入
 - `scalar` 為負數：返回反向向量
 - `scalar` 為 NaN：拋出 TypeError
 - `scalar` 為 Infinity：拋出 RangeError
-- 結果需四捨五入至最接近的整數
 
 ### 1.4.4 normalize
 
@@ -169,15 +166,15 @@ normalize(): Vector
 ```
 magnitude = sqrt(x² + y²)
 if (magnitude === 0) return Vector(0, 0)
-result.x = Math.round(x / magnitude)
-result.y = Math.round(y / magnitude)
+result.x = x / magnitude
+result.y = y / magnitude
 ```
 
 **範例**：
 
 ```typescript
 const velocity = new Vector(3, 4);
-const direction = velocity.normalize(); // Vector(1, 1)  // 四捨五入後
+const direction = velocity.normalize(); // Vector(0.6, 0.8)
 
 const zeroVector = new Vector(0, 0);
 const normalized = zeroVector.normalize(); // Vector(0, 0)  // 優雅降級
@@ -186,7 +183,6 @@ const normalized = zeroVector.normalize(); // Vector(0, 0)  // 優雅降級
 **邊界情況**：
 
 - 零向量 (0, 0)：返回 Vector(0, 0)（不拋出錯誤）
-- 結果需四捨五入至最接近的整數
 
 ### 1.4.5 magnitude
 

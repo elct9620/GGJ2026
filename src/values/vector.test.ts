@@ -3,16 +3,16 @@ import { Vector } from "./vector";
 
 describe("Vector", () => {
   describe("constructor", () => {
-    test("creates vector with integer coordinates", () => {
+    test("creates vector with coordinates", () => {
       const v = new Vector(100, 200);
       expect(v.x).toBe(100);
       expect(v.y).toBe(200);
     });
 
-    test("rounds float coordinates to integers", () => {
+    test("preserves float coordinates", () => {
       const v = new Vector(100.6, 200.4);
-      expect(v.x).toBe(101);
-      expect(v.y).toBe(200);
+      expect(v.x).toBe(100.6);
+      expect(v.y).toBe(200.4);
     });
 
     test("throws TypeError for NaN coordinates", () => {
@@ -111,11 +111,11 @@ describe("Vector", () => {
       expect(result.y).toBe(10);
     });
 
-    test("rounds result to nearest integer", () => {
+    test("preserves float result", () => {
       const v = new Vector(10, 5);
       const result = v.multiply(0.5);
       expect(result.x).toBe(5);
-      expect(result.y).toBe(3); // 2.5 rounds to 3
+      expect(result.y).toBe(2.5);
     });
 
     test("handles zero scalar", () => {
@@ -148,9 +148,9 @@ describe("Vector", () => {
     test("normalizes vector to unit length", () => {
       const v = new Vector(3, 4);
       const result = v.normalize();
-      // magnitude = 5, normalized = (3/5, 4/5) = (0.6, 0.8) → rounds to (1, 1)
-      expect(result.x).toBe(1);
-      expect(result.y).toBe(1);
+      // magnitude = 5, normalized = (3/5, 4/5) = (0.6, 0.8)
+      expect(result.x).toBeCloseTo(0.6, 5);
+      expect(result.y).toBeCloseTo(0.8, 5);
     });
 
     test("handles zero vector gracefully", () => {
@@ -160,11 +160,12 @@ describe("Vector", () => {
       expect(result.y).toBe(0);
     });
 
-    test("rounds result to nearest integer", () => {
+    test("produces unit vector", () => {
       const v = new Vector(100, 0);
       const result = v.normalize();
       expect(result.x).toBe(1);
       expect(result.y).toBe(0);
+      expect(result.magnitude()).toBeCloseTo(1, 5);
     });
 
     test("returns new Vector instance (immutable)", () => {

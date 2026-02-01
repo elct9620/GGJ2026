@@ -544,6 +544,53 @@ describe("CombatSystem", () => {
       expect(spawnedBullets).toHaveLength(3);
     });
 
+    it("should spread BubbleTea bullets at ±15° angles (SPEC § 2.6.3.4)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Activate BubbleTea buff
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "3" });
+      combatSystem.performShoot();
+
+      expect(spawnedBullets).toHaveLength(3);
+
+      // Verify bullet velocities form a ±15° spread
+      // Expected: (+15°, 0°, -15°) for 3 bullets
+      // Bullet 0: +15° -> cos(15°) ≈ 0.966, sin(15°) ≈ 0.259
+      // Bullet 1: 0° -> cos(0°) = 1, sin(0°) = 0
+      // Bullet 2: -15° -> cos(-15°) ≈ 0.966, sin(-15°) ≈ -0.259
+
+      const speed = 400; // BULLET_CONFIG.speed
+      const tolerance = 1;
+
+      // Bullet 0: upper spread (+15°)
+      const bullet0 = spawnedBullets[0];
+      expect(bullet0.velocity.x).toBeCloseTo(
+        speed * Math.cos((15 * Math.PI) / 180),
+        tolerance,
+      );
+      expect(bullet0.velocity.y).toBeCloseTo(
+        speed * Math.sin((15 * Math.PI) / 180),
+        tolerance,
+      );
+
+      // Bullet 1: center (0°)
+      const bullet1 = spawnedBullets[1];
+      expect(bullet1.velocity.x).toBeCloseTo(speed, tolerance);
+      expect(bullet1.velocity.y).toBeCloseTo(0, tolerance);
+
+      // Bullet 2: lower spread (-15°)
+      const bullet2 = spawnedBullets[2];
+      expect(bullet2.velocity.x).toBeCloseTo(
+        speed * Math.cos((-15 * Math.PI) / 180),
+        tolerance,
+      );
+      expect(bullet2.velocity.y).toBeCloseTo(
+        speed * Math.sin((-15 * Math.PI) / 180),
+        tolerance,
+      );
+    });
+
     it("should spawn tracking bullet for BloodCake buff (SPEC § 2.3.3)", () => {
       const spawnedBullets: Bullet[] = [];
       combatSystem.setBulletSpawner(createSpawner(spawnedBullets));

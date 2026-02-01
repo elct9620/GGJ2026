@@ -3,7 +3,7 @@
  *
  * 遵循 SPEC.md § 3.2.1 Vector 規格
  * - 不可變（Immutable）：所有操作返回新 Vector 實例
- * - 整數座標：像素對齊渲染，避免浮點精度問題
+ * - 浮點座標：支援精確的方向和速度計算
  * - 零向量正規化：返回 (0, 0) 而非錯誤，優雅降級
  */
 export class Vector {
@@ -14,8 +14,8 @@ export class Vector {
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
       throw new TypeError("Coordinates must be finite numbers");
     }
-    this.x = Math.round(x);
-    this.y = Math.round(y);
+    this.x = x;
+    this.y = y;
   }
 
   /**
@@ -48,7 +48,7 @@ export class Vector {
       }
       throw new RangeError("Parameter must be finite");
     }
-    return new Vector(Math.round(this.x * scalar), Math.round(this.y * scalar));
+    return new Vector(this.x * scalar, this.y * scalar);
   }
 
   /**
@@ -60,7 +60,7 @@ export class Vector {
     if (mag === 0) {
       return new Vector(0, 0); // 優雅降級
     }
-    return new Vector(Math.round(this.x / mag), Math.round(this.y / mag));
+    return new Vector(this.x / mag, this.y / mag);
   }
 
   /**
