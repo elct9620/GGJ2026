@@ -291,6 +291,7 @@ describe("SynthesisSystem", () => {
       const event = new KeyboardEvent("keydown", { key: "5" });
       window.dispatchEvent(event);
       synthesisSystem.update();
+      inputSystem.update(0.016); // Update prev state AFTER synthesis check
 
       expect(synthesisSystem.canUseOysterOmelet()).toBe(false);
     });
@@ -312,6 +313,7 @@ describe("SynthesisSystem", () => {
       // First use
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
       synthesisSystem.update();
+      inputSystem.update(0.016); // Update prev state AFTER synthesis check
       expect(triggerCount).toBe(1);
       expect(killCounterSystem.getKillCount()).toBe(0);
 
@@ -323,11 +325,128 @@ describe("SynthesisSystem", () => {
         });
       }
 
-      // Second use
+      // Second use (release and press again)
+      window.dispatchEvent(new KeyboardEvent("keyup", { key: "5" }));
+      inputSystem.update(0.016);
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
       synthesisSystem.update();
+      inputSystem.update(0.016); // Update prev state AFTER synthesis check
       expect(triggerCount).toBe(2);
       expect(killCounterSystem.getKillCount()).toBe(0);
+    });
+  });
+
+  describe("Edge Detection (防止按住按鍵重複觸發)", () => {
+    it("SY-13: 按住按鍵 5 不會重複觸發蚵仔煎", () => {
+      // Accumulate 60 kills (enough for 3 uses)
+      for (let i = 0; i < 60; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      let triggerCount = 0;
+      eventQueue.subscribe(EventType.SynthesisTriggered, () => {
+        triggerCount++;
+      });
+
+      // Press and hold key 5
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      inputSystem.update(0.016); // Mark as processed
+
+      // First frame: should trigger
+      expect(triggerCount).toBe(1);
+      expect(killCounterSystem.getKillCount()).toBe(40);
+
+      // Hold key for multiple frames
+      for (let i = 0; i < 10; i++) {
+        synthesisSystem.update();
+        inputSystem.update(0.016);
+      }
+
+      // Should NOT trigger again (still only 1 trigger)
+      expect(triggerCount).toBe(1);
+      expect(killCounterSystem.getKillCount()).toBe(40); // Unchanged
+    });
+
+    it("SY-14: 按住按鍵 2 不會重複消耗食材", () => {
+      // Prepare 6 tofu (enough for 2 uses)
+      for (let i = 0; i < 6; i++) {
+        boothSystem.storeFood("Tofu" as FoodType);
+      }
+
+      let triggerCount = 0;
+      eventQueue.subscribe(EventType.SynthesisTriggered, () => {
+        triggerCount++;
+      });
+
+      // Press and hold key 2
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+      synthesisSystem.update();
+      inputSystem.update(0.016);
+
+      // First frame: should trigger and consume 3 tofu
+      expect(triggerCount).toBe(1);
+      expect(boothSystem.getFoodCount(2)).toBe(3);
+
+      // Hold key for multiple frames
+      for (let i = 0; i < 10; i++) {
+        synthesisSystem.update();
+        inputSystem.update(0.016);
+      }
+
+      // Should NOT trigger again
+      expect(triggerCount).toBe(1);
+      expect(boothSystem.getFoodCount(2)).toBe(3); // Unchanged
+    });
+  });
+
+  describe("Ultimate vs Normal Buff Events", () => {
+    it("SY-15: 蚵仔煎 (ID 5) 發送 isUltimate: true，無 duration", () => {
+      // Accumulate 20 kills
+      for (let i = 0; i < 20; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      let eventData: any = null;
+      eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
+        eventData = data;
+      });
+
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      inputSystem.update(0.016);
+
+      expect(eventData).toBeDefined();
+      expect(eventData.recipeId).toBe("5");
+      expect(eventData.isUltimate).toBe(true);
+      expect(eventData.duration).toBeUndefined();
+      expect(eventData.damageMultiplier).toBeDefined();
+    });
+
+    it("SY-16: 一般技能 (ID 1-4) 發送 duration，無 isUltimate", () => {
+      boothSystem.storeFood("Tofu" as FoodType);
+      boothSystem.storeFood("Pearl" as FoodType);
+      boothSystem.storeFood("BloodCake" as FoodType);
+
+      let eventData: any = null;
+      eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
+        eventData = data;
+      });
+
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "1" }));
+      synthesisSystem.update();
+      inputSystem.update(0.016);
+
+      expect(eventData).toBeDefined();
+      expect(eventData.recipeId).toBe("1");
+      expect(eventData.duration).toBe(2000); // Base 2s in ms
+      expect(eventData.isUltimate).toBeUndefined();
     });
   });
 });

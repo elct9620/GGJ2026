@@ -161,4 +161,50 @@ describe("InputSystem", () => {
       expect(inputSystem.getMovementDirection().y).toBe(0);
     });
   });
+
+  describe("Synthesis Key Edge Detection", () => {
+    it("應在按鍵首次按下時觸發（edge detection）", () => {
+      // Simulate key press
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "1" }));
+
+      // First frame: should trigger
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(1);
+
+      // Update to mark this frame as processed
+      inputSystem.update(0.016);
+
+      // Second frame (still holding): should NOT trigger
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(null);
+    });
+
+    it("應在按鍵釋放後再按下時再次觸發", () => {
+      // First press
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(2);
+      inputSystem.update(0.016);
+
+      // Release
+      window.dispatchEvent(new KeyboardEvent("keyup", { key: "2" }));
+      inputSystem.update(0.016);
+
+      // Press again
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(2);
+    });
+
+    it("應只在當前幀按下的按鍵觸發（多按鍵測試）", () => {
+      // Press key 1
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "1" }));
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(1);
+      inputSystem.update(0.016);
+
+      // Press key 2 while holding key 1
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "2" }));
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(2); // Only key 2 triggers
+      inputSystem.update(0.016);
+
+      // Both keys held: no trigger
+      expect(inputSystem.getSynthesisKeyPressed()).toBe(null);
+    });
+  });
 });

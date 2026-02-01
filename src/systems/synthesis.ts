@@ -88,6 +88,27 @@ export class SynthesisSystem extends InjectableSystem {
   }
 
   /**
+   * Get buff duration from upgrade system
+   * SPEC § 2.3.4: 飢餓三十 increases buff duration
+   * Base: 2s, +2s per upgrade
+   */
+  private getBuffDuration(): number {
+    const baseBuffDuration = 2000; // 2 seconds in ms
+    const multiplier = this.upgradeSystem?.getState().buffDurationMultiplier ?? 1;
+    return baseBuffDuration * multiplier;
+  }
+
+  /**
+   * Get oyster omelet damage percent from upgrade system
+   * SPEC § 2.3.4: 快吃 increases oyster omelet damage by +10%
+   */
+  private getOysterDamageMultiplier(): number {
+    const baseDamagePercent = 1.0; // 100% base
+    const bonus = this.upgradeSystem?.getState().killThresholdDivisor ?? 1;
+    return baseDamagePercent + (bonus - 1);
+  }
+
+  /**
    * Initialize synthesis system
    */
   public initialize(): void {
@@ -140,13 +161,30 @@ export class SynthesisSystem extends InjectableSystem {
       this.killCounterSystem.consume();
     }
 
-    // Consume food from booths
-    this.consumeFood(recipe);
+    // Consume food from booths (only for non-ultimate abilities)
+    if (!recipe.requiresKillCounter) {
+      this.consumeFood(recipe);
+    }
 
     // Publish SynthesisTriggered event (SPEC § 2.3.6)
-    this.eventQueue.publish(EventType.SynthesisTriggered, {
-      recipeId: recipe.id,
-    });
+    // Ultimate abilities (ID 5) send isUltimate: true, no duration, includes damage multiplier
+    // Normal abilities (ID 1-4) send duration from upgrade system
+    if (recipe.requiresKillCounter) {
+      // Ultimate ability: no duration, marked as ultimate, includes damage multiplier
+      const damageMultiplier = this.getOysterDamageMultiplier();
+      this.eventQueue.publish(EventType.SynthesisTriggered, {
+        recipeId: recipe.id,
+        isUltimate: true,
+        damageMultiplier,
+      });
+    } else {
+      // Normal ability: includes duration from upgrade system
+      const buffDuration = this.getBuffDuration();
+      this.eventQueue.publish(EventType.SynthesisTriggered, {
+        recipeId: recipe.id,
+        duration: buffDuration,
+      });
+    }
   }
 
   /**
