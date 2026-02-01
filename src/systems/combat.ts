@@ -330,10 +330,18 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Find the nearest active enemy to the player
+   * For tracking bullets, applies tracking range limit (SPEC § 2.3.3 + § 2.3.4)
    */
   private findNearestEnemyToPlayer(): Enemy | null {
     if (!this.player) return null;
-    return this.findClosestEnemy(this.player.position);
+
+    // Calculate tracking range with upgrade bonus (SPEC § 2.3.4: 加香菜)
+    const baseRange = RECIPE_CONFIG.bloodCake.trackingRange;
+    const upgradeState = this.upgradeSystem?.getState();
+    const upgradeBonus = upgradeState?.bloodCakeRangeBonus ?? 0;
+    const maxRange = baseRange + upgradeBonus;
+
+    return this.findClosestEnemy(this.player.position, undefined, maxRange);
   }
 
   /**

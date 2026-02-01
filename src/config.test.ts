@@ -157,6 +157,10 @@ describe("Game Balance Config", () => {
       expect(RECIPE_CONFIG.bloodCake.bloodCake).toBe(3);
     });
 
+    it("豬血糕追蹤範圍應為 500px (Issue #59)", () => {
+      expect(RECIPE_CONFIG.bloodCake.trackingRange).toBe(500);
+    });
+
     it("蚵仔煎百分比傷害應正確 (SPEC § 2.3.3)", () => {
       expect(RECIPE_CONFIG.oysterOmelet.bossDamagePercent).toBe(0.1);
       expect(RECIPE_CONFIG.oysterOmelet.eliteDamagePercent).toBe(0.5);
@@ -173,8 +177,8 @@ describe("Game Balance Config", () => {
       expect(UPGRADE_CONFIG.normal.coconut.bulletBonus).toBe(1);
     });
 
-    it("加香菜應加 0.5 範圍 (SPEC § 2.3.4)", () => {
-      expect(UPGRADE_CONFIG.normal.cilantro.rangeBonus).toBe(0.5);
+    it("加香菜應加 100px 追蹤範圍 (SPEC § 2.3.4)", () => {
+      expect(UPGRADE_CONFIG.normal.cilantro.rangeBonus).toBe(100);
     });
 
     it("大胃王應加 6 彈夾容量 (SPEC § 2.3.4)", () => {
