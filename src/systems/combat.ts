@@ -384,9 +384,7 @@ export class CombatSystem extends InjectableSystem {
     const expired = this.gameState.updateBuffTimer(deltaTime);
 
     if (expired) {
-      // Reset player appearance to base when buff expires
-      this.player?.updateAppearanceForBuff(SpecialBulletType.None);
-
+      // Player appearance handled by PlayerRenderer via GameState.combat.currentBuff
       // GameStateManager already cleared the buff, just publish the event
       this.publishEvent(EventType.BuffExpired, {
         buffType: SpecialBulletType.None, // Already cleared
@@ -546,10 +544,8 @@ export class CombatSystem extends InjectableSystem {
     const effectiveDuration = this.buffDuration + (durationBonus - 1);
 
     // Activate buff via GameStateManager
+    // Player appearance handled by PlayerRenderer via GameState.combat.currentBuff
     this.gameState.activateBuff(buffType, effectiveDuration);
-
-    // Update player appearance for the new buff
-    this.player?.updateAppearanceForBuff(buffType);
 
     // Publish BuffExpired event with delay (SPEC § 2.3.6)
     this.publishEvent(

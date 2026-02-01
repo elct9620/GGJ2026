@@ -1,23 +1,18 @@
-import { SpriteEntity } from "./entity";
+import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import { Health } from "../values/health";
 import { Ammo } from "../values/ammo";
 import type { CollisionBox } from "../values/collision";
-import { Container, Sprite } from "pixi.js";
-import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
-import { SpecialBulletType } from "../core/types";
-import { bulletData } from "../data";
 
 /**
  * Player entity with keyboard controls and shooting capability
  * Spec: § 2.6.1 Player
  *
- * Buff type to sprite mappings are now centralized in BulletData
- * (src/data/bullet-data.ts)
+ * Pure data container - rendering handled by PlayerRenderer
  */
-export class Player extends SpriteEntity {
+export class Player extends Entity {
   public position: Vector;
   public readonly speed: number = PLAYER_CONFIG.speed;
 
@@ -52,51 +47,9 @@ export class Player extends SpriteEntity {
     return Math.max(0.5, this.baseReloadTime - this.reloadTimeReduction);
   }
 
-  // Visual representation
-  public sprite: Container;
-  private playerSprite: Sprite;
-  private dirHintSprite: Sprite;
-
   constructor(initialPosition: Vector) {
     super();
     this.position = initialPosition;
-
-    // Create container to hold player sprite and direction hint
-    this.sprite = new Container();
-    this.playerSprite = this.createPlayerSprite();
-    this.dirHintSprite = this.createDirHintSprite();
-
-    this.sprite.addChild(this.playerSprite);
-    this.sprite.addChild(this.dirHintSprite);
-
-    this.updateSpritePosition();
-  }
-
-  private createPlayerSprite(): Sprite {
-    const sprite = new Sprite(getTexture(AssetKeys.playerBase));
-
-    // Asset size is 256×256, use full size per SPEC § 2.7.2
-    sprite.width = LAYOUT.PLAYER_SIZE;
-    sprite.height = LAYOUT.PLAYER_SIZE;
-
-    // Set anchor to center for proper positioning
-    sprite.anchor.set(0.5, 0.5);
-
-    return sprite;
-  }
-
-  private createDirHintSprite(): Sprite {
-    const sprite = new Sprite(getTexture(AssetKeys.playerDirHint01));
-
-    // Asset size is 100×256, use full size proportional to player
-    sprite.width = 100;
-    sprite.height = 256;
-
-    // Position to the right of player
-    sprite.anchor.set(0, 0.5);
-    sprite.position.set(this.playerSprite.width / 2, 0);
-
-    return sprite;
   }
 
   /**
@@ -123,7 +76,6 @@ export class Player extends SpriteEntity {
     );
 
     this.position = new Vector(clampedX, clampedY);
-    this.updateSpritePosition();
   }
 
   /**
@@ -168,8 +120,6 @@ export class Player extends SpriteEntity {
         this.reloadTimer = 0;
       }
     }
-
-    this.updateSpritePosition();
   }
 
   /**
@@ -210,21 +160,6 @@ export class Player extends SpriteEntity {
   }
 
   /**
-   * Update player appearance based on active buff
-   * SPEC § 2.6.1: Player visual changes based on buff state
-   * Updates both player sprite and direction hint indicator
-   * Uses BulletData for centralized property lookup
-   * @param buffType The current active buff type
-   */
-  public updateAppearanceForBuff(buffType: SpecialBulletType): void {
-    const playerAssetKey = bulletData.getPlayerAssetForBuff(buffType);
-    this.playerSprite.texture = getTexture(playerAssetKey);
-
-    const dirHintAssetKey = bulletData.getDirHintAssetForBuff(buffType);
-    this.dirHintSprite.texture = getTexture(dirHintAssetKey);
-  }
-
-  /**
    * Reset player state for object pool reuse
    */
   public reset(position: Vector): void {
@@ -235,7 +170,5 @@ export class Player extends SpriteEntity {
     this.isReloading = false;
     this.reloadTimer = 0;
     this.reloadTimeReduction = 0;
-    this.updateAppearanceForBuff(SpecialBulletType.None);
-    this.updateSpritePosition();
   }
 }

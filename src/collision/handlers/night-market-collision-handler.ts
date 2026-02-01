@@ -87,7 +87,11 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
       );
 
       // Apply universal hit effects for each chain target
-      currentTarget.flashHit(flashConfig.color, flashConfig.duration);
+      // Flash effect stored in GameState for EnemyRenderer
+      context.gameState.setEnemyFlashEffect(currentTarget.id, {
+        color: flashConfig.color,
+        duration: flashConfig.duration,
+      });
       currentTarget.applyKnockback(
         knockbackConfig.distance,
         knockbackConfig.duration,

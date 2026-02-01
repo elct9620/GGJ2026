@@ -1,10 +1,8 @@
-import { SpriteEntity } from "./entity";
+import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import { Health } from "../values/health";
 import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
-import { Container, Graphics, Sprite } from "pixi.js";
-import { getTexture } from "../core/assets";
 import type { FoodType } from "../core/types";
 import { LAYOUT } from "../utils/constants";
 import { EnemyType, isEliteType } from "../core/types";
@@ -13,12 +11,13 @@ import { enemyData } from "../data";
 /**
  * Enemy entity (Ghost or Boss)
  * Spec: § 2.6.2 Enemies
+ *
+ * Pure data container - rendering handled by EnemyRenderer
  */
-export class Enemy extends SpriteEntity {
+export class Enemy extends Entity {
   public position: Vector;
   public readonly type: EnemyType;
   public readonly baseSpeed!: number; // px/s (original speed, assigned in constructor)
-  public sprite: Container;
 
   // Value Object
   private _health: Health;
@@ -27,10 +26,6 @@ export class Enemy extends SpriteEntity {
   private speedMultiplier: number = 1.0;
   private slowDuration: number = 0;
   private readonly slowEffectDuration: number = 3; // seconds
-
-  // Flash effect system (SPEC § 2.6.3 通用視覺效果)
-  private originalTint: number = 0xffffff;
-  private flashDuration: number = 0;
 
   // Knockback effect system (通用受擊效果)
   private knockbackVelocity: number = 0;
@@ -42,9 +37,6 @@ export class Enemy extends SpriteEntity {
   public get health(): Health {
     return this._health;
   }
-
-  private enemySprite: Sprite;
-  private healthBarContainer: Graphics | null = null;
 
   /**
    * Current effective speed (base speed × multiplier)
@@ -70,43 +62,6 @@ export class Enemy extends SpriteEntity {
     } else {
       this._health = Health.bossForWave(wave);
     }
-
-    this.sprite = new Container();
-    this.enemySprite = this.createSprite();
-    this.sprite.addChild(this.enemySprite);
-
-    // Add health bar if needed
-    if (enemyData.shouldShowHealthBar(type)) {
-      this.healthBarContainer = new Graphics();
-      this.sprite.addChild(this.healthBarContainer);
-      this.updateHealthBar();
-    }
-
-    this.updateSpritePosition();
-  }
-
-  private createSprite(): Sprite {
-    const props = enemyData.get(this.type);
-    const sprite = new Sprite(getTexture(props.assetKey));
-
-    sprite.width = props.size;
-    sprite.height = props.size;
-
-    // Set anchor to center
-    sprite.anchor.set(0.5, 0.5);
-
-    return sprite;
-  }
-
-  /**
-   * Apply flash effect when hit by bullet (SPEC § 2.6.3 通用視覺效果)
-   * @param color Tint color for flash effect
-   * @param duration Duration of flash in seconds
-   */
-  public flashHit(color: number = 0xffffff, duration: number = 0.1): void {
-    this.originalTint = 0xffffff; // Store original tint (always white)
-    this.enemySprite.tint = color;
-    this.flashDuration = duration;
   }
 
   /**
@@ -128,15 +83,6 @@ export class Enemy extends SpriteEntity {
   public update(deltaTime: number): void {
     if (!this.active) return;
 
-    // Update flash effect duration
-    if (this.flashDuration > 0) {
-      this.flashDuration -= deltaTime;
-      if (this.flashDuration <= 0) {
-        this.enemySprite.tint = this.originalTint;
-        this.flashDuration = 0;
-      }
-    }
-
     // Update knockback effect (push right, away from baseline)
     if (this.knockbackDuration > 0) {
       const knockbackDisplacement = this.knockbackVelocity * deltaTime;
@@ -156,8 +102,6 @@ export class Enemy extends SpriteEntity {
     // Move left (using effective speed = baseSpeed × speedMultiplier)
     const displacement = new Vector(-this.speed * deltaTime, 0);
     this.position = this.position.add(displacement);
-
-    this.updateSpritePosition();
   }
 
   /**
@@ -180,11 +124,6 @@ export class Enemy extends SpriteEntity {
     // Support both number and Damage value object
     const damage = typeof amount === "number" ? new Damage(amount) : amount;
     this._health = this._health.takeDamage(damage);
-
-    // Update health bar if applicable
-    if (enemyData.shouldShowHealthBar(this.type)) {
-      this.updateHealthBar();
-    }
 
     if (this._health.isDead()) {
       this.active = false;
@@ -220,34 +159,6 @@ export class Enemy extends SpriteEntity {
   }
 
   /**
-   * Update health bar visualization for Boss and Elite enemies
-   */
-  private updateHealthBar(): void {
-    if (!enemyData.shouldShowHealthBar(this.type) || !this.healthBarContainer)
-      return;
-
-    this.healthBarContainer.clear();
-
-    const barWidth = 8;
-    const barHeight = 6;
-    const barSpacing = 2;
-    const maxHP = this.health.max;
-    const currentHP = this.health.current;
-    const totalWidth = maxHP * barWidth + (maxHP - 1) * barSpacing;
-    const startX = -totalWidth / 2;
-    // Health bar position based on sprite size from data catalog
-    const spriteHeight = enemyData.getSize(this.type);
-    const startY = -spriteHeight / 2 - 15;
-
-    // Draw health bars (green for remaining health, gray for lost health)
-    for (let i = 0; i < maxHP; i++) {
-      const x = startX + i * (barWidth + barSpacing);
-      this.healthBarContainer.rect(x, startY, barWidth, barHeight);
-      this.healthBarContainer.fill(i < currentHP ? 0x2ecc71 : 0x7f8c8d);
-    }
-  }
-
-  /**
    * Reset enemy state for object pool reuse
    * SPEC § 2.6.2: HP scales with wave number
    */
@@ -261,11 +172,6 @@ export class Enemy extends SpriteEntity {
     this.speedMultiplier = 1.0;
     this.slowDuration = 0;
 
-    // Reset flash effect
-    this.enemySprite.tint = 0xffffff;
-    this.originalTint = 0xffffff;
-    this.flashDuration = 0;
-
     // Reset knockback effect
     this.knockbackVelocity = 0;
     this.knockbackDuration = 0;
@@ -274,12 +180,8 @@ export class Enemy extends SpriteEntity {
       this._health = Health.ghostForWave(wave);
     } else if (isEliteType(type)) {
       this._health = Health.eliteForWave(wave);
-      this.updateHealthBar();
     } else {
       this._health = Health.bossForWave(wave);
-      this.updateHealthBar();
     }
-
-    this.updateSpritePosition();
   }
 }

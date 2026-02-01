@@ -123,6 +123,19 @@ export interface ResourceState {
 }
 
 // ============================================
+// Enemy Effect State (for EnemyRenderer)
+// ============================================
+
+/**
+ * Flash effect configuration for enemies
+ * Used by EnemyRenderer to apply visual flash effects
+ */
+export interface FlashEffect {
+  color: number;
+  duration: number;
+}
+
+// ============================================
 // Booth State (SPEC § 2.3.1)
 // ============================================
 
@@ -219,6 +232,7 @@ export class GameStateManager implements GameStateSnapshot {
   private _stats: GameStats = createGameStats();
   private _upgrades: UpgradeState = createDefaultUpgradeState();
   private _booths: Map<BoothId, BoothState> = new Map();
+  private _enemyFlashEffects: Map<string, FlashEffect> = new Map();
 
   // ============================================
   // Read-only getters
@@ -637,6 +651,41 @@ export class GameStateManager implements GameStateSnapshot {
   }
 
   // ============================================
+  // Enemy Effect State (for EnemyRenderer)
+  // ============================================
+
+  /**
+   * Set flash effect for an enemy
+   * Called by collision handlers when bullet hits enemy
+   */
+  setEnemyFlashEffect(enemyId: string, effect: FlashEffect): void {
+    this._enemyFlashEffects.set(enemyId, effect);
+  }
+
+  /**
+   * Get flash effect for an enemy
+   * Returns null if no effect is set
+   */
+  getEnemyFlashEffect(enemyId: string): FlashEffect | null {
+    return this._enemyFlashEffects.get(enemyId) ?? null;
+  }
+
+  /**
+   * Clear flash effect for an enemy
+   * Called by renderer after effect expires
+   */
+  clearEnemyFlashEffect(enemyId: string): void {
+    this._enemyFlashEffects.delete(enemyId);
+  }
+
+  /**
+   * Get all enemy flash effects (for rendering)
+   */
+  get enemyFlashEffects(): ReadonlyMap<string, FlashEffect> {
+    return this._enemyFlashEffects;
+  }
+
+  // ============================================
   // Reset for new game
   // ============================================
 
@@ -649,5 +698,6 @@ export class GameStateManager implements GameStateSnapshot {
     this._stats = createGameStats();
     this._upgrades = createDefaultUpgradeState();
     this.resetBooths();
+    this._enemyFlashEffects.clear();
   }
 }

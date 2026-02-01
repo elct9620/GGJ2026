@@ -1,8 +1,7 @@
-import { SpriteEntity } from "./entity";
+import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
-import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
@@ -13,12 +12,13 @@ import { bulletData } from "../data";
 /**
  * Bullet entity fired by player
  * Spec: § 2.6.3 Bullets
+ *
+ * Pure data container - rendering handled by BulletRenderer
  */
-export class Bullet extends SpriteEntity {
+export class Bullet extends Entity {
   public position: Vector;
   public velocity: Vector;
   public readonly speed: number = BULLET_CONFIG.speed;
-  public sprite: Graphics;
 
   // Value Object
   private _damage: Damage = Damage.normal();
@@ -67,34 +67,6 @@ export class Bullet extends SpriteEntity {
     this.velocity = direction.normalize().multiply(this.speed);
     this.bulletType = bulletType;
     this._upgradeSnapshot = upgradeSnapshot ?? null;
-    this.sprite = this.createSprite();
-  }
-
-  /**
-   * Get bullet size based on type (視覺與碰撞統一)
-   * Uses BulletData for centralized property lookup
-   */
-  private getBulletSize(): number {
-    return bulletData.getSize(this.bulletType);
-  }
-
-  private createSprite(): Graphics {
-    const sprite = new Graphics();
-    const color = this.getBulletColor();
-    const radius = this.getBulletSize() / 2;
-
-    sprite.circle(0, 0, radius);
-    sprite.fill(color);
-
-    return sprite;
-  }
-
-  /**
-   * Get bullet color based on type
-   * Uses BulletData for centralized property lookup
-   */
-  private getBulletColor(): number {
-    return bulletData.getColor(this.bulletType);
   }
 
   /**
@@ -102,7 +74,7 @@ export class Bullet extends SpriteEntity {
    * SPEC § 4.2.5: AABB 碰撞檢測
    */
   public get collisionBox(): CollisionBox {
-    const size = this.getBulletSize();
+    const size = bulletData.getSize(this.bulletType);
     return {
       width: size,
       height: size,
@@ -129,8 +101,6 @@ export class Bullet extends SpriteEntity {
     if (this.position.x > 1920 || this.position.x < 0) {
       this.active = false;
     }
-
-    this.updateSpritePosition();
   }
 
   /**
@@ -175,19 +145,6 @@ export class Bullet extends SpriteEntity {
     this.trackingTarget = null;
     this.bulletType = bulletType;
     this._upgradeSnapshot = upgradeSnapshot ?? null;
-    this.updateSprite();
-    this.updateSpritePosition();
-  }
-
-  /**
-   * Update sprite appearance based on current bullet type
-   */
-  private updateSprite(): void {
-    this.sprite.clear();
-    const color = this.getBulletColor();
-    const radius = this.getBulletSize() / 2;
-    this.sprite.circle(0, 0, radius);
-    this.sprite.fill(color);
   }
 
   /**

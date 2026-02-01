@@ -31,11 +31,15 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
   /**
    * Apply flash effect to enemy based on bullet type
    * SPEC § 2.6.3: 閃白效果 100~300ms
+   * Flash effect stored in GameState for EnemyRenderer to consume
    */
   protected applyFlashEffect(context: CollisionContext): void {
     const configKey = this.getConfigKey();
     const config = hitEffectData.getFlash(configKey);
-    context.enemy.flashHit(config.color, config.duration);
+    context.gameState.setEnemyFlashEffect(context.enemy.id, {
+      color: config.color,
+      duration: config.duration,
+    });
   }
 
   /**

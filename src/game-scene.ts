@@ -29,6 +29,9 @@ import { SpecialBulletType } from "./core/types";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
 import { BoothRenderer } from "./renderers/booth-renderer";
+import { BulletRenderer } from "./renderers/bullet-renderer";
+import { PlayerRenderer } from "./renderers/player-renderer";
+import { EnemyRenderer } from "./renderers/enemy-renderer";
 
 /**
  * Main game scene managing all game entities and systems
@@ -65,6 +68,9 @@ export class GameScene {
 
   // Renderers
   private boothRenderer: BoothRenderer;
+  private bulletRenderer: BulletRenderer;
+  private playerRenderer: PlayerRenderer;
+  private enemyRenderer: EnemyRenderer;
   private hudRenderer: HUDRenderer;
 
   constructor(
@@ -90,6 +96,9 @@ export class GameScene {
 
     // Initialize renderers
     this.boothRenderer = new BoothRenderer();
+    this.bulletRenderer = new BulletRenderer();
+    this.playerRenderer = new PlayerRenderer();
+    this.enemyRenderer = new EnemyRenderer();
     this.hudRenderer = new HUDRenderer();
 
     // Initialize SystemManager and register all systems
@@ -156,7 +165,8 @@ export class GameScene {
 
     // Initialize player at center of playable area
     this.player = new Player(new Vector(960, 540)); // Center of 1920×1080
-    this.playerContainer.addChild(this.player.sprite);
+    // Rendering handled by PlayerRenderer.sync()
+    this.playerContainer.addChild(this.playerRenderer.getContainer());
 
     // Connect Combat System with game entities (entity references - not injectable)
     combatSystem.setPlayer(this.player);
@@ -179,7 +189,7 @@ export class GameScene {
         bullet.setTracking(request.trackingTarget);
       }
       this.bullets.push(bullet);
-      this.bulletsContainer.addChild(bullet.sprite);
+      // Rendering handled by BulletRenderer.sync()
       return bullet;
     });
 
@@ -195,9 +205,15 @@ export class GameScene {
     // Setup box visualization (SPEC § 2.3.7)
     this.boothContainer.addChild(boxSystem.getContainer());
 
+    // Setup enemy renderer container
+    this.enemiesContainer.addChild(this.enemyRenderer.getContainer());
+
     // Setup bullet visual effects container (SPEC § 2.6.3)
-    // Add to bullets container so effects render with bullets
+    // Add visual effects first so bullets render on top
     this.bulletsContainer.addChild(bulletVisualEffects.getContainer());
+
+    // Setup bullet renderer container (on top of effects)
+    this.bulletsContainer.addChild(this.bulletRenderer.getContainer());
 
     // Setup HUD (using HUDRenderer)
     this.uiLayer.addChild(this.hudRenderer.getTopHUD());
@@ -232,7 +248,7 @@ export class GameScene {
     const enemyType = EnemyType[type];
     const enemy = new Enemy(enemyType, new Vector(x, y), wave);
     this.enemies.push(enemy);
-    this.enemiesContainer.addChild(enemy.sprite);
+    // Rendering handled by EnemyRenderer.sync()
   }
 
   /**
@@ -316,6 +332,12 @@ export class GameScene {
 
   private updatePlayer(deltaTime: number): void {
     this.player.update(deltaTime);
+
+    // Sync player rendering
+    this.playerRenderer.sync({
+      position: this.player.position,
+      activeBuff: this.gameState.combat.currentBuff,
+    });
   }
 
   private updateEnemies(deltaTime: number): void {
@@ -323,8 +345,7 @@ export class GameScene {
       const enemy = this.enemies[i];
 
       if (!enemy.active) {
-        // Remove inactive enemies
-        this.enemiesContainer.removeChild(enemy.sprite);
+        // Rendering cleanup handled by EnemyRenderer.sync()
         this.enemies.splice(i, 1);
         continue;
       }
@@ -335,13 +356,32 @@ export class GameScene {
       if (enemy.hasReachedBaseline()) {
         this.player.takeDamage(1);
         enemy.active = false;
-        this.enemiesContainer.removeChild(enemy.sprite);
+        // Rendering cleanup handled by EnemyRenderer.sync()
         this.enemies.splice(i, 1);
 
         // Publish EnemyReachedEnd event for Wave System (SPEC § 2.3.6)
         const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
         eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: enemy.id });
       }
+    }
+
+    // Sync enemy rendering
+    const enemyStates = this.enemies.map((enemy) => ({
+      id: enemy.id,
+      position: enemy.position,
+      type: enemy.type,
+      health: { current: enemy.health.current, max: enemy.health.max },
+      active: enemy.active,
+    }));
+    const consumedFlashEffects = this.enemyRenderer.sync(
+      enemyStates,
+      this.gameState.enemyFlashEffects,
+      deltaTime,
+    );
+
+    // Clear consumed flash effects from GameState
+    for (const enemyId of consumedFlashEffects) {
+      this.gameState.clearEnemyFlashEffect(enemyId);
     }
   }
 
@@ -350,7 +390,7 @@ export class GameScene {
       const bullet = this.bullets[i];
 
       if (!bullet.active) {
-        this.bulletsContainer.removeChild(bullet.sprite);
+        // Rendering cleanup handled by BulletRenderer.sync()
         this.bullets.splice(i, 1);
         continue;
       }
@@ -363,6 +403,9 @@ export class GameScene {
 
       bullet.update(deltaTime);
     }
+
+    // Sync bullet rendering
+    this.bulletRenderer.sync(this.bullets);
   }
 
   /**
@@ -661,24 +704,25 @@ export class GameScene {
    */
   public reset(): void {
     // Clear all entities
-    this.enemies.forEach((enemy) => {
-      this.enemiesContainer.removeChild(enemy.sprite);
-    });
-    this.bullets.forEach((bullet) => {
-      this.bulletsContainer.removeChild(bullet.sprite);
-    });
+    // Enemies are rendered via EnemyRenderer - sync with empty array to clear
+    this.enemies = [];
+    this.enemyRenderer.sync([], new Map(), 0);
+    // Bullets are rendered via BulletRenderer - sync with empty array to clear
+    this.bullets = [];
+    this.bulletRenderer.sync(this.bullets);
     this.foods.forEach((food) => {
       this.foodsContainer.removeChild(food.sprite);
     });
 
-    this.enemies = [];
-    this.bullets = [];
     this.foods = [];
 
     // Reset player
-    this.playerContainer.removeChild(this.player.sprite);
     this.player = new Player(new Vector(960, 540));
-    this.playerContainer.addChild(this.player.sprite);
+    // PlayerRenderer container already added, just sync with new player state
+    this.playerRenderer.sync({
+      position: this.player.position,
+      activeBuff: SpecialBulletType.None,
+    });
 
     // Reset booth system
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");

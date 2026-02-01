@@ -404,55 +404,8 @@ describe("Enemy", () => {
     });
   });
 
-  describe("Flash Hit Effect (SPEC § 2.6.3)", () => {
-    it("flashHit 設定敵人 tint 顏色", () => {
-      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      // Access sprite to check tint (internal)
-      const sprite = ghost.sprite.children[0] as any;
-      expect(sprite.tint).toBe(0xffffff); // Default tint
-
-      ghost.flashHit(0xff0000, 0.1);
-
-      expect(sprite.tint).toBe(0xff0000); // Red flash
-    });
-
-    it("flashHit 持續時間後恢復原始顏色", () => {
-      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      const sprite = ghost.sprite.children[0] as any;
-
-      ghost.flashHit(0xff0000, 0.1);
-      expect(sprite.tint).toBe(0xff0000);
-
-      // Update for the full duration
-      ghost.update(0.1);
-
-      expect(sprite.tint).toBe(0xffffff); // Restored to white
-    });
-
-    it("flashHit 持續時間內保持閃白顏色", () => {
-      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      const sprite = ghost.sprite.children[0] as any;
-
-      ghost.flashHit(0xff0000, 0.2);
-
-      // Update for half the duration
-      ghost.update(0.1);
-
-      expect(sprite.tint).toBe(0xff0000); // Still flashing
-    });
-
-    it("reset 後閃白效果被清除", () => {
-      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      const sprite = ghost.sprite.children[0] as any;
-
-      ghost.flashHit(0xff0000, 1.0);
-      expect(sprite.tint).toBe(0xff0000);
-
-      ghost.reset(EnemyType.Ghost, new Vector(1500, 300));
-
-      expect(sprite.tint).toBe(0xffffff); // Reset to white
-    });
-  });
+  // Note: Flash effect management moved to EnemyRenderer (Phase 2 architecture refactor)
+  // See src/renderers/enemy-renderer.test.ts for flash effect tests;
 
   describe("Knockback Effect", () => {
     it("applyKnockback 使敵人向右移動", () => {

@@ -201,20 +201,23 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 
 ### 5.2 目標架構差異
 
-| 面向     | 目前實作                          | 目標架構               | 狀態    |
-| -------- | --------------------------------- | ---------------------- | ------- |
-| 狀態管理 | 集中於 GameStateManager           | 集中於 GameState       | ✅ 完成 |
-| 渲染同步 | BoothRenderer、HUDRenderer 已分離 | 獨立 RenderSystem 同步 | ⚠️ 部分 |
-| Entity   | 混合資料與 Sprite                 | 純資料容器             | 未來    |
-| 事件流   | 高度事件驅動（14 種事件）         | 完全事件驅動           | ✅ 接近 |
+| 面向     | 目前實作                      | 目標架構               | 狀態    |
+| -------- | ----------------------------- | ---------------------- | ------- |
+| 狀態管理 | 集中於 GameStateManager       | 集中於 GameState       | ✅ 完成 |
+| 渲染同步 | 5 個 Renderer 類別已完成分離  | 獨立 RenderSystem 同步 | ✅ 完成 |
+| Entity   | 純資料容器（無 Pixi.js 依賴） | 純資料容器             | ✅ 完成 |
+| 事件流   | 高度事件驅動（14 種事件）     | 完全事件驅動           | ✅ 接近 |
 
 ### 5.3 重構進度
 
 1. ✅ **Phase 1**：抽取 GameState，集中狀態管理
-2. ⚠️ **Phase 2**：分離 RenderSystem，統一 Entity-Sprite 同步
+2. ✅ **Phase 2**：分離 RenderSystem，統一 Entity-Sprite 同步
    - ✅ BoothRenderer 已分離
    - ✅ HUDRenderer 已分離（原 HUDSystem 重構為純渲染器）
-   - ⏳ Player、Enemy 渲染尚未分離
+   - ✅ BulletRenderer 已分離（子彈渲染獨立）
+   - ✅ PlayerRenderer 已分離（玩家渲染獨立，Buff 外觀透過 GameState）
+   - ✅ EnemyRenderer 已分離（敵人渲染獨立，閃白效果透過 GameState）
+   - ✅ SpriteEntity 已移除（Entity 為純資料容器）
 3. ✅ **Phase 3**：將 System 內部狀態移至 GameState
    - BoothSystem、BoxSystem、WaveSystem 已無狀態
    - CombatSystem 僅保留 shootCooldown（實作細節）
@@ -224,11 +227,10 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 
 以下項目已識別但不影響功能運作：
 
-1. **CombatSystem 直接呼叫 Player 渲染方法**
-   - 位置：`combat.ts` L402、L566
-   - 現況：直接呼叫 `player.updateAppearanceForBuff()`
-   - 理想：Player 訂閱 BuffExpired 事件自行更新外觀
-   - 原因：目前 Entity 不直接訂閱事件，需架構調整
+1. **Food Entity 仍混合資料與 Sprite**
+   - 現況：Food 使用 SpriteEntity 模式
+   - 理想：建立 FoodRenderer 完成分離
+   - 原因：Food 生命週期簡單，優先級較低
 
 ### 5.5 重構原則
 
