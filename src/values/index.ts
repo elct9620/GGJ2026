@@ -25,3 +25,7 @@ export type { Recipe, RecipeDisplayConfig, HUDColorType } from "./recipes";
 // 特殊子彈
 export { SpecialBulletType } from "./special-bullet";
 export type { SpecialBulletType as SpecialBulletTypeValue } from "./special-bullet";
+
+// 子彈升級快照
+export type { BulletUpgradeSnapshot } from "./bullet-upgrade-snapshot";
+export { createDefaultUpgradeSnapshot } from "./bullet-upgrade-snapshot";

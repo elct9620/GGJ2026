@@ -7,6 +7,7 @@ import { LAYOUT } from "../utils/constants";
 import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
 import { SpecialBulletType } from "../values/special-bullet";
+import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 
 /**
  * Bullet entity fired by player
@@ -28,11 +29,22 @@ export class Bullet extends SpriteEntity {
   // Bullet type for visual differentiation
   private bulletType: SpecialBulletType = SpecialBulletType.None;
 
+  // Upgrade snapshot captured at bullet creation time
+  private _upgradeSnapshot: BulletUpgradeSnapshot | null = null;
+
   /**
    * Get bullet type (for visual effects)
    */
   public get type(): SpecialBulletType {
     return this.bulletType;
+  }
+
+  /**
+   * Get upgrade snapshot captured at bullet creation time
+   * Returns null if no snapshot was provided (for backwards compatibility)
+   */
+  public get upgradeSnapshot(): BulletUpgradeSnapshot | null {
+    return this._upgradeSnapshot;
   }
 
   // Backward compatible getter/setter
@@ -53,11 +65,13 @@ export class Bullet extends SpriteEntity {
     initialPosition: Vector,
     direction: Vector,
     bulletType: SpecialBulletType = SpecialBulletType.None,
+    upgradeSnapshot?: BulletUpgradeSnapshot,
   ) {
     super();
     this.position = initialPosition;
     this.velocity = direction.normalize().multiply(this.speed);
     this.bulletType = bulletType;
+    this._upgradeSnapshot = upgradeSnapshot ?? null;
     this.sprite = this.createSprite();
   }
 
@@ -173,11 +187,16 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Reset bullet state for object pool reuse
+   * @param position Initial position
+   * @param direction Direction vector
+   * @param bulletType Special bullet type
+   * @param upgradeSnapshot Upgrade state captured at bullet creation time
    */
   public reset(
     position: Vector,
     direction: Vector,
     bulletType: SpecialBulletType = SpecialBulletType.None,
+    upgradeSnapshot?: BulletUpgradeSnapshot,
   ): void {
     this.active = true;
     this.position = position;
@@ -186,6 +205,7 @@ export class Bullet extends SpriteEntity {
     this.isTracking = false;
     this.trackingTarget = null;
     this.bulletType = bulletType;
+    this._upgradeSnapshot = upgradeSnapshot ?? null;
     this.updateSprite();
     this.updateSpritePosition();
   }

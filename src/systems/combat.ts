@@ -26,6 +26,7 @@ import {
   createCollisionHandlerRegistry,
   StinkyTofuCollisionHandler,
 } from "../collision";
+import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
@@ -40,6 +41,7 @@ export interface BulletSpawnRequest {
   bulletType: SpecialBulletType;
   isTracking?: boolean;
   trackingTarget?: Enemy;
+  upgradeSnapshot?: BulletUpgradeSnapshot;
 }
 
 /**
@@ -264,15 +266,33 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
+   * Create upgrade snapshot capturing current upgrade state
+   * This snapshot is attached to bullets at creation time to ensure
+   * consistent behavior throughout the bullet's lifetime
+   */
+  private createUpgradeSnapshot(): BulletUpgradeSnapshot {
+    const state = this.upgradeSystem?.getState();
+    return {
+      stinkyTofuDamageBonus: state?.stinkyTofuDamageBonus ?? 0,
+      nightMarketChainMultiplier: state?.nightMarketChainMultiplier ?? 1,
+      nightMarketDecayReduction: state?.nightMarketDecayReduction ?? 0,
+      killThresholdDivisor: state?.killThresholdDivisor ?? 1,
+      bloodCakeRangeBonus: state?.bloodCakeRangeBonus ?? 0,
+    };
+  }
+
+  /**
    * Spawn a single bullet with specified type
    */
   private spawnSingleBullet(bulletType: SpecialBulletType): Bullet[] {
     if (!this.bulletSpawner || !this.player) return [];
 
+    const snapshot = this.createUpgradeSnapshot();
     const bullet = this.bulletSpawner({
       position: this.player.position,
       direction: new Vector(1, 0),
       bulletType,
+      upgradeSnapshot: snapshot,
     });
 
     return [bullet];
@@ -287,6 +307,7 @@ export class CombatSystem extends InjectableSystem {
 
     const bullets: Bullet[] = [];
     const upgradeState = this.upgradeSystem?.getState();
+    const snapshot = this.createUpgradeSnapshot();
 
     // Base extra bullets + upgrade bonus (SPEC § 2.3.4: 加椰果)
     const baseExtra = RECIPE_CONFIG.bubbleTea.extraBullets;
@@ -312,6 +333,7 @@ export class CombatSystem extends InjectableSystem {
         position: this.player.position,
         direction: dir,
         bulletType,
+        upgradeSnapshot: snapshot,
       });
       bullets.push(bullet);
     }
@@ -321,39 +343,34 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Spawn BloodCake tracking bullet (SPEC § 2.3.3)
-   * Tracks the nearest enemy
+   * Tracks the nearest enemy based on bullet spawn position
    */
   private spawnTrackingBullet(): Bullet[] {
     if (!this.bulletSpawner || !this.player) return [];
 
-    // Find nearest enemy to track
-    const target = this.findNearestEnemyToPlayer();
+    // Create snapshot first to use for initial target finding
+    const snapshot = this.createUpgradeSnapshot();
+
+    // Find nearest enemy to track using snapshot's range bonus
+    // Initial target is based on bullet spawn position (= player position)
+    const baseRange = RECIPE_CONFIG.bloodCake.trackingRange;
+    const maxRange = baseRange + snapshot.bloodCakeRangeBonus;
+    const target = this.findClosestEnemy(
+      this.player.position,
+      undefined,
+      maxRange,
+    );
 
     const bullet = this.bulletSpawner({
       position: this.player.position,
       direction: new Vector(1, 0),
       bulletType: SpecialBulletType.BloodCake,
-      isTracking: target !== null,
+      isTracking: true, // Always enable tracking for BloodCake bullets
       trackingTarget: target ?? undefined,
+      upgradeSnapshot: snapshot,
     });
 
     return [bullet];
-  }
-
-  /**
-   * Find the nearest active enemy to the player
-   * For tracking bullets, applies tracking range limit (SPEC § 2.3.3 + § 2.3.4)
-   */
-  private findNearestEnemyToPlayer(): Enemy | null {
-    if (!this.player) return null;
-
-    // Calculate tracking range with upgrade bonus (SPEC § 2.3.4: 加香菜)
-    const baseRange = RECIPE_CONFIG.bloodCake.trackingRange;
-    const upgradeState = this.upgradeSystem?.getState();
-    const upgradeBonus = upgradeState?.bloodCakeRangeBonus ?? 0;
-    const maxRange = baseRange + upgradeBonus;
-
-    return this.findClosestEnemy(this.player.position, undefined, maxRange);
   }
 
   /**

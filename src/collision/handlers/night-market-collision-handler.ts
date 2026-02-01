@@ -21,11 +21,15 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
     const baseChainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
     const baseDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
 
-    // 總匯吃到飽 upgrade effects
+    // Use snapshot if available, fallback to current upgrade state for backwards compatibility
     const chainMultiplier =
-      context.upgradeSystem?.getState().nightMarketChainMultiplier ?? 1;
+      context.bullet.upgradeSnapshot?.nightMarketChainMultiplier ??
+      context.upgradeSystem?.getState().nightMarketChainMultiplier ??
+      1;
     const decayReduction =
-      context.upgradeSystem?.getState().nightMarketDecayReduction ?? 0;
+      context.bullet.upgradeSnapshot?.nightMarketDecayReduction ??
+      context.upgradeSystem?.getState().nightMarketDecayReduction ??
+      0;
 
     const chainTargets = Math.floor(baseChainTargets * chainMultiplier);
     const damageDecay = Math.max(0, baseDecay - decayReduction);

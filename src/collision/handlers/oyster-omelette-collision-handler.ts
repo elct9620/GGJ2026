@@ -30,9 +30,11 @@ export class OysterOmeletteCollisionHandler extends BaseCollisionHandler {
     const { bossDamagePercent, eliteDamagePercent, ghostDamagePercent } =
       RECIPE_CONFIG.oysterOmelet;
 
-    // 快吃 upgrade bonus (killThresholdDivisor adds +10% per stack)
+    // Use snapshot if available, fallback to current upgrade state for backwards compatibility
     const damageBonus =
-      context.upgradeSystem?.getState().killThresholdDivisor ?? 1;
+      context.bullet.upgradeSnapshot?.killThresholdDivisor ??
+      context.upgradeSystem?.getState().killThresholdDivisor ??
+      1;
     const bonusPercent = damageBonus - 1; // Convert multiplier to bonus (1 = no bonus)
 
     let percentage: number;

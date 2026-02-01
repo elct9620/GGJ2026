@@ -15,8 +15,11 @@ export class StinkyTofuCollisionHandler extends BaseCollisionHandler {
 
   handle(context: CollisionContext): void {
     const baseDamage = RECIPE_CONFIG.stinkyTofu.baseDamage;
+    // Use snapshot if available, fallback to current upgrade state for backwards compatibility
     const damageBonus =
-      context.upgradeSystem?.getState().stinkyTofuDamageBonus ?? 0;
+      context.bullet.upgradeSnapshot?.stinkyTofuDamageBonus ??
+      context.upgradeSystem?.getState().stinkyTofuDamageBonus ??
+      0;
     const damage = baseDamage + damageBonus;
 
     context.applyDamageAndPublishDeath(context.enemy, damage);

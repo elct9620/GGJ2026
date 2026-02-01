@@ -162,6 +162,7 @@ export class GameScene {
         spawnPosition,
         request.direction,
         request.bulletType,
+        request.upgradeSnapshot,
       );
       if (request.isTracking && request.trackingTarget) {
         bullet.setTracking(request.trackingTarget);
@@ -339,7 +340,8 @@ export class GameScene {
       }
 
       // Dynamic tracking: update target based on bullet position (SPEC § 2.6.3.5)
-      if (bullet.type === SpecialBulletType.BloodCake && bullet.isTracking) {
+      // BloodCake bullets always try to track the nearest enemy
+      if (bullet.type === SpecialBulletType.BloodCake) {
         this.updateTrackingTarget(bullet);
       }
 
@@ -349,11 +351,16 @@ export class GameScene {
 
   /**
    * Update tracking bullet target based on bullet position
-   * SPEC § 2.6.3.5: 追蹤最近敵人（距離限制 600px）
+   * SPEC § 2.6.3.5: 追蹤最近敵人（距離限制 600px + 升級加成）
    * Target is dynamically updated each frame based on bullet position
+   * Range bonus is determined by bullet's upgrade snapshot at creation time
    */
   private updateTrackingTarget(bullet: Bullet): void {
-    const trackingRange: number = RECIPE_CONFIG.bloodCake.trackingRange;
+    // Use snapshot for range bonus (captured at bullet creation time)
+    const baseRange = RECIPE_CONFIG.bloodCake.trackingRange;
+    const rangeBonus = bullet.upgradeSnapshot?.bloodCakeRangeBonus ?? 0;
+    const trackingRange = baseRange + rangeBonus;
+
     let closest: Enemy | null = null;
     let closestDistance: number = trackingRange;
 
