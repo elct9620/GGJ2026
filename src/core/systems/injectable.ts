@@ -139,18 +139,6 @@ export abstract class InjectableSystem implements System {
     }
   }
 
-  /**
-   * Get all declared dependency keys (for debugging)
-   */
-  public getDeclaredDependencies(): { required: string[]; optional: string[] } {
-    const allKeys = new Set([...this._dependencies.keys()]);
-    const required = Array.from(this._requiredKeys);
-    const optional = Array.from(allKeys).filter(
-      (k) => !this._requiredKeys.has(k),
-    );
-    return { required, optional };
-  }
-
   public abstract update(deltaTime: number): void;
   public initialize?(): void;
   public destroy?(): void;

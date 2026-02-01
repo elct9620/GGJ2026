@@ -145,20 +145,6 @@ describe("InjectableSystem", () => {
     });
   });
 
-  describe("getDeclaredDependencies", () => {
-    it("should return required and optional dependency keys", () => {
-      system.injectDependencyA("value");
-      system.injectDependencyB(123);
-      system.injectOptional({});
-
-      const deps = system.getDeclaredDependencies();
-
-      expect(deps.required).toContain("DependencyA");
-      expect(deps.required).toContain("DependencyB");
-      expect(deps.optional).toContain("OptionalDep");
-    });
-  });
-
   describe("inject method", () => {
     it("should be callable from outside (by SystemManager)", () => {
       system.inject("DependencyA", "external-value");

@@ -319,18 +319,4 @@ export class WaveSystem extends InjectableSystem {
     this.gameState.resetWaveSpawn();
     // Wave state reset is handled by GameStateManager.reset()
   }
-
-  /**
-   * Get remaining enemies to spawn (for testing)
-   */
-  public getEnemiesToSpawn(): number {
-    return this.gameState.waveSpawn.enemiesToSpawn;
-  }
-
-  /**
-   * Check if boss spawn is pending (for testing)
-   */
-  public isBossSpawnPending(): boolean {
-    return this.gameState.waveSpawn.shouldSpawnBoss;
-  }
 }

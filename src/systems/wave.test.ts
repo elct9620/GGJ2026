@@ -171,8 +171,8 @@ describe("WaveSystem", () => {
 
       // At this point we should have 9 regular enemies, and still 1 to spawn
       expect(spawnedEnemies.length).toBe(9);
-      expect(waveSystem.getEnemiesToSpawn()).toBe(1);
-      expect(waveSystem.isBossSpawnPending()).toBe(true);
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(1);
+      expect(gameState.waveSpawn.shouldSpawnBoss).toBe(true);
 
       // Spawn the 10th regular enemy
       waveSystem.update(waveData.spawnIntervalMax);
@@ -180,12 +180,12 @@ describe("WaveSystem", () => {
         isRegularEnemy(e.type),
       );
       expect(regularEnemies.length).toBe(10);
-      expect(waveSystem.getEnemiesToSpawn()).toBe(0);
+      expect(gameState.waveSpawn.enemiesToSpawn).toBe(0);
 
       // Boss should spawn now (in the same update where enemiesToSpawn becomes 0)
       // Since boss spawns in update() after enemiesToSpawn === 0
       expect(spawnedEnemies.filter((e) => e.type === "Boss").length).toBe(1);
-      expect(waveSystem.isBossSpawnPending()).toBe(false);
+      expect(gameState.waveSpawn.shouldSpawnBoss).toBe(false);
     });
 
     it("WS-19: Y 座標為遊戲區域內的隨機值（考慮敵人大小，避開 HUD）", () => {
