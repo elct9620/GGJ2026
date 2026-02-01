@@ -104,12 +104,12 @@ describe("UpgradeSystem", () => {
       const options = upgradeSystem.getCurrentOptions();
       const selectedOption = options[0];
 
-      const beforeState = { ...upgradeSystem.getState() };
+      const beforeState = { ...gameState.upgrades };
       const success = upgradeSystem.selectUpgrade(selectedOption.id);
 
       expect(success).toBe(true);
 
-      const afterState = { ...upgradeSystem.getState() };
+      const afterState = { ...gameState.upgrades };
 
       // Verify at least one stat increased based on selected upgrade
       // SPEC § 2.3.4: 加辣 +0.5 damage, 加椰果 +1 bullet, 加香菜 +100px range
@@ -143,7 +143,7 @@ describe("UpgradeSystem", () => {
 
         if (spicyOption) {
           upgradeSystem.selectUpgrade("spicy");
-          expect(upgradeSystem.getState().stinkyTofuDamageBonus).toBe(0.5);
+          expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(0.5);
           return;
         }
       }
@@ -178,7 +178,7 @@ describe("UpgradeSystem", () => {
       const firstSuccess = upgradeSystem.selectUpgrade(firstOptions[0].id);
       expect(firstSuccess).toBe(true);
 
-      const afterFirst = upgradeSystem.getState();
+      const afterFirst = { ...gameState.upgrades };
 
       // Second upgrade
       eventQueue.publish(EventType.WaveComplete, { waveNumber: 2 });
@@ -186,7 +186,7 @@ describe("UpgradeSystem", () => {
       const secondSuccess = upgradeSystem.selectUpgrade(secondOptions[0].id);
 
       if (secondSuccess) {
-        const afterSecond = upgradeSystem.getState();
+        const afterSecond = gameState.upgrades;
 
         // Verify total stats increased (stacking effect)
         const totalBonus =
@@ -225,11 +225,11 @@ describe("UpgradeSystem", () => {
       eventQueue.publish(EventType.WaveComplete, { waveNumber: 5 });
       const options = upgradeSystem.getCurrentOptions();
 
-      const beforeState = { ...upgradeSystem.getState() };
+      const beforeState = { ...gameState.upgrades };
       const success = upgradeSystem.selectUpgrade(options[0].id);
       expect(success).toBe(true);
 
-      const afterState = { ...upgradeSystem.getState() };
+      const afterState = { ...gameState.upgrades };
 
       // Verify specific effect based on selected upgrade
       // SPEC § 2.3.4: 打折 -1, 大胃王 +6, 快吃 +10%, 飢餓三十 +2s, 好餓好餓 -0.5s, 總匯吃到飽 ×2/-10%
@@ -276,7 +276,7 @@ describe("UpgradeSystem", () => {
       const firstOptions = upgradeSystem.getCurrentOptions();
       const firstId = firstOptions[0].id;
       upgradeSystem.selectUpgrade(firstId);
-      const afterFirst = upgradeSystem.getState();
+      const afterFirst = { ...gameState.upgrades };
 
       // Second upgrade - select same if available
       eventQueue.publish(EventType.WaveComplete, { waveNumber: 10 });
@@ -287,7 +287,7 @@ describe("UpgradeSystem", () => {
         const secondSuccess = upgradeSystem.selectUpgrade(firstId);
 
         if (secondSuccess) {
-          const afterSecond = upgradeSystem.getState();
+          const afterSecond = gameState.upgrades;
 
           // Verify effect stacked based on which upgrade was selected
           switch (firstId) {
@@ -388,14 +388,13 @@ describe("UpgradeSystem", () => {
       upgradeSystem.reset();
       gameState.reset(); // Upgrade state is now managed by GameStateManager
 
-      const state = upgradeSystem.getState();
-      expect(state.stinkyTofuDamageBonus).toBe(0);
-      expect(state.bubbleTeaBulletBonus).toBe(0);
-      expect(state.bloodCakeRangeBonus).toBe(0);
-      expect(state.recipeCostReduction).toBe(0);
-      expect(state.magazineMultiplier).toBe(1);
-      expect(state.killThresholdDivisor).toBe(1);
-      expect(state.buffDurationMultiplier).toBe(1);
+      expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(0);
+      expect(gameState.upgrades.bubbleTeaBulletBonus).toBe(0);
+      expect(gameState.upgrades.bloodCakeRangeBonus).toBe(0);
+      expect(gameState.upgrades.recipeCostReduction).toBe(0);
+      expect(gameState.upgrades.magazineMultiplier).toBe(1);
+      expect(gameState.upgrades.killThresholdDivisor).toBe(1);
+      expect(gameState.upgrades.buffDurationMultiplier).toBe(1);
       expect(upgradeSystem.isPending()).toBe(false);
       expect(upgradeSystem.getCurrentOptions().length).toBe(0);
     });
@@ -403,15 +402,13 @@ describe("UpgradeSystem", () => {
 
   describe("Upgrade State", () => {
     it("UP-18: 初始狀態所有升級為零", () => {
-      const state = upgradeSystem.getState();
-
-      expect(state.stinkyTofuDamageBonus).toBe(0);
-      expect(state.bubbleTeaBulletBonus).toBe(0);
-      expect(state.bloodCakeRangeBonus).toBe(0);
-      expect(state.recipeCostReduction).toBe(0);
-      expect(state.magazineMultiplier).toBe(1);
-      expect(state.killThresholdDivisor).toBe(1);
-      expect(state.buffDurationMultiplier).toBe(1);
+      expect(gameState.upgrades.stinkyTofuDamageBonus).toBe(0);
+      expect(gameState.upgrades.bubbleTeaBulletBonus).toBe(0);
+      expect(gameState.upgrades.bloodCakeRangeBonus).toBe(0);
+      expect(gameState.upgrades.recipeCostReduction).toBe(0);
+      expect(gameState.upgrades.magazineMultiplier).toBe(1);
+      expect(gameState.upgrades.killThresholdDivisor).toBe(1);
+      expect(gameState.upgrades.buffDurationMultiplier).toBe(1);
     });
   });
 });

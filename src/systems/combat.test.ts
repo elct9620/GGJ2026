@@ -206,8 +206,8 @@ describe("CombatSystem", () => {
       // Note: Testing damage multiplier requires implementing damage scaling
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "2" });
 
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.StinkyTofu);
-      expect(combatSystem.isBuffActive()).toBe(true);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.StinkyTofu);
+      expect(gameState.combat.buffTimeRemaining).toBeGreaterThan(0);
     });
 
     it("CS-14: 臭豆腐 Buff + 按 Space → 貫穿子彈", () => {
@@ -240,14 +240,14 @@ describe("CombatSystem", () => {
     it("CS-15: 珍珠奶茶 Buff + 按 Space → 散射多個子彈", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "3" });
 
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BubbleTea);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.BubbleTea);
       // Note: Scatter logic is implemented in GameScene.spawnBubbleTeaBullets()
       // CombatSystem only manages buff state, bullet spawning is in GameScene
     });
 
     it("CS-16: 豬血糕 Buff + 按 Space → 追蹤子彈 + 減速效果", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.BloodCake);
 
       // Create enemy with more HP to survive (Elite has 2 HP, BloodCake damage is 2)
       // SPEC § 2.3.5: Boss 首次出現在 Wave 5
@@ -273,7 +273,7 @@ describe("CombatSystem", () => {
 
     it("CS-17: 夜市總匯 Buff + 擊中第 1 隻敵人 → 閃電連鎖", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "1" });
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.NightMarket);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.NightMarket);
 
       // Create multiple enemies in chain range (300px)
       const enemy1 = new Enemy(EnemyType.Ghost, new Vector(500, 540));
@@ -326,7 +326,7 @@ describe("CombatSystem", () => {
 
     it("CS-13b: 蚵仔煎 Boss 傷害 = 10% HP", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "5" });
-      expect(combatSystem.getCurrentBuff()).toBe(
+      expect(gameState.combat.currentBuff).toBe(
         SpecialBulletType.OysterOmelette,
       );
 
@@ -439,7 +439,7 @@ describe("CombatSystem", () => {
 
     it("CS-18: Buff 結束（2 秒後）+ 按 Space → 普通子彈", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "2" });
-      expect(combatSystem.isBuffActive()).toBe(true);
+      expect(gameState.combat.buffTimeRemaining).toBeGreaterThan(0);
 
       // Mock BuffExpired event
       let buffExpiredFired = false;
@@ -450,20 +450,20 @@ describe("CombatSystem", () => {
       // Simulate 2 seconds
       combatSystem.update(2);
 
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.None);
-      expect(combatSystem.isBuffActive()).toBe(false);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.None);
+      expect(gameState.combat.buffTimeRemaining).toBe(0);
       expect(buffExpiredFired).toBe(true);
     });
 
     it("CS-19: 特殊 Buff 期間 + 按數字鍵 → 無效果", () => {
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "2" });
-      expect(combatSystem.isBuffActive()).toBe(true);
+      expect(gameState.combat.buffTimeRemaining).toBeGreaterThan(0);
 
       // Try to trigger another buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "3" });
 
       // Buff should remain as StinkyTofu
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.StinkyTofu);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.StinkyTofu);
     });
 
     it("CS-20: Buff 剩餘 0.5 秒 + 按 Space → 特殊子彈", () => {
@@ -472,8 +472,8 @@ describe("CombatSystem", () => {
       // Simulate 1.5 seconds (0.5 seconds remaining)
       combatSystem.update(1.5);
 
-      expect(combatSystem.isBuffActive()).toBe(true);
-      expect(combatSystem.getBuffTimer()).toBeCloseTo(0.5, 1);
+      expect(gameState.combat.buffTimeRemaining).toBeGreaterThan(0);
+      expect(gameState.combat.buffTimeRemaining).toBeCloseTo(0.5, 1);
     });
   });
 
@@ -581,7 +581,7 @@ describe("CombatSystem", () => {
 
       // Activate BubbleTea buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "3" });
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BubbleTea);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.BubbleTea);
 
       const result = combatSystem.performShoot();
 
@@ -647,7 +647,7 @@ describe("CombatSystem", () => {
 
       // Activate BloodCake buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.BloodCake);
 
       const result = combatSystem.performShoot();
 
@@ -669,7 +669,7 @@ describe("CombatSystem", () => {
 
       // Activate BloodCake buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.BloodCake);
 
       const result = combatSystem.performShoot();
 
@@ -692,7 +692,7 @@ describe("CombatSystem", () => {
 
       // Activate BloodCake buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
-      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+      expect(gameState.combat.currentBuff).toBe(SpecialBulletType.BloodCake);
 
       const result = combatSystem.performShoot();
 

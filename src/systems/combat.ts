@@ -360,23 +360,9 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
-   * Get current special bullet buff type
+   * Check if buff is active (internal use)
    */
-  public getCurrentBuff(): SpecialBulletType {
-    return this.gameState.combat.currentBuff;
-  }
-
-  /**
-   * Get remaining buff time
-   */
-  public getBuffTimer(): number {
-    return this.gameState.combat.buffTimeRemaining;
-  }
-
-  /**
-   * Check if buff is active
-   */
-  public isBuffActive(): boolean {
+  private isBuffActive(): boolean {
     const combat = this.gameState.combat;
     return (
       combat.currentBuff !== SpecialBulletType.None &&

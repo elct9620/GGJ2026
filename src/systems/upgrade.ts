@@ -11,7 +11,7 @@ import type { BoothSystem } from "./booth";
 import { type FoodType, getBoothIdForFood } from "../core/types";
 import { upgradeData, waveData } from "../data";
 import { DependencyKeys } from "../core/systems/dependency-keys";
-import type { GameStateManager, UpgradeState } from "../core/game-state";
+import type { GameStateManager } from "../core/game-state";
 
 /**
  * Upgrade option definition
@@ -208,14 +208,6 @@ export class UpgradeSystem extends InjectableSystem {
    */
   public destroy(): void {
     // Dependencies are managed by InjectableSystem
-  }
-
-  /**
-   * Get upgrade state (read by other systems)
-   * Delegates to GameStateManager for centralized state
-   */
-  public getState(): Readonly<UpgradeState> {
-    return this.gameState.upgrades;
   }
 
   /**

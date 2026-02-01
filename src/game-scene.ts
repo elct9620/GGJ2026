@@ -640,20 +640,18 @@ export class GameScene {
    * Apply Player-related upgrades: 大胃王 (magazine), 好餓好餓 (reload time)
    */
   private onUpgradeSelected(data: { upgradeId: string }): void {
-    const upgradeSystem =
-      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
-    const state = upgradeSystem.getState();
+    const upgrades = this.gameState.upgrades;
 
     // Apply 大胃王 upgrade (magazine capacity)
     if (data.upgradeId === "bigEater") {
       const newCapacity =
-        PLAYER_CONFIG.magazineCapacity + (state.magazineMultiplier - 1);
+        PLAYER_CONFIG.magazineCapacity + (upgrades.magazineMultiplier - 1);
       this.player.updateMagazineCapacity(newCapacity);
     }
 
     // Apply 好餓好餓 upgrade (reload time reduction)
     if (data.upgradeId === "veryHungry") {
-      this.player.setReloadTimeReduction(state.reloadTimeReduction);
+      this.player.setReloadTimeReduction(upgrades.reloadTimeReduction);
     }
   }
 
