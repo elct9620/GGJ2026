@@ -1094,7 +1094,7 @@ abstract class Entity {
 **Design Decisions**:
 
 - **不可變（Immutable）**：所有操作返回新 Vector 實例，防止意外修改
-- **浮點座標**：支援精確的方向和速度計算（如散射子彈角度）
+- **整數座標**：像素對齊渲染，避免浮點精度問題
 - **零向量正規化**：返回 (0, 0) 而非錯誤，優雅降級
 
 **Core Operations**:
@@ -1163,8 +1163,8 @@ abstract class Entity {
 **值物件契約**:
 
 - **Vector**：不可變，所有操作返回新實例
-  - 浮點座標支援精確的方向計算
-  - 所有數學運算保留浮點精度
+  - 建構時強制整數座標（四捨五入）
+  - 所有數學運算結果為整數（四捨五入）
   - 操作不修改原實例狀態
 
 # 4. Technical Specifications
@@ -1343,6 +1343,45 @@ Application.stage
 - 60 FPS（16.67ms per frame）
 - 50 隻敵人 + 100 發子彈同時存在
 - 記憶體使用 < 200 MB
+
+### 4.2.7 Configuration Constants
+
+**Purpose**: 集中管理遊戲數值常數，確保規格與實作一致性
+
+**File Location**: `src/config.ts`
+
+**Configuration Categories**:
+
+| Category | Config Name | Purpose |
+| -------- | ----------- | ------- |
+| Kill Counter | `KILL_COUNTER_CONFIG` | 擊殺計數與蚵仔煎消耗參數 |
+| Booth | `BOOTH_CONFIG` | 攤位儲存與偷取參數 |
+| Recipe | `RECIPE_CONFIG` | 特殊子彈配方與效果 |
+| Combat | `COMBAT_CONFIG` | 射擊與重裝參數 |
+| Wave | `WAVE_CONFIG` | 敵人生成與回合參數 |
+| Player | `PLAYER_CONFIG` | 玩家移動與生命值 |
+| Enemy | `ENEMY_CONFIG` | 敵人屬性與行為 |
+
+**Kill Counter Configuration** (SPEC § 2.3.8):
+
+```typescript
+export const KILL_COUNTER_CONFIG = {
+  /** 蚵仔煎消耗擊殺數門檻（固定值，非累進） */
+  oysterOmeletThreshold: 20,
+} as const;
+```
+
+**Constraints**:
+
+- `oysterOmeletThreshold`: 每次使用蚵仔煎固定消耗此值（不隨使用次數增加為 20n）
+- 此值定義單次消耗量，系統每次扣除固定 20 擊殺數
+- 範例：第 1 次使用消耗 20，第 2 次使用仍消耗 20（非 40）
+
+**Design Rationale**:
+
+- 固定消耗確保蚵仔煎使用頻率可預測
+- 避免累進消耗導致後期無法使用的問題
+- 保持遊戲節奏平衡（每 20 次擊殺可使用 1 次終極技能）
 
 ## 4.3 Browser Compatibility
 
