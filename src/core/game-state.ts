@@ -138,8 +138,9 @@ export interface BoothState {
 
 /**
  * Centralized game state interface
+ * Defines the structure of game-wide state
  */
-export interface GameStateInterface {
+export interface GameStateSnapshot {
   // Screen state
   screen: ScreenState;
 
@@ -209,7 +210,7 @@ function createInitialCombatState(): CombatState {
  * Systems read from GameStateManager and update via specific methods.
  * This ensures consistent state across all systems.
  */
-export class GameStateManager implements GameStateInterface {
+export class GameStateManager implements GameStateSnapshot {
   private _screen: ScreenState = ScreenState.START;
   private _wave: WaveState = createInitialWaveState();
   private _waveSpawn: WaveSpawnState = createInitialWaveSpawnState();

@@ -36,17 +36,10 @@ export class Enemy extends SpriteEntity {
   private knockbackVelocity: number = 0;
   private knockbackDuration: number = 0;
 
-  // Read-only health accessor (use takeDamage for modifications)
-  public get health(): number {
-    return this._health.current;
-  }
-
-  public get maxHealth(): number {
-    return this._health.max;
-  }
-
-  // Value Object accessor
-  public get healthVO(): Health {
+  /**
+   * Health Value Object (use takeDamage for modifications)
+   */
+  public get health(): Health {
     return this._health;
   }
 
@@ -219,10 +212,10 @@ export class Enemy extends SpriteEntity {
   }
 
   /**
-   * Drop food item when defeated (or null if no drop)
+   * Food drop when defeated (or null if no drop)
    * SPEC § 2.6.2: Uses EnemyData for food drop mapping
    */
-  public dropFood(): FoodType | null {
+  public get foodDrop(): FoodType | null {
     return enemyData.getFoodDrop(this.type);
   }
 
@@ -238,18 +231,19 @@ export class Enemy extends SpriteEntity {
     const barWidth = 8;
     const barHeight = 6;
     const barSpacing = 2;
-    const totalWidth =
-      this.maxHealth * barWidth + (this.maxHealth - 1) * barSpacing;
+    const maxHP = this.health.max;
+    const currentHP = this.health.current;
+    const totalWidth = maxHP * barWidth + (maxHP - 1) * barSpacing;
     const startX = -totalWidth / 2;
     // Health bar position based on sprite size from data catalog
     const spriteHeight = enemyData.getSize(this.type);
     const startY = -spriteHeight / 2 - 15;
 
     // Draw health bars (green for remaining health, gray for lost health)
-    for (let i = 0; i < this.maxHealth; i++) {
+    for (let i = 0; i < maxHP; i++) {
       const x = startX + i * (barWidth + barSpacing);
       this.healthBarContainer.rect(x, startY, barWidth, barHeight);
-      this.healthBarContainer.fill(i < this.health ? 0x2ecc71 : 0x7f8c8d);
+      this.healthBarContainer.fill(i < currentHP ? 0x2ecc71 : 0x7f8c8d);
     }
   }
 

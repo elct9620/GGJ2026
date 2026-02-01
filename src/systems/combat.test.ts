@@ -41,12 +41,12 @@ describe("CombatSystem", () => {
 
   describe("Normal Attack", () => {
     it("CS-01: 彈夾 6/6 + 按 Space → 彈夾 5/6，子彈生成", () => {
-      expect(player.ammo).toBe(6);
+      expect(player.ammo.current).toBe(6);
 
       const result = combatSystem.shoot();
 
       expect(result).toBe(true);
-      expect(player.ammo).toBe(5);
+      expect(player.ammo.current).toBe(5);
     });
 
     it("CS-02: 彈夾 0/6 + 按 Space → 無效果", () => {
@@ -54,12 +54,12 @@ describe("CombatSystem", () => {
       for (let i = 0; i < 6; i++) {
         player.shoot();
       }
-      expect(player.ammo).toBe(0);
+      expect(player.ammo.current).toBe(0);
 
       const result = combatSystem.shoot();
 
       expect(result).toBe(false);
-      expect(player.ammo).toBe(0);
+      expect(player.ammo.current).toBe(0);
     });
 
     it("CS-03: 子彈擊中餓鬼（1 HP）→ 餓鬼死亡", () => {
@@ -86,20 +86,20 @@ describe("CombatSystem", () => {
       // SPEC § 2.6.2: Boss Wave 5 基礎血量 = 10
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
       enemies.push(boss);
-      expect(boss.health).toBe(10);
+      expect(boss.health.current).toBe(10);
 
       const bullet = new Bullet(new Vector(490, 540), new Vector(1, 0));
       bullets.push(bullet);
 
       combatSystem.update(0.016);
 
-      expect(boss.health).toBe(9);
+      expect(boss.health.current).toBe(9);
       expect(boss.active).toBe(true);
       expect(bullet.active).toBe(false); // Bullet consumed
     });
 
     it("CS-05: 連續按 Space 6 次 → 彈夾 0/6，6 發子彈生成", () => {
-      expect(player.ammo).toBe(6);
+      expect(player.ammo.current).toBe(6);
 
       for (let i = 0; i < 6; i++) {
         const result = combatSystem.shoot();
@@ -108,7 +108,7 @@ describe("CombatSystem", () => {
         combatSystem.update(0.2); // Cooldown is 0.2s
       }
 
-      expect(player.ammo).toBe(0);
+      expect(player.ammo.current).toBe(0);
     });
 
     it("CS-06: 子彈飛出畫面右邊界 → 子彈消失", () => {
@@ -142,7 +142,7 @@ describe("CombatSystem", () => {
       player.update(3);
 
       expect(player.isReloading).toBe(false);
-      expect(player.ammo).toBe(6);
+      expect(player.ammo.current).toBe(6);
     });
 
     it("CS-09: 重裝中（1.5 秒）+ 按 Space → 無效果", () => {
@@ -182,7 +182,7 @@ describe("CombatSystem", () => {
       player.update(1.5);
 
       expect(player.isReloading).toBe(true);
-      expect(player.ammo).toBe(0);
+      expect(player.ammo.current).toBe(0);
     });
 
     it("CS-12: 重裝完成瞬間 + 按 Space → 彈夾 5/6，子彈生成", () => {
@@ -191,12 +191,12 @@ describe("CombatSystem", () => {
       }
 
       player.update(3); // Complete reload
-      expect(player.ammo).toBe(6);
+      expect(player.ammo.current).toBe(6);
 
       const result = combatSystem.shoot();
 
       expect(result).toBe(true);
-      expect(player.ammo).toBe(5);
+      expect(player.ammo.current).toBe(5);
     });
   });
 
@@ -345,7 +345,7 @@ describe("CombatSystem", () => {
       combatSystem.update(0.016);
 
       // Boss should take 10% of max HP (10 × 0.1 = 1)
-      expect(boss.health).toBe(9);
+      expect(boss.health.current).toBe(9);
       expect(bullet.active).toBe(false);
     });
 
@@ -367,7 +367,7 @@ describe("CombatSystem", () => {
       combatSystem.update(0.016);
 
       // Elite should take 50% of max HP (2 × 0.5 = 1)
-      expect(elite.health).toBe(1);
+      expect(elite.health.current).toBe(1);
     });
 
     it("CS-13d: 蚵仔煎 Ghost 傷害 = 70% HP", () => {
@@ -410,7 +410,7 @@ describe("CombatSystem", () => {
       combatSystem.update(0.016);
 
       // Boss should take 10% of CURRENT HP (6 × 0.1 = 0.6 → 1)
-      expect(boss.health).toBe(5);
+      expect(boss.health.current).toBe(5);
       expect(bullet.active).toBe(false);
     });
 
@@ -433,7 +433,7 @@ describe("CombatSystem", () => {
       combatSystem.update(0.016);
 
       // Elite should take 50% of CURRENT HP (3 × 0.5 = 1.5 → 2)
-      expect(elite.health).toBe(1);
+      expect(elite.health.current).toBe(1);
       expect(bullet.active).toBe(false);
     });
 
@@ -557,7 +557,7 @@ describe("CombatSystem", () => {
       for (let i = 0; i < 6; i++) {
         player.shoot();
       }
-      expect(player.ammo).toBe(0);
+      expect(player.ammo.current).toBe(0);
 
       const result = combatSystem.performShoot();
 

@@ -434,7 +434,7 @@ export class GameScene {
     if (!enemy) return;
 
     // Drop food at enemy position (only Elite enemies drop food per SPEC § 2.6.2)
-    const foodType = enemy.dropFood();
+    const foodType = enemy.foodDrop;
     if (foodType !== null) {
       this.spawnFood(foodType, new Vector(data.position.x, data.position.y));
     }
@@ -581,7 +581,7 @@ export class GameScene {
    * Check game over condition (Spec: § 2.8.2)
    */
   private checkGameOver(): void {
-    if (this.player.healthVO.isDead() && this.onGameOver) {
+    if (this.player.health.isDead() && this.onGameOver) {
       this.onGameOver(this.gameState.stats);
     }
   }

@@ -44,6 +44,6 @@ export class OysterOmeletteCollisionHandler extends BaseCollisionHandler {
       percentage = ghostDamagePercent + bonusPercent;
     }
 
-    return Damage.fromPercentage(context.enemy.health, percentage);
+    return Damage.fromPercentage(context.enemy.health.current, percentage);
   }
 }

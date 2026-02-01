@@ -25,27 +25,27 @@ describe("Enemy", () => {
     });
 
     it("EN-02: 餓鬼 1 HP + 普通子彈擊中 → 餓鬼死亡", () => {
-      expect(ghost.health).toBe(1);
+      expect(ghost.health.current).toBe(1);
 
       const died = ghost.takeDamage(1);
 
       expect(died).toBe(true);
-      expect(ghost.health).toBe(0);
+      expect(ghost.health.current).toBe(0);
       expect(ghost.active).toBe(false);
     });
 
-    it("EN-03: 餓鬼死亡 → dropFood 回傳 null（不掉落食材）", () => {
+    it("EN-03: 餓鬼死亡 → foodDrop 回傳 null（不掉落食材）", () => {
       ghost.takeDamage(1);
 
       // SPEC § 2.6.2: Ghost (餓鬼) does NOT drop food
-      const foodType = ghost.dropFood();
+      const foodType = ghost.foodDrop;
       expect(foodType).toBeNull();
     });
 
-    it("EN-04: 餓鬼 dropFood 始終回傳 null", () => {
+    it("EN-04: 餓鬼 foodDrop 始終回傳 null", () => {
       // SPEC § 2.6.2: Ghost consistently returns null
       for (let i = 0; i < 10; i++) {
-        expect(ghost.dropFood()).toBeNull();
+        expect(ghost.foodDrop).toBeNull();
       }
     });
 
@@ -61,7 +61,7 @@ describe("Enemy", () => {
 
     it("餓鬼初始 HP 為 1", () => {
       const newGhost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      expect(newGhost.health).toBe(1);
+      expect(newGhost.health.current).toBe(1);
     });
   });
 
@@ -77,27 +77,27 @@ describe("Enemy", () => {
     it("EN-06: 紅餓鬼 2 HP + 1 發普通子彈 → 紅餓鬼 1 HP", () => {
       // SPEC § 2.6.2: Elite 基礎血量 = 2
       const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
-      expect(redGhost.health).toBe(2);
+      expect(redGhost.health.current).toBe(2);
 
       redGhost.takeDamage(1);
 
-      expect(redGhost.health).toBe(1);
+      expect(redGhost.health.current).toBe(1);
       expect(redGhost.active).toBe(true); // Not dead yet
     });
 
     it("EN-07: 紅餓鬼死亡 → 掉落豆腐", () => {
       const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
-      expect(redGhost.dropFood()).toBe(FoodType.Tofu);
+      expect(redGhost.foodDrop).toBe(FoodType.Tofu);
     });
 
     it("EN-08: 綠餓鬼死亡 → 掉落珍珠", () => {
       const greenGhost = new Enemy(EnemyType.GreenGhost, new Vector(1000, 500));
-      expect(greenGhost.dropFood()).toBe(FoodType.Pearl);
+      expect(greenGhost.foodDrop).toBe(FoodType.Pearl);
     });
 
     it("EN-09: 藍餓鬼死亡 → 掉落米血", () => {
       const blueGhost = new Enemy(EnemyType.BlueGhost, new Vector(1000, 500));
-      expect(blueGhost.dropFood()).toBe(FoodType.BloodCake);
+      expect(blueGhost.foodDrop).toBe(FoodType.BloodCake);
     });
 
     it("EN-10: 菁英敵人速度為 40 px/s", () => {
@@ -136,11 +136,11 @@ describe("Enemy", () => {
 
     it("EN-12: 餓死鬼 10 HP + 普通子彈 → 餓死鬼 9 HP", () => {
       // SPEC § 2.6.2: Boss 基礎血量 = 10
-      expect(boss.health).toBe(10);
+      expect(boss.health.current).toBe(10);
 
       boss.takeDamage(1);
 
-      expect(boss.health).toBe(9);
+      expect(boss.health.current).toBe(9);
     });
 
     it("EN-13: 餓死鬼 10 HP + 10 發子彈 → 餓死鬼死亡", () => {
@@ -153,7 +153,7 @@ describe("Enemy", () => {
       const died = boss.takeDamage(1);
 
       expect(died).toBe(true);
-      expect(boss.health).toBe(0);
+      expect(boss.health.current).toBe(0);
       expect(boss.active).toBe(false);
     });
 
@@ -166,16 +166,16 @@ describe("Enemy", () => {
     it("EN-15: Boss 初始 HP 為 10", () => {
       // SPEC § 2.6.2: Boss 基礎血量 = 10
       const newBoss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
-      expect(newBoss.health).toBe(10);
+      expect(newBoss.health.current).toBe(10);
     });
 
     it("Boss 速度為 30 px/s", () => {
       expect(boss.speed).toBe(30);
     });
 
-    it("Boss dropFood 回傳 null（不掉落食材）", () => {
+    it("Boss foodDrop 回傳 null（不掉落食材）", () => {
       // SPEC § 2.6.2: Boss 不掉落食材，擊敗後由 UpgradeSystem 處理特殊升級
-      expect(boss.dropFood()).toBeNull();
+      expect(boss.foodDrop).toBeNull();
     });
   });
 
@@ -345,7 +345,7 @@ describe("Enemy", () => {
       const died = ghost.takeDamage(1);
 
       expect(died).toBe(false);
-      expect(ghost.health).toBe(1); // Unchanged
+      expect(ghost.health.current).toBe(1); // Unchanged
     });
   });
 
@@ -359,7 +359,7 @@ describe("Enemy", () => {
       ghost.reset(EnemyType.Ghost, new Vector(1500, 300));
 
       expect(ghost.active).toBe(true);
-      expect(ghost.health).toBe(1);
+      expect(ghost.health.current).toBe(1);
       expect(ghost.position.x).toBe(1500);
       expect(ghost.position.y).toBe(300);
     });
@@ -368,22 +368,22 @@ describe("Enemy", () => {
       const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
       boss.takeDamage(2);
 
-      expect(boss.health).toBe(8);
+      expect(boss.health.current).toBe(8);
 
       boss.reset(EnemyType.Boss, new Vector(1500, 300), 5);
 
-      expect(boss.health).toBe(10);
+      expect(boss.health.current).toBe(10);
     });
 
     it("reset Elite 恢復 2 HP", () => {
       const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
       redGhost.takeDamage(1);
 
-      expect(redGhost.health).toBe(1);
+      expect(redGhost.health.current).toBe(1);
 
       redGhost.reset(EnemyType.RedGhost, new Vector(1500, 300));
 
-      expect(redGhost.health).toBe(2);
+      expect(redGhost.health.current).toBe(2);
     });
   });
 

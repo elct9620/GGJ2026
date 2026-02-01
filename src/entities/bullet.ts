@@ -50,16 +50,9 @@ export class Bullet extends SpriteEntity {
   }
 
   /**
-   * Get damage as number (convenience getter for collision handlers)
+   * Damage Value Object
    */
-  public get damage(): number {
-    return this._damage.toNumber();
-  }
-
-  /**
-   * Get damage as Value Object (for Damage.fromPercentage etc.)
-   */
-  public get damageVO(): Damage {
+  public get damage(): Damage {
     return this._damage;
   }
 

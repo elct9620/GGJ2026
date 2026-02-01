@@ -11,7 +11,10 @@ export class NormalCollisionHandler extends BaseCollisionHandler {
   readonly bulletType = SpecialBulletType.None;
 
   handle(context: CollisionContext): void {
-    context.applyDamageAndPublishDeath(context.enemy, context.bullet.damage);
+    context.applyDamageAndPublishDeath(
+      context.enemy,
+      context.bullet.damage.value,
+    );
     this.applyUniversalHitEffects(context);
   }
 }

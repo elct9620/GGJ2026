@@ -30,21 +30,18 @@ export class Player extends SpriteEntity {
   private baseReloadTime: number = PLAYER_CONFIG.reloadTime;
   private reloadTimeReduction: number = 0;
 
-  // Read-only health accessor (use takeDamage/heal for modifications)
-  public get health(): number {
-    return this._health.current;
+  /**
+   * Health Value Object (use takeDamage for modifications)
+   */
+  public get health(): Health {
+    return this._health;
   }
 
-  public get ammo(): number {
-    return this._ammo.current;
-  }
-
-  public set ammo(value: number) {
-    this._ammo = new Ammo(value, this._ammo.max);
-  }
-
-  public get maxAmmo(): number {
-    return this._ammo.max;
+  /**
+   * Ammo Value Object (use consume/reload for modifications)
+   */
+  public get ammo(): Ammo {
+    return this._ammo;
   }
 
   /**
@@ -53,15 +50,6 @@ export class Player extends SpriteEntity {
    */
   public get reloadTime(): number {
     return Math.max(0.5, this.baseReloadTime - this.reloadTimeReduction);
-  }
-
-  // Value Object accessors
-  public get healthVO(): Health {
-    return this._health;
-  }
-
-  public get ammoVO(): Ammo {
-    return this._ammo;
   }
 
   // Visual representation
