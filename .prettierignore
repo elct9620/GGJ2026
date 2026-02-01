@@ -5,3 +5,4 @@ pnpm-lock.yaml
 *.min.js
 coverage
 CLAUDE.md
+public/fonts/

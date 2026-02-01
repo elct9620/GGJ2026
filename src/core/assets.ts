@@ -3,8 +3,9 @@ import { Assets, Texture } from "pixi.js";
 /**
  * Game font family constant
  * Used by all UI text elements for consistent styling
+ * Font: Chiron Hei HK WS (Variable Font)
  */
-export const GAME_FONT_FAMILY = "UnboundedSans, Arial, sans-serif";
+export const GAME_FONT_FAMILY = "Chiron Hei HK WS, sans-serif";
 
 // Import assets using Vite's static import
 import bgRoad from "../assets/BG_Road.png";
@@ -78,15 +79,23 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
 
 /**
  * Load custom game fonts
- * Uses FontFace API for dynamic font loading
+ * Loads Chiron Hei HK WS variable font via CSS
  */
 async function loadFonts(): Promise<void> {
-  const fontFace = new FontFace(
-    "UnboundedSans",
-    "url(/fonts/UnboundedSans-Regular.ttf)",
-  );
-  await fontFace.load();
-  document.fonts.add(fontFace);
+  // Load font CSS stylesheet
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "/fonts/css/vf.css";
+  document.head.appendChild(link);
+
+  // Wait for the font to be available
+  await document.fonts.ready;
+
+  // Verify the font is loaded by checking if the font family is available
+  const fontLoaded = await document.fonts.load("400 16px 'Chiron Hei HK WS'");
+  if (fontLoaded.length === 0) {
+    console.warn("Chiron Hei HK WS font may not be fully loaded");
+  }
 }
 
 /**
