@@ -12,7 +12,6 @@ import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
 import { UpgradeSystem } from "./systems/upgrade";
-import { BulletVisualEffectsSystem } from "./systems/bullet-visual-effects";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -85,7 +84,6 @@ export class GameScene {
     const killCounterSystem = new KillCounterSystem();
     const waveSystem = new WaveSystem();
     const upgradeSystem = new UpgradeSystem();
-    const bulletVisualEffects = new BulletVisualEffectsSystem();
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
@@ -97,7 +95,6 @@ export class GameScene {
     this.systemManager.register(new HUDSystem());
     this.systemManager.register(boothSystem);
     this.systemManager.register(boxSystem);
-    this.systemManager.register(bulletVisualEffects);
 
     // Provide dependencies for InjectableSystem instances (before initialize)
     this.systemManager.provideDependency("EventQueue", eventQueue);
@@ -108,10 +105,6 @@ export class GameScene {
       killCounterSystem,
     );
     this.systemManager.provideDependency("UpgradeSystem", upgradeSystem);
-    this.systemManager.provideDependency(
-      "BulletVisualEffectsSystem",
-      bulletVisualEffects,
-    );
     this.systemManager.provideDependency("GameState", this.gameState);
 
     this.systemManager.initialize();
@@ -146,8 +139,13 @@ export class GameScene {
 
     // Setup bullet spawner callback (follows same pattern as WaveSystem.setSpawnCallback)
     combatSystem.setBulletSpawner((request: BulletSpawnRequest) => {
+      // FIX: Create independent Vector copy for each bullet (Issue #67)
+      // Without this, all BubbleTea scatter bullets share the same position reference
+      // and move together instead of spreading out
+      const spawnPosition = new Vector(request.position.x, request.position.y);
+
       const bullet = new Bullet(
-        request.position,
+        spawnPosition,
         request.direction,
         request.bulletType,
       );
@@ -162,18 +160,11 @@ export class GameScene {
     // Connect Box System with enemies (entity reference - not injectable)
     boxSystem.setEnemies(this.enemies);
 
-    // Connect Bullet Visual Effects System with bullets (SPEC § 2.6.3)
-    bulletVisualEffects.setBullets(this.bullets);
-
     // Setup booth visualization
     this.boothContainer.addChild(boothSystem.getContainer());
 
     // Setup box visualization (SPEC § 2.3.7)
     this.boothContainer.addChild(boxSystem.getContainer());
-
-    // Setup bullet visual effects container (SPEC § 2.6.3)
-    // Add to bullets container so effects render with bullets
-    this.bulletsContainer.addChild(bulletVisualEffects.getContainer());
 
     // Setup HUD
     const hudSystem = this.systemManager.get<HUDSystem>("HUDSystem");
