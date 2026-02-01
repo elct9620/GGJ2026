@@ -302,8 +302,7 @@ export class BulletVisualEffects {
     // Create glow effect with multiple circles for bloom
     const bloomLayers = 3;
     for (let i = 0; i < bloomLayers; i++) {
-      const layerRadius =
-        config.muzzleFlashRadius * (1 + i * 0.3);
+      const layerRadius = config.muzzleFlashRadius * (1 + i * 0.3);
       const layerAlpha = (config.muzzleFlashParticles ? 0.8 : 0.8) / (i + 1);
 
       flash.circle(0, 0, layerRadius);
@@ -511,7 +510,10 @@ export class BulletVisualEffects {
           particle.lifetime += deltaTime;
           particle.alpha = 1 - particle.lifetime / particle.maxLifetime;
           particle.graphics.alpha = particle.alpha;
-          particle.graphics.position.set(particle.position.x, particle.position.y);
+          particle.graphics.position.set(
+            particle.position.x,
+            particle.position.y,
+          );
         });
       },
     );
@@ -586,12 +588,7 @@ export class BulletVisualEffects {
       pos.x += (Math.random() - 0.5) * 10;
       pos.y += (Math.random() - 0.5) * 10;
 
-      this.createTrailParticle(
-        pos,
-        config.chainColor,
-        2,
-        config.chainDuration,
-      );
+      this.createTrailParticle(pos, config.chainColor, 2, config.chainDuration);
     }
   }
 
@@ -1017,19 +1014,20 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3: Each bullet type has specific visual size
    */
   public static getBulletVisualSize(bulletType: SpecialBulletType): number {
-    const config = VISUAL_EFFECTS_CONFIG[
-      bulletType === SpecialBulletType.None
-        ? "normal"
-        : bulletType === SpecialBulletType.NightMarket
-          ? "nightMarket"
-          : bulletType === SpecialBulletType.StinkyTofu
-            ? "stinkyTofu"
-            : bulletType === SpecialBulletType.BubbleTea
-              ? "bubbleTea"
-              : bulletType === SpecialBulletType.BloodCake
-                ? "bloodCake"
-                : "oysterOmelette"
-    ];
+    const config =
+      VISUAL_EFFECTS_CONFIG[
+        bulletType === SpecialBulletType.None
+          ? "normal"
+          : bulletType === SpecialBulletType.NightMarket
+            ? "nightMarket"
+            : bulletType === SpecialBulletType.StinkyTofu
+              ? "stinkyTofu"
+              : bulletType === SpecialBulletType.BubbleTea
+                ? "bubbleTea"
+                : bulletType === SpecialBulletType.BloodCake
+                  ? "bloodCake"
+                  : "oysterOmelette"
+      ];
     return config.visualSize || 16;
   }
 }

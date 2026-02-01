@@ -264,9 +264,9 @@ describe("BulletVisualEffects", () => {
       // Update with enough time to expire pierce effects (total 0.6s > 0.5s)
       // Ground residue remains (duration 1.5s)
       visualEffects.update(0.3);
-      expect(visualEffects.getContainer().children.length).toBeGreaterThanOrEqual(
-        1,
-      ); // At least ground residue remains
+      expect(
+        visualEffects.getContainer().children.length,
+      ).toBeGreaterThanOrEqual(1); // At least ground residue remains
     });
 
     it("should remove explosion effects after lifetime expires via update loop", () => {
@@ -282,9 +282,9 @@ describe("BulletVisualEffects", () => {
       // Update with enough time to expire explosion effects (total 1.2s > 1.0s)
       // Ground residue remains (duration 3.0s)
       visualEffects.update(0.7);
-      expect(visualEffects.getContainer().children.length).toBeGreaterThanOrEqual(
-        1,
-      ); // At least ground residue remains
+      expect(
+        visualEffects.getContainer().children.length,
+      ).toBeGreaterThanOrEqual(1); // At least ground residue remains
     });
 
     it("should clear all trails for a specific bullet", () => {
@@ -352,9 +352,9 @@ describe("BulletVisualEffects", () => {
       });
 
       // All bullet types should create effects (some create additional particles)
-      expect(visualEffects.getContainer().children.length).toBeGreaterThanOrEqual(
-        types.length,
-      );
+      expect(
+        visualEffects.getContainer().children.length,
+      ).toBeGreaterThanOrEqual(types.length);
     });
   });
 });
