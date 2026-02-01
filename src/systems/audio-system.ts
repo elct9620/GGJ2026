@@ -1,12 +1,13 @@
 /**
- * Audio System
+ * Audio System (SPEC § 2.3.9)
  * 音效系統：管理遊戲音效播放、音量控制、預載入
  *
  * Requirements:
- * - 預載入所有音效（遊戲啟動時）
+ * - 預載入所有音效（遊戲啟動時，背景非阻塞載入）
  * - 不重疊播放音效（每個音效 ID 同時只播放一個實例）
- * - 音量控制（0.0 - 1.0）
+ * - 音量控制（0.0 - 1.0，自動限制範圍）
  * - 事件驅動播放（訂閱 BulletFired, EnemyHit, ButtonClicked 事件）
+ * - 靜默錯誤處理（音效載入失敗不阻擋遊戲進行）
  */
 
 import { SystemPriority } from "../core/systems/system.interface";
@@ -36,8 +37,11 @@ const SOUND_PATHS: Record<SoundId, string> = {
 };
 
 /**
- * Audio System
+ * Audio System (SPEC § 2.3.9)
  * 負責音效播放、音量控制、預載入
+ *
+ * 事件驅動架構，不需要每幀更新
+ * 音效載入失敗靜默處理，不阻擋遊戲進行
  */
 export class AudioSystem extends InjectableSystem {
   public readonly name = "AudioSystem";
@@ -160,8 +164,9 @@ export class AudioSystem extends InjectableSystem {
   }
 
   /**
-   * 播放音效（不重疊播放）
+   * 播放音效（不重疊播放，SPEC § 2.3.9）
    * 若該音效已在播放中，停止前一個實例再播放新的
+   * 不同音效 ID 可同時播放
    */
   private playSound(soundId: SoundId): void {
     // 若音效尚未載入，靜默失敗

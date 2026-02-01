@@ -91,7 +91,7 @@ export class GameScene {
     const waveSystem = new WaveSystem();
     const upgradeSystem = new UpgradeSystem();
     const bulletVisualEffects = new BulletVisualEffectsSystem();
-    const audioSystem = new AudioSystem();
+    const audioSystem = new AudioSystem(); // SPEC § 2.3.9: Audio System
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);

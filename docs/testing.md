@@ -601,9 +601,72 @@
 | KC-21   | 結束畫面顯示擊殺數                   | 顯示總擊殺數    | 統計數據正確（含已消耗數量）  |
 | KC-22   | 擊殺 25 隻 + 按 5 + 擊殺 3 隻 + 按 5 | 第二次無反應    | 第一次消耗 20，剩 5+3=8，8<20 |
 
-## 2.11 Game State Tests
+## 2.11 Audio System Tests
 
-### 2.11.1 Start Screen
+### 2.11.1 Initialization
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-01   | AudioSystem 初始化             | 系統名稱為 "AudioSystem"         | 系統正確註冊                         |
+| AS-02   | AudioSystem 初始化             | 開始背景預載入音效               | isLoaded() 初始為 false              |
+| AS-03   | 預載入完成（50ms 後）          | isLoaded() 回傳 true             | 所有音效成功載入                     |
+| AS-04   | 預載入期間播放音效             | 靜默失敗，無錯誤拋出             | 遊戲不受影響                         |
+
+### 2.11.2 Volume Control
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-05   | setVolume(0.5)                 | getVolume() 回傳 0.5             | 音量設定成功                         |
+| AS-06   | setVolume(1.5)                 | getVolume() 回傳 1.0             | 自動限制上限為 1.0                   |
+| AS-07   | setVolume(-0.5)                | getVolume() 回傳 0.0             | 自動限制下限為 0.0                   |
+| AS-08   | setVolume(0.7) 預載入後        | 所有音效 audio.volume = 0.7      | 更新所有已載入音效音量               |
+
+### 2.11.3 Sound Playback
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-09   | 發布 BulletFired 事件          | 播放 player_shoot 音效           | audio.play() 被呼叫                  |
+| AS-10   | 發布 EnemyHit 事件             | 播放 enemy_hit 音效              | audio.play() 被呼叫                  |
+| AS-11   | 發布 ButtonClicked 事件        | 播放 button_click 音效           | audio.play() 被呼叫                  |
+| AS-12   | 連續發布 3 個不同事件          | 3 個音效分別播放                 | 所有 audio.play() 被呼叫             |
+
+### 2.11.4 Non-overlapping Playback
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-13   | 連續 2 次發布 BulletFired      | 停止前一實例，播放新實例         | audio.pause() 和 currentTime = 0     |
+| AS-14   | BulletFired + EnemyHit 同時    | 兩個音效同時播放                 | 不同音效 ID 不互相影響               |
+| AS-15   | 標記音效為播放中 + 再次播放    | audio.currentTime 重置為 0       | 重新開始播放                         |
+
+### 2.11.5 Error Handling
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-16   | 音效載入失敗（error 事件）     | console.warn 記錄錯誤            | isLoaded() 回傳 false                |
+| AS-17   | 音效載入失敗 + 發布事件        | 不拋出錯誤                       | 遊戲繼續執行                         |
+| AS-18   | play() 被瀏覽器拒絕（Promise） | console.warn 記錄錯誤            | 遊戲繼續執行                         |
+| AS-19   | 音效尚未載入時播放             | 靜默失敗，無錯誤拋出             | 不影響遊戲流程                       |
+
+### 2.11.6 Lifecycle
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-20   | destroy() 呼叫                 | currentlyPlaying.size = 0        | 停止所有播放中音效                   |
+| AS-21   | destroy() 呼叫                 | sounds.size = 0                  | 清空音效緩存                         |
+| AS-22   | destroy() 呼叫                 | isLoaded() 回傳 false            | 重置載入狀態                         |
+| AS-23   | 播放中音效 + destroy()         | audio.pause() 被呼叫             | 確保音效停止                         |
+
+### 2.11.7 Integration with EventQueue
+
+| Test ID | Input                          | Expected Output                  | Accept Criteria                      |
+| ------- | ------------------------------ | -------------------------------- | ------------------------------------ |
+| AS-24   | 連續發布多個事件               | 所有對應音效播放                 | 事件訂閱正常運作                     |
+| AS-25   | 發布不相關事件（WaveStart）    | 不拋出錯誤                       | AudioSystem 不受無關事件影響         |
+| AS-26   | 依賴注入 EventQueue            | AudioSystem 正確取得依賴         | SystemManager 依賴注入成功           |
+
+## 2.12 Game State Tests
+
+### 2.12.1 Start Screen
 
 | Test ID | Input               | Expected Output | Accept Criteria        |
 | ------- | ------------------- | --------------- | ---------------------- |
@@ -612,7 +675,7 @@
 | GS-03   | 開始畫面 + 按其他鍵 | 無效果          | 開始畫面仍顯示         |
 | GS-04   | 開始畫面顯示        | 遊戲未更新      | 遊戲邏輯暫停           |
 
-### 2.11.2 Game Over Screen
+### 2.12.2 Game Over Screen
 
 | Test ID | Input                            | Expected Output      | Accept Criteria                |
 | ------- | -------------------------------- | -------------------- | ------------------------------ |
@@ -624,7 +687,7 @@
 | GS-10   | 結束畫面 + 按 Space + 再按 Space | 遊戲重新開始         | 玩家生命值恢復，回合數重置為 1 |
 | GS-11   | 結束畫面顯示                     | 遊戲未更新           | 遊戲邏輯暫停                   |
 
-### 2.11.3 Game Statistics Tracking
+### 2.12.3 Game Statistics Tracking
 
 | Test ID | Input         | Expected Output     | Accept Criteria |
 | ------- | ------------- | ------------------- | --------------- |

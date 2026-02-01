@@ -546,6 +546,76 @@
 - **UI System**: 顯示擊殺總數和蚵仔煎可用狀態
 - **Game Over Screen**: 顯示最終擊殺統計
 
+### 2.3.9 Audio System
+
+**Purpose**: 管理遊戲音效播放、音量控制、預載入，提供事件驅動的音效反饋
+
+**Constraints**:
+
+- 遊戲啟動時背景預載入所有音效（非阻塞）
+- 每個音效 ID 同時只播放一個實例（不重疊播放）
+- 音量範圍：0.0 - 1.0（浮點數）
+- 音效載入失敗不阻擋遊戲進行（靜默錯誤處理）
+- 瀏覽器 Autoplay Policy 阻擋時靜默失敗
+
+**Behaviors**:
+
+- **Preload（預載入）**:
+  - 遊戲啟動時背景載入所有音效檔案
+  - 使用 Promise.all 並行載入，不阻塞初始化
+  - 載入失敗時記錄警告但不拋出錯誤
+  - 提供 `isLoaded()` 查詢預載入狀態
+
+- **Play Sound（播放音效）**:
+  - 訂閱 `BulletFired`, `EnemyHit`, `ButtonClicked` 事件
+  - 事件觸發時播放對應音效
+  - 同一音效 ID 若已在播放，停止前一個實例再播放新的
+  - 不同音效 ID 可同時播放
+
+- **Volume Control（音量控制）**:
+  - 提供 `setVolume(volume: number)` 方法
+  - 自動限制範圍 0.0 - 1.0
+  - 更新所有已載入音效和播放中音效的音量
+
+- **Lifecycle Management（生命週期管理）**:
+  - `initialize()`: 訂閱事件並開始預載入
+  - `update()`: 無需每幀更新（事件驅動）
+  - `destroy()`: 停止所有播放中音效，清空緩存
+
+**Audio System Decision Table**:
+
+| 音效 ID      | 已載入 | 播放中 | 事件觸發       | 結果                   |
+| ------------ | ------ | ------ | -------------- | ---------------------- |
+| PlayerShoot  | 是     | 否     | BulletFired    | 播放音效               |
+| PlayerShoot  | 是     | 是     | BulletFired    | 停止前一實例，播放新的 |
+| EnemyHit     | 是     | 否     | EnemyHit       | 播放音效               |
+| ButtonClick  | 是     | 否     | ButtonClicked  | 播放音效               |
+| 任何         | 否     | 任何   | 任何事件       | 靜默失敗，無音效       |
+| 任何         | 是     | 任何   | play() 被阻擋  | 記錄警告，繼續遊戲     |
+
+**Sound ID Mapping**:
+
+| 音效 ID      | 檔案路徑                    | 觸發事件      |
+| ------------ | --------------------------- | ------------- |
+| button_click | /assets/se/select03.mp3     | ButtonClicked |
+| enemy_hit    | /assets/se/short_punch1.mp3 | EnemyHit      |
+| player_shoot | /assets/se/shoot5.mp3       | BulletFired   |
+
+**Error Scenarios**:
+
+- 音效檔案不存在：記錄 `console.warn`，遊戲繼續
+- 音效載入失敗：`isLoaded()` 回傳 `false`，遊戲繼續
+- 瀏覽器阻擋 autoplay：記錄 `console.warn`，遊戲繼續
+- 音效尚未載入時嘗試播放：靜默失敗，無錯誤拋出
+
+**Integration with Other Systems**:
+
+- **EventQueue**: 訂閱 `BulletFired`, `EnemyHit`, `ButtonClicked` 事件
+- **Combat System**: 發布 `BulletFired` 和 `EnemyHit` 事件
+- **Synthesis System**: 按下數字鍵 1-5 時發布 `ButtonClicked` 事件
+- **Upgrade Screen**: 點擊升級卡片時發布 `ButtonClicked` 事件
+- **System Manager**: 透過依賴注入提供 EventQueue
+
 ## 2.4 Player Interactions
 
 ### 2.4.1 Input Controls
