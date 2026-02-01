@@ -98,20 +98,16 @@ export class CombatSystem extends InjectableSystem {
    * Get EventQueue dependency (optional)
    */
   private get eventQueue(): EventQueue | null {
-    if (this.hasDependency(DependencyKeys.EventQueue)) {
-      return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
-    }
-    return null;
+    return this.getOptionalDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**
    * Get UpgradeSystem dependency (optional)
    */
   private get upgradeSystem(): UpgradeSystem | null {
-    if (this.hasDependency(DependencyKeys.UpgradeSystem)) {
-      return this.getDependency<UpgradeSystem>(DependencyKeys.UpgradeSystem);
-    }
-    return null;
+    return this.getOptionalDependency<UpgradeSystem>(
+      DependencyKeys.UpgradeSystem,
+    );
   }
 
   /**
@@ -344,9 +340,7 @@ export class CombatSystem extends InjectableSystem {
     for (const enemy of this.enemies) {
       if (!enemy.active) continue;
 
-      const dx = enemy.position.x - this.player.position.x;
-      const dy = enemy.position.y - this.player.position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = enemy.position.distance(this.player.position);
 
       if (distance < minDistance) {
         nearest = enemy;
@@ -608,13 +602,12 @@ export class CombatSystem extends InjectableSystem {
   ): Enemy | null {
     let closest: Enemy | null = null;
     let closestDistance = maxRange ?? Infinity;
+    const positionVector = new Vector(position.x, position.y);
 
     for (const enemy of this.enemies) {
       if (!enemy.active || excludeIds.has(enemy.id)) continue;
 
-      const dx = enemy.position.x - position.x;
-      const dy = enemy.position.y - position.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = enemy.position.distance(positionVector);
 
       if (distance < closestDistance) {
         closest = enemy;

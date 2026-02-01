@@ -80,6 +80,16 @@ export abstract class InjectableSystem implements ISystem {
   }
 
   /**
+   * Get an optional dependency (returns null if not injected)
+   */
+  protected getOptionalDependency<T>(key: string): T | null {
+    if (this.hasDependency(key)) {
+      return this.getDependency<T>(key);
+    }
+    return null;
+  }
+
+  /**
    * Inject a dependency
    * Called by SystemManager during initialization
    */

@@ -64,22 +64,18 @@ export class SynthesisSystem extends InjectableSystem {
    * Get KillCounterSystem dependency (optional)
    */
   private get killCounterSystem(): KillCounterSystem | null {
-    if (this.hasDependency(DependencyKeys.KillCounterSystem)) {
-      return this.getDependency<KillCounterSystem>(
-        DependencyKeys.KillCounterSystem,
-      );
-    }
-    return null;
+    return this.getOptionalDependency<KillCounterSystem>(
+      DependencyKeys.KillCounterSystem,
+    );
   }
 
   /**
    * Get UpgradeSystem dependency (optional)
    */
   private get upgradeSystem(): UpgradeSystem | null {
-    if (this.hasDependency(DependencyKeys.UpgradeSystem)) {
-      return this.getDependency<UpgradeSystem>(DependencyKeys.UpgradeSystem);
-    }
-    return null;
+    return this.getOptionalDependency<UpgradeSystem>(
+      DependencyKeys.UpgradeSystem,
+    );
   }
 
   /**
