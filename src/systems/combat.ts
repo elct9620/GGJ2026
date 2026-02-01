@@ -18,9 +18,28 @@ import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
 import type { GameStateManager } from "../core/game-state";
+import { Vector } from "../values/vector";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
+
+/**
+ * Bullet spawn request data
+ * Contains all information needed to create a bullet
+ */
+export interface BulletSpawnRequest {
+  position: Vector;
+  direction: Vector;
+  bulletType: SpecialBulletType;
+  isTracking?: boolean;
+  trackingTarget?: Enemy;
+}
+
+/**
+ * Bullet spawner callback type
+ * GameScene implements this to handle Container management
+ */
+export type BulletSpawner = (request: BulletSpawnRequest) => Bullet;
 
 /**
  * 碰撞效果處理器類型
@@ -57,6 +76,9 @@ export class CombatSystem extends InjectableSystem {
   private player: Player | null = null;
   private bullets: Bullet[] = [];
   private enemies: Enemy[] = [];
+
+  // Bullet spawner callback (set by GameScene)
+  private bulletSpawner: BulletSpawner | null = null;
 
   // Shooting cooldown (SPEC § 2.3.2) - internal implementation detail
   private shootCooldown = 0;
@@ -147,6 +169,14 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
+   * Set bullet spawner callback (Callback Pattern like WaveSystem.setSpawnCallback)
+   * GameScene provides this to handle Container management
+   */
+  public setBulletSpawner(spawner: BulletSpawner): void {
+    this.bulletSpawner = spawner;
+  }
+
+  /**
    * Subscribe to events after EventQueue is injected
    * Called by GameScene after injection
    */
@@ -185,6 +215,146 @@ export class CombatSystem extends InjectableSystem {
     }
 
     return false;
+  }
+
+  /**
+   * Perform shoot and spawn bullets based on current buff (SPEC § 2.3.3)
+   * This method combines shoot() check with bullet spawning logic
+   * @returns Array of spawned bullets (empty if shoot failed or no spawner)
+   */
+  public performShoot(): Bullet[] {
+    if (!this.shoot()) {
+      return [];
+    }
+
+    if (!this.bulletSpawner || !this.player) {
+      return [];
+    }
+
+    return this.spawnBulletsForCurrentBuff();
+  }
+
+  /**
+   * Spawn bullets based on current buff type
+   * Centralizes all buff-specific bullet spawning logic
+   */
+  private spawnBulletsForCurrentBuff(): Bullet[] {
+    const currentBuff = this.gameState.combat.currentBuff;
+
+    switch (currentBuff) {
+      case SpecialBulletType.BubbleTea:
+        return this.spawnBubbleTeaBullets();
+      case SpecialBulletType.BloodCake:
+        return this.spawnTrackingBullet();
+      default:
+        return this.spawnSingleBullet(currentBuff);
+    }
+  }
+
+  /**
+   * Spawn a single bullet with specified type
+   */
+  private spawnSingleBullet(bulletType: SpecialBulletType): Bullet[] {
+    if (!this.bulletSpawner || !this.player) return [];
+
+    const bullet = this.bulletSpawner({
+      position: this.player.position,
+      direction: new Vector(1, 0),
+      bulletType,
+    });
+
+    return [bullet];
+  }
+
+  /**
+   * Spawn BubbleTea spread bullets (SPEC § 2.3.3, § 2.3.4)
+   * Creates 3+ bullets: center + extra at alternating ±15°, ±30°, etc.
+   */
+  private spawnBubbleTeaBullets(): Bullet[] {
+    if (!this.bulletSpawner || !this.player) return [];
+
+    const bullets: Bullet[] = [];
+    const upgradeState = this.upgradeSystem?.getState();
+
+    // Base extra bullets + upgrade bonus (SPEC § 2.3.4: 加椰果)
+    const baseExtra = RECIPE_CONFIG.bubbleTea.extraBullets;
+    const upgradeBonus = upgradeState?.bubbleTeaBulletBonus ?? 0;
+    const totalExtraBullets = baseExtra + upgradeBonus;
+
+    const spreadAngle = 15; // degrees
+    const bulletType = SpecialBulletType.BubbleTea;
+
+    // Center bullet
+    const centerBullet = this.bulletSpawner({
+      position: this.player.position,
+      direction: new Vector(1, 0),
+      bulletType,
+    });
+    bullets.push(centerBullet);
+
+    // Extra spread bullets (alternating left/right at increasing angles)
+    for (let i = 0; i < totalExtraBullets; i++) {
+      const angleIndex = Math.floor(i / 2) + 1;
+      const directionSign = i % 2 === 0 ? 1 : -1;
+      const angleOffset = spreadAngle * angleIndex * directionSign;
+      const radians = (angleOffset * Math.PI) / 180;
+      const dir = new Vector(Math.cos(radians), Math.sin(radians));
+
+      const bullet = this.bulletSpawner({
+        position: this.player.position,
+        direction: dir,
+        bulletType,
+      });
+      bullets.push(bullet);
+    }
+
+    return bullets;
+  }
+
+  /**
+   * Spawn BloodCake tracking bullet (SPEC § 2.3.3)
+   * Tracks the nearest enemy
+   */
+  private spawnTrackingBullet(): Bullet[] {
+    if (!this.bulletSpawner || !this.player) return [];
+
+    // Find nearest enemy to track
+    const target = this.findNearestEnemyToPlayer();
+
+    const bullet = this.bulletSpawner({
+      position: this.player.position,
+      direction: new Vector(1, 0),
+      bulletType: SpecialBulletType.BloodCake,
+      isTracking: target !== null,
+      trackingTarget: target ?? undefined,
+    });
+
+    return [bullet];
+  }
+
+  /**
+   * Find the nearest active enemy to the player
+   */
+  private findNearestEnemyToPlayer(): Enemy | null {
+    if (!this.player) return null;
+
+    let nearest: Enemy | null = null;
+    let minDistance = Infinity;
+
+    for (const enemy of this.enemies) {
+      if (!enemy.active) continue;
+
+      const dx = enemy.position.x - this.player.position.x;
+      const dy = enemy.position.y - this.player.position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < minDistance) {
+        nearest = enemy;
+        minDistance = distance;
+      }
+    }
+
+    return nearest;
   }
 
   /**

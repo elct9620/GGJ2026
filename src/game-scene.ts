@@ -7,7 +7,7 @@ import { InputSystem } from "./systems/input";
 import { HUDSystem, type RecipeStatus } from "./systems/hud";
 import { BoothSystem } from "./systems/booth";
 import { BoxSystem } from "./systems/box";
-import { CombatSystem, SpecialBulletType } from "./systems/combat";
+import { CombatSystem, type BulletSpawnRequest } from "./systems/combat";
 import { SynthesisSystem } from "./systems/synthesis";
 import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
@@ -16,7 +16,7 @@ import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import { RECIPES } from "./values/recipes";
-import { RECIPE_CONFIG, PLAYER_CONFIG } from "./config";
+import { PLAYER_CONFIG } from "./config";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
 
@@ -137,6 +137,21 @@ export class GameScene {
     combatSystem.setEnemies(this.enemies);
     combatSystem.subscribeToEvents(); // Subscribe after dependencies injected
 
+    // Setup bullet spawner callback (follows same pattern as WaveSystem.setSpawnCallback)
+    combatSystem.setBulletSpawner((request: BulletSpawnRequest) => {
+      const bullet = new Bullet(
+        request.position,
+        request.direction,
+        request.bulletType,
+      );
+      if (request.isTracking && request.trackingTarget) {
+        bullet.setTracking(request.trackingTarget);
+      }
+      this.bullets.push(bullet);
+      this.bulletsContainer.addChild(bullet.sprite);
+      return bullet;
+    });
+
     // Connect Box System with enemies (entity reference - not injectable)
     boxSystem.setEnemies(this.enemies);
 
@@ -222,123 +237,13 @@ export class GameScene {
       this.player.move(moveDirection, deltaTime);
     }
 
-    // Handle shooting (delegated to Combat System)
+    // Handle shooting (fully delegated to Combat System via performShoot)
     if (inputSystem.isShootPressed()) {
-      if (combatSystem.shoot()) {
-        this.spawnBullet();
-      }
+      combatSystem.performShoot();
     }
 
     // Synthesis is now handled by SynthesisSystem (SPEC § 2.3.3)
     // No manual booth interactions needed
-  }
-
-  /**
-   * Spawn bullet(s) based on current buff (SPEC § 2.3.3)
-   * - BubbleTea: 3-way spread (+2 bullets at ±15°)
-   * - BloodCake: Tracking bullet toward nearest enemy
-   * - Others: Normal single bullet moving right (with color based on buff)
-   */
-  private spawnBullet(): void {
-    const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
-    const currentBuff = combatSystem.getCurrentBuff();
-
-    if (currentBuff === SpecialBulletType.BubbleTea) {
-      this.spawnBubbleTeaBullets();
-    } else if (currentBuff === SpecialBulletType.BloodCake) {
-      this.spawnTrackingBullet();
-    } else {
-      this.spawnTypedBullet(currentBuff);
-    }
-  }
-
-  /**
-   * Spawn bullet with specific type (for color differentiation)
-   */
-  private spawnTypedBullet(bulletType: SpecialBulletType): void {
-    const bullet = new Bullet(
-      this.player.position,
-      new Vector(1, 0),
-      bulletType,
-    );
-    this.bullets.push(bullet);
-    this.bulletsContainer.addChild(bullet.sprite);
-  }
-
-  /**
-   * Spawn BubbleTea spread bullets (SPEC § 2.3.3, § 2.3.4)
-   * Creates 3+ bullets: center + extra at alternating ±15°, ±30°, etc.
-   * Base: 2 extra bullets (for 3-way spread)
-   * Upgrade bonus: +1 per 加椰果 upgrade (SPEC § 2.3.4)
-   */
-  private spawnBubbleTeaBullets(): void {
-    const upgradeSystem =
-      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
-    const upgradeState = upgradeSystem.getState();
-
-    // Base extra bullets + upgrade bonus (SPEC § 2.3.4: 加椰果)
-    const baseExtra = RECIPE_CONFIG.bubbleTea.extraBullets;
-    const upgradeBonus = upgradeState.bubbleTeaBulletBonus;
-    const totalExtraBullets = baseExtra + upgradeBonus;
-
-    const spreadAngle = 15; // degrees
-    const bulletType = SpecialBulletType.BubbleTea;
-
-    // Center bullet
-    this.spawnTypedBullet(bulletType);
-
-    // Extra spread bullets (alternating left/right at increasing angles)
-    for (let i = 0; i < totalExtraBullets; i++) {
-      const angleIndex = Math.floor(i / 2) + 1;
-      const direction = i % 2 === 0 ? 1 : -1;
-      const angleOffset = spreadAngle * angleIndex * direction;
-      const radians = (angleOffset * Math.PI) / 180;
-      const dir = new Vector(Math.cos(radians), Math.sin(radians));
-      const bullet = new Bullet(this.player.position, dir, bulletType);
-      this.bullets.push(bullet);
-      this.bulletsContainer.addChild(bullet.sprite);
-    }
-  }
-
-  /**
-   * Spawn BloodCake tracking bullet (SPEC § 2.3.3)
-   * Tracks the nearest enemy
-   */
-  private spawnTrackingBullet(): void {
-    const bullet = new Bullet(
-      this.player.position,
-      new Vector(1, 0),
-      SpecialBulletType.BloodCake,
-    );
-
-    // Find nearest enemy to track
-    const target = this.findNearestEnemy();
-    if (target) {
-      bullet.setTracking(target);
-    }
-
-    this.bullets.push(bullet);
-    this.bulletsContainer.addChild(bullet.sprite);
-  }
-
-  /**
-   * Find the nearest active enemy to the player
-   */
-  private findNearestEnemy(): Enemy | null {
-    let nearest: Enemy | null = null;
-    let minDistance = Infinity;
-
-    for (const enemy of this.enemies) {
-      if (!enemy.active) continue;
-
-      const distance = this.player.position.distance(enemy.position);
-      if (distance < minDistance) {
-        nearest = enemy;
-        minDistance = distance;
-      }
-    }
-
-    return nearest;
   }
 
   private updatePlayer(deltaTime: number): void {

@@ -442,4 +442,96 @@ describe("CombatSystem", () => {
       expect(data.position.y).toBeCloseTo(540, 0);
     });
   });
+
+  describe("performShoot", () => {
+    // Helper function to create spawner callback with proper Vector conversion
+    const createSpawner = (spawnedBullets: Bullet[]) => {
+      return (request: {
+        position: { x: number; y: number };
+        direction: { x: number; y: number };
+        bulletType: SpecialBulletType;
+        isTracking?: boolean;
+        trackingTarget?: Enemy;
+      }) => {
+        const bullet = new Bullet(
+          new Vector(request.position.x, request.position.y),
+          new Vector(request.direction.x, request.direction.y),
+          request.bulletType,
+        );
+        if (request.isTracking && request.trackingTarget) {
+          bullet.setTracking(request.trackingTarget);
+        }
+        spawnedBullets.push(bullet);
+        return bullet;
+      };
+    };
+
+    it("should return empty array when shoot fails (no ammo)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Deplete ammo
+      for (let i = 0; i < 6; i++) {
+        player.shoot();
+      }
+      expect(player.ammo).toBe(0);
+
+      const result = combatSystem.performShoot();
+
+      expect(result).toEqual([]);
+      expect(spawnedBullets).toHaveLength(0);
+    });
+
+    it("should spawn 1 bullet for normal shot (no buff)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      const result = combatSystem.performShoot();
+
+      expect(result).toHaveLength(1);
+      expect(spawnedBullets).toHaveLength(1);
+    });
+
+    it("should spawn 3 bullets for BubbleTea buff (SPEC § 2.3.3)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Activate BubbleTea buff
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "3" });
+      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BubbleTea);
+
+      const result = combatSystem.performShoot();
+
+      // 1 center + 2 extra = 3 bullets (base config)
+      expect(result).toHaveLength(3);
+      expect(spawnedBullets).toHaveLength(3);
+    });
+
+    it("should spawn tracking bullet for BloodCake buff (SPEC § 2.3.3)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Add an enemy to track
+      const enemy = new Enemy(EnemyType.Ghost, new Vector(800, 540));
+      enemies.push(enemy);
+
+      // Activate BloodCake buff
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
+      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+
+      const result = combatSystem.performShoot();
+
+      expect(result).toHaveLength(1);
+      expect(spawnedBullets).toHaveLength(1);
+      expect(spawnedBullets[0].isTracking).toBe(true);
+      expect(spawnedBullets[0].trackingTarget).toBe(enemy);
+    });
+
+    it("should return empty array when no spawner is set", () => {
+      // Don't set a spawner
+      const result = combatSystem.performShoot();
+
+      expect(result).toEqual([]);
+    });
+  });
 });
