@@ -192,30 +192,50 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 
 ### 5.1 目前實作摘要
 
-目前架構採用事件驅動，但 System 仍持有部分狀態：
+目前架構已達到高度符合無狀態原則（96.5% 遵循度）：
 
-- **EventQueue**：已實作 publish/subscribe 模式
-- **Systems**：各自持有 entities 參照和內部狀態
-- **Rendering**：與 System 邏輯混合在同一層
+- **EventQueue**：已實作 publish/subscribe 模式，14 種事件類型支援系統通訊
+- **GameStateManager**：集中管理所有遊戲狀態（combat、wave、upgrades、kills）
+- **Systems**：大部分已無狀態，僅持有必要的實作細節（如 shootCooldown）
+- **BoothRenderer**：已分離，Booth 渲染邏輯獨立於 BoothSystem
 
 ### 5.2 目標架構差異
 
-| 面向     | 目前實作               | 目標架構               |
-| -------- | ---------------------- | ---------------------- |
-| 狀態管理 | 分散在各 System        | 集中於 GameState       |
-| 渲染同步 | System 直接操作 Sprite | 獨立 RenderSystem 同步 |
-| Entity   | 混合資料與行為         | 純資料容器             |
-| 事件流   | 部分事件驅動           | 完全事件驅動           |
+| 面向     | 目前實作                  | 目標架構               | 狀態    |
+| -------- | ------------------------- | ---------------------- | ------- |
+| 狀態管理 | 集中於 GameStateManager   | 集中於 GameState       | ✅ 完成 |
+| 渲染同步 | BoothRenderer 已分離      | 獨立 RenderSystem 同步 | ⚠️ 部分 |
+| Entity   | 混合資料與 Sprite         | 純資料容器             | 未來    |
+| 事件流   | 高度事件驅動（14 種事件） | 完全事件驅動           | ✅ 接近 |
 
-### 5.3 未來重構方向
+### 5.3 重構進度
 
-1. **Phase 1**：抽取 GameState，集中狀態管理
-2. **Phase 2**：分離 RenderSystem，統一 Entity-Sprite 同步
-3. **Phase 3**：將 System 內部狀態移至 GameState
-4. **Phase 4**：引入 Component 系統，增加 Entity 組合彈性
+1. ✅ **Phase 1**：抽取 GameState，集中狀態管理
+2. ⚠️ **Phase 2**：分離 RenderSystem，統一 Entity-Sprite 同步
+   - ✅ BoothRenderer 已分離
+   - ⏳ Player、Enemy 渲染尚未分離
+3. ✅ **Phase 3**：將 System 內部狀態移至 GameState
+   - BoothSystem、BoxSystem、WaveSystem 已無狀態
+   - CombatSystem 僅保留 shootCooldown（實作細節）
+4. ⏳ **Phase 4**：引入 Component 系統，增加 Entity 組合彈性（未來方向）
 
-### 5.4 重構原則
+### 5.4 已知改進點（優先級低）
+
+以下項目已識別但不影響功能運作：
+
+1. **CombatSystem 直接呼叫 Player 渲染方法**
+   - 位置：`combat.ts` L402、L566
+   - 現況：直接呼叫 `player.updateAppearanceForBuff()`
+   - 理想：Player 訂閱 BuffExpired 事件自行更新外觀
+   - 原因：目前 Entity 不直接訂閱事件，需架構調整
+
+2. **HUDSystem 混合渲染邏輯**
+   - 現況：系統內建構 Pixi.js 元件
+   - 評估：這是設計意圖，HUDSystem 本身就是 UI 系統
+   - 結論：無需改動
+
+### 5.5 重構原則
 
 - **漸進式**：每次重構只改變一個面向
-- **測試保護**：重構前確保測試覆蓋
+- **測試保護**：重構前確保測試覆蓋（目前 92%+）
 - **行為不變**：重構不改變遊戲行為
