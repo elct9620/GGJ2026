@@ -434,19 +434,61 @@
 | ET-20   | Food 繼承 Entity   | Food.id 存在且唯一   | 繼承 Entity 屬性 |
 | ET-21   | 不同類型的 Entity  | 所有 id 必定不同     | 全域 ID 唯一性   |
 
-## 2.10 Kill Counter and Oyster Omelet Consumption Tests
+## 2.10 Box System Tests
 
-### 2.10.1 Kill Counter
+### 2.10.1 Box Spawn and Despawn
+
+| Test ID | Input                     | Expected Output | Accept Criteria          |
+| ------- | ------------------------- | --------------- | ------------------------ |
+| BX-01   | 攤位食材總數 = 0          | 寶箱不存在      | 無寶箱顯示               |
+| BX-02   | 攤位獲得第一個食材        | 寶箱出現        | 寶箱在攤位前方顯示       |
+| BX-03   | 攤位食材 6 → 0（合成消耗）| 寶箱消失        | 食材歸零時寶箱立即消失   |
+| BX-04   | 攤位食材 0 → 1（敵人掉落）| 寶箱重新出現    | 食材恢復時寶箱立即出現   |
+| BX-05   | 攤位食材 3 → 4            | 寶箱持續存在    | 食材增加時寶箱不變       |
+
+### 2.10.2 Enemy Collision with Box
+
+| Test ID | Input                           | Expected Output                   | Accept Criteria                  |
+| ------- | ------------------------------- | --------------------------------- | -------------------------------- |
+| BX-06   | 敵人碰撞寶箱（食材 > 0）        | 玩家生命 -1，敵人消失，食材不變   | 扣血但不消耗食材                 |
+| BX-07   | 敵人碰撞寶箱（食材 = 1）        | 玩家生命 -1，敵人消失，寶箱持續存在| 有食材時寶箱不消失               |
+| BX-08   | 敵人碰撞寶箱（Boss）            | 玩家生命 -1，Boss 消失，食材不變  | Boss 碰撞寶箱同樣扣血             |
+| BX-09   | 敵人碰撞寶箱後到達底線          | 不扣第二次血                      | 敵人已消失，不重複扣血           |
+| BX-10   | 寶箱不存在（食材 = 0）          | 敵人穿過，到達底線扣血            | 無寶箱時敵人正常到達底線         |
+
+### 2.10.3 Box State Synchronization
+
+| Test ID | Input                           | Expected Output       | Accept Criteria              |
+| ------- | ------------------------------- | --------------------- | ---------------------------- |
+| BX-11   | 訂閱 FoodStored 事件            | 寶箱出現              | 事件觸發寶箱生成             |
+| BX-12   | 訂閱 FoodConsumed 事件（歸零）  | 寶箱消失              | 事件觸發寶箱消失             |
+| BX-13   | 合成消耗食材（3 → 0）           | 寶箱同步消失          | 食材變化時寶箱狀態同步更新   |
+| BX-14   | 攤位 1 有食材，攤位 2、3 無     | 寶箱存在              | 總食材 > 0 時寶箱存在        |
+| BX-15   | 3 個攤位都有食材                | 寶箱存在              | 總食材數量決定寶箱存在狀態   |
+
+### 2.10.4 Integration with Other Systems
+
+| Test ID | Input                                 | Expected Output                     | Accept Criteria                      |
+| ------- | ------------------------------------- | ----------------------------------- | ------------------------------------ |
+| BX-16   | 敵人碰撞寶箱                          | 不計入擊殺數（killCount 不變）      | 寶箱消滅敵人不計入 Kill Counter      |
+| BX-17   | 敵人碰撞寶箱                          | 不掉落食材                          | 敵人消失時不觸發 FoodStored 事件     |
+| BX-18   | 敵人碰撞寶箱                          | 發佈 EnemyReachedEnd 事件           | 統計追蹤敵人突破防線                 |
+| BX-19   | 玩家生命 1，敵人碰撞寶箱              | 玩家生命 0，遊戲結束                | 寶箱碰撞扣血可導致遊戲失敗           |
+| BX-20   | 5 隻敵人同時碰撞寶箱（同一幀）        | 僅處理 1 隻敵人碰撞                 | 每幀最多處理一次碰撞                 |
+
+## 2.11 Kill Counter and Oyster Omelet Consumption Tests
+
+### 2.11.1 Kill Counter
 
 | Test ID | Input          | Expected Output    | Accept Criteria      |
 | ------- | -------------- | ------------------ | -------------------- |
 | KC-01   | 擊殺 1 隻餓鬼  | killCount = 1      | 計數器 +1            |
 | KC-02   | 擊殺 5 隻餓鬼  | killCount = 5      | 計數器累加正確       |
-| KC-03   | 敵人被寶箱消滅 | killCount 不變     | 寶箱消滅不計入擊殺數 |
+| KC-03   | 敵人被寶箱消滅 | killCount 不變     | 寶箱碰撞不計入擊殺數 |
 | KC-04   | 敵人到達底線   | killCount 不變     | 到達底線不計入擊殺數 |
 | KC-05   | 跨回合擊殺累計 | killCount 持續累加 | 全局計數器不重置     |
 
-### 2.10.2 Oyster Omelet Consumption
+### 2.11.2 Oyster Omelet Consumption
 
 | Test ID | Input                 | Expected Output          | Accept Criteria            |
 | ------- | --------------------- | ------------------------ | -------------------------- |
@@ -457,7 +499,7 @@
 | KC-10   | 擊殺 40 隻，按 5 兩次 | 第二次蚵仔煎發射         | 可重複消耗，剩餘 0         |
 | KC-11   | UI 顯示可用狀態       | 顯示 X/20（可用/不可用） | 實時更新擊殺數和可用狀態   |
 
-### 2.10.3 Quick Eat Effect on Oyster Omelet
+### 2.11.3 Quick Eat Effect on Oyster Omelet
 
 | Test ID | Input                         | Expected Output       | Accept Criteria           |
 | ------- | ----------------------------- | --------------------- | ------------------------- |
@@ -468,19 +510,19 @@
 | KC-16   | 快吃後蚵仔煎 vs 菁英          | 造成 60% HP 傷害      | 50% + 10% = 60%           |
 | KC-17   | 快吃後蚵仔煎 vs 小怪          | 造成 80% HP 傷害      | 70% + 10% = 80%           |
 
-### 2.10.4 Integration Tests
+### 2.11.4 Integration Tests
 
 | Test ID | Input                                | Expected Output | Accept Criteria               |
 | ------- | ------------------------------------ | --------------- | ----------------------------- |
 | KC-18   | 擊殺 20 隻 + 按 5 + 按 Space         | 發射蚵仔煎      | 蚵仔煎效果正確生效            |
 | KC-19   | 重新開始遊戲                         | killCount = 0   | 統計重置，擊殺數歸零          |
-| KC-20   | 擊殺 19 隻 + 寶箱消滅 1 隻 + 按 5    | 無反應          | 寶箱消滅不計入，仍為 19/20    |
+| KC-20   | 擊殺 19 隻 + 寶箱碰撞 1 隻 + 按 5    | 無反應          | 寶箱碰撞不計入，仍為 19/20    |
 | KC-21   | 結束畫面顯示擊殺數                   | 顯示總擊殺數    | 統計數據正確（含已消耗數量）  |
 | KC-22   | 擊殺 25 隻 + 按 5 + 擊殺 3 隻 + 按 5 | 第二次無反應    | 第一次消耗 20，剩 5+3=8，8<20 |
 
-## 2.11 Game State Tests
+## 2.12 Game State Tests
 
-### 2.11.1 Start Screen
+### 2.12.1 Start Screen
 
 | Test ID | Input               | Expected Output | Accept Criteria        |
 | ------- | ------------------- | --------------- | ---------------------- |
@@ -489,7 +531,7 @@
 | GS-03   | 開始畫面 + 按其他鍵 | 無效果          | 開始畫面仍顯示         |
 | GS-04   | 開始畫面顯示        | 遊戲未更新      | 遊戲邏輯暫停           |
 
-### 2.11.2 Game Over Screen
+### 2.12.2 Game Over Screen
 
 | Test ID | Input                            | Expected Output      | Accept Criteria                |
 | ------- | -------------------------------- | -------------------- | ------------------------------ |
@@ -501,7 +543,7 @@
 | GS-10   | 結束畫面 + 按 Space + 再按 Space | 遊戲重新開始         | 玩家生命值恢復，回合數重置為 1 |
 | GS-11   | 結束畫面顯示                     | 遊戲未更新           | 遊戲邏輯暫停                   |
 
-### 2.11.3 Game Statistics Tracking
+### 2.12.3 Game Statistics Tracking
 
 | Test ID | Input         | Expected Output     | Accept Criteria |
 | ------- | ------------- | ------------------- | --------------- |
