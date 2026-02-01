@@ -4,6 +4,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values/recipes";
+import { KILL_COUNTER_CONFIG } from "../config";
 
 /**
  * Individual food requirement status
@@ -44,9 +45,6 @@ export class HUDSystem extends InjectableSystem {
   private waveText: Text;
   private scoreText: Text;
 
-  // Bottom HUD elements
-  private killCountText: Text;
-
   // Bottom HUD base sprites
   private upgradeBaseSprite: Sprite;
   private bulletClassBaseSprite: Sprite;
@@ -81,6 +79,7 @@ export class HUDSystem extends InjectableSystem {
       CANVAS_WIDTH / 2,
       row1CenterY,
       LAYOUT.TOP_HUD.FONT_SIZE_LARGE,
+      { stroke: true, strokeColor: 0x000000, strokeWidth: 3 },
     );
     this.enemyCountText.anchor.set(0.5, 0.5);
     this.topHUD.addChild(this.enemyCountText);
@@ -91,6 +90,7 @@ export class HUDSystem extends InjectableSystem {
       CANVAS_WIDTH - 20,
       row1CenterY,
       LAYOUT.TOP_HUD.FONT_SIZE_LARGE,
+      { stroke: true, strokeColor: 0x000000, strokeWidth: 3 },
     );
     this.scoreText.anchor.set(1, 0.5);
     this.topHUD.addChild(this.scoreText);
@@ -101,6 +101,7 @@ export class HUDSystem extends InjectableSystem {
       CANVAS_WIDTH / 2,
       row2CenterY,
       LAYOUT.TOP_HUD.FONT_SIZE_SMALL,
+      { stroke: true, strokeColor: 0x000000, strokeWidth: 3 },
     );
     this.waveText.anchor.set(0.5, 0.5);
     this.topHUD.addChild(this.waveText);
@@ -109,11 +110,6 @@ export class HUDSystem extends InjectableSystem {
     this.upgradeBaseSprite = this.createUpgradeBaseSprite();
     this.bulletClassBaseSprite = this.createBulletClassBaseSprite();
     this.keyBindSprite = this.createKeyBindSprite();
-
-    // Bottom HUD text (SPEC § 2.7.3: Kill Counter display)
-    // Position: Right section of bottom HUD (keyBind area)
-    const killCountY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT + 50;
-    this.killCountText = this.createText("擊殺: 0/20", 1420, killCountY);
 
     this.setupHUD();
   }
@@ -196,9 +192,6 @@ export class HUDSystem extends InjectableSystem {
     this.bottomHUD.addChild(this.upgradeBaseSprite);
     this.bottomHUD.addChild(this.bulletClassBaseSprite);
     this.bottomHUD.addChild(this.keyBindSprite);
-
-    // Bottom HUD text elements
-    this.bottomHUD.addChild(this.killCountText);
 
     // Add upgrade icons to left section
     this.setupUpgradeIcons();
@@ -335,13 +328,15 @@ export class HUDSystem extends InjectableSystem {
       }
       this.skillCostIndicators.push(indicators);
 
-      // For skill 5 (大招), add "×10" text next to indicator
+      // For skill 5 (大招), add kill threshold text next to indicator
       if (i === 4) {
+        const threshold = KILL_COUNTER_CONFIG.oysterOmeletThreshold;
         const killCountLabel = this.createText(
-          "×10",
+          `×${threshold}`,
           indicatorStartX + costIndicatorSize + INDICATOR_GAP,
           indicatorY - NUMBER_LABEL_Y_OFFSET,
           LABEL_FONT_SIZE,
+          { stroke: true, strokeColor: 0x000000, strokeWidth: 2 },
         );
         this.bottomHUD.addChild(killCountLabel);
       }
@@ -389,14 +384,6 @@ export class HUDSystem extends InjectableSystem {
    */
   public updateScore(score: number): void {
     this.scoreText.text = `分數: ${score}`;
-  }
-
-  /**
-   * Update kill counter display
-   * SPEC § 2.3.8: UI 顯示當前擊殺總數和蚵仔煎可用狀態
-   */
-  public updateKillCount(current: number, threshold: number): void {
-    this.killCountText.text = `擊殺: ${current}/${threshold}`;
   }
 
   /**

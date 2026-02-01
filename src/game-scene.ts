@@ -392,12 +392,6 @@ export class GameScene {
     // Recipe availability display
     const recipes = this.getRecipeStatuses(boothSystem, killCounterSystem);
     hudSystem.updateRecipeAvailability(recipes);
-
-    // Kill counter display (SPEC § 2.3.8)
-    hudSystem.updateKillCount(
-      killCounterSystem.getKillCount(),
-      killCounterSystem.getConsumeThreshold(),
-    );
   }
 
   /**
