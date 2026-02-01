@@ -12,6 +12,7 @@ export const DependencyKeys = {
   GameState: "GameState",
   HUDSystem: "HUDSystem",
   WaveSystem: "WaveSystem",
+  AudioSystem: "AudioSystem",
 } as const;
 
 export type DependencyKey =

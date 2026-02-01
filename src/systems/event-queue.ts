@@ -22,6 +22,9 @@ export const EventType = {
   FoodStored: "FoodStored",
   FoodConsumed: "FoodConsumed",
   KillCounterConsumed: "KillCounterConsumed",
+  BulletFired: "BulletFired",
+  EnemyHit: "EnemyHit",
+  ButtonClicked: "ButtonClicked",
 } as const;
 
 export type EventType = (typeof EventType)[keyof typeof EventType];
@@ -45,6 +48,9 @@ export interface EventData {
   [EventType.FoodStored]: { boothId: string; foodType: string };
   [EventType.FoodConsumed]: { boothId: string; amount: number };
   [EventType.KillCounterConsumed]: { consumed: number; remaining: number };
+  [EventType.BulletFired]: Record<string, never>;
+  [EventType.EnemyHit]: Record<string, never>;
+  [EventType.ButtonClicked]: Record<string, never>;
 }
 
 /**

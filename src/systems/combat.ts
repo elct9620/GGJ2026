@@ -209,6 +209,11 @@ export class CombatSystem extends InjectableSystem {
     if (this.player.shoot()) {
       this.shootCooldown = this.shootCooldownTime;
 
+      // Publish BulletFired event for audio system
+      if (this.eventQueue) {
+        this.eventQueue.publish(EventType.BulletFired, {});
+      }
+
       // Check if reload was triggered (SPEC § 2.3.2)
       if (this.player.isReloading && this.eventQueue) {
         this.eventQueue.publish(
@@ -531,6 +536,11 @@ export class CombatSystem extends InjectableSystem {
    */
   private applyDamageAndPublishDeath(enemy: Enemy, damage: number): void {
     const died = enemy.takeDamage(damage);
+
+    // Publish EnemyHit event for audio system
+    if (this.eventQueue) {
+      this.eventQueue.publish(EventType.EnemyHit, {});
+    }
 
     if (died && this.eventQueue) {
       this.eventQueue.publish(EventType.EnemyDeath, {

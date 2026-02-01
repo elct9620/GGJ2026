@@ -101,6 +101,8 @@ export class SynthesisSystem extends InjectableSystem {
     // Check for synthesis key press (1-5)
     const synthesisKey = this.inputSystem.getSynthesisKeyPressed();
     if (synthesisKey !== null) {
+      // Publish ButtonClicked event for audio system
+      this.eventQueue.publish(EventType.ButtonClicked, {});
       this.trySynthesize(synthesisKey.toString());
     }
   }

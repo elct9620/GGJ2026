@@ -17,6 +17,7 @@ import { KillCounterSystem } from "./systems/kill-counter";
 import { WaveSystem } from "./systems/wave";
 import { UpgradeSystem } from "./systems/upgrade";
 import { BulletVisualEffectsSystem } from "./systems/bullet-visual-effects";
+import { AudioSystem } from "./systems/audio-system";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -91,6 +92,7 @@ export class GameScene {
     const waveSystem = new WaveSystem();
     const upgradeSystem = new UpgradeSystem();
     const bulletVisualEffects = new BulletVisualEffectsSystem();
+    const audioSystem = new AudioSystem(); // SPEC § 2.3.9: Audio System
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
@@ -103,6 +105,7 @@ export class GameScene {
     this.systemManager.register(boothSystem);
     this.systemManager.register(boxSystem);
     this.systemManager.register(bulletVisualEffects);
+    this.systemManager.register(audioSystem);
 
     // Provide dependencies for InjectableSystem instances (before initialize)
     this.systemManager.provideDependency("EventQueue", eventQueue);
@@ -118,6 +121,7 @@ export class GameScene {
       bulletVisualEffects,
     );
     this.systemManager.provideDependency("GameState", this.gameState);
+    this.systemManager.provideDependency("AudioSystem", audioSystem);
 
     this.systemManager.initialize();
 
@@ -189,7 +193,10 @@ export class GameScene {
     this.uiLayer.addChild(hudSystem.getBottomHUD());
 
     // Setup Upgrade Screen (SPEC § 2.3.4)
-    this.upgradeScreen = new UpgradeScreen(this.onUpgradeSelect.bind(this));
+    this.upgradeScreen = new UpgradeScreen(
+      this.onUpgradeSelect.bind(this),
+      eventQueue,
+    );
     this.uiLayer.addChild(this.upgradeScreen.getContainer());
 
     // Connect Wave System spawn callback (SPEC § 2.3.5)

@@ -2,6 +2,8 @@ import { Container, Text, Graphics } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
 import { GAME_FONT_FAMILY } from "../core/assets";
 import type { UpgradeOption } from "../systems/upgrade";
+import type { EventQueue } from "../systems/event-queue";
+import { EventType } from "../systems/event-queue";
 
 /**
  * Upgrade Selection Screen
@@ -16,9 +18,11 @@ export class UpgradeScreen {
   private optionsContainer: Container;
   private currentOptions: UpgradeOption[] = [];
   private optionCards: Container[] = [];
+  private eventQueue: EventQueue | null;
 
-  constructor(onSelect: (upgradeId: string) => void) {
+  constructor(onSelect: (upgradeId: string) => void, eventQueue?: EventQueue) {
     this.onSelect = onSelect;
+    this.eventQueue = eventQueue || null;
     this.container = new Container();
     this.optionsContainer = new Container();
     this.container.visible = false;
@@ -165,6 +169,10 @@ export class UpgradeScreen {
 
     // Click handler
     card.on("pointerdown", () => {
+      // Publish ButtonClicked event for audio system
+      if (this.eventQueue) {
+        this.eventQueue.publish(EventType.ButtonClicked, {});
+      }
       this.onSelect(option.id);
     });
 
