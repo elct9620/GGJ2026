@@ -425,7 +425,7 @@ class BoothSystem implements System {
 ### Notes
 
 - 攤位滿時（6/6）無法儲存食材（食材遺失）
-- Booth ID 使用 1-indexed（1=Pearl, 2=Tofu, 3=BloodCake）
+- Booth ID 使用 1-indexed（1=Tofu, 2=Pearl, 3=BloodCake）
 - 透過 EventQueue 發布 FoodStored/FoodConsumed 事件
 
 ---
@@ -444,17 +444,17 @@ class BoothSystem implements System {
 class SynthesisSystem implements System {
   // 5 種合成配方對應按鍵 1-5
   private recipes: Map<number, Recipe> = new Map([
-    [1, { key: 1, name: "NightMarket", ingredients: [Pearl, Tofu, BloodCake] }],
-    [2, { key: 2, name: "StinkyTofu", ingredients: [Tofu, Tofu, Tofu] }],
-    [3, { key: 3, name: "BubbleTea", ingredients: [Pearl, Pearl, Pearl] }],
+    [1, { key: 1, name: "StinkyTofu", ingredients: [Tofu, Tofu, Tofu] }],
+    [2, { key: 2, name: "BubbleTea", ingredients: [Pearl, Pearl, Pearl] }],
     [
-      4,
+      3,
       {
-        key: 4,
+        key: 3,
         name: "BloodCake",
         ingredients: [BloodCake, BloodCake, BloodCake],
       },
     ],
+    [4, { key: 4, name: "NightMarket", ingredients: [Pearl, Tofu, BloodCake] }],
     [5, { key: 5, name: "OysterOmelette", requiresKillCounter: true }], // 需 20 擊殺數
   ]);
 

@@ -47,7 +47,7 @@ describe("SynthesisSystem", () => {
   });
 
   describe("Recipe Triggering", () => {
-    it("SY-01: 按鍵 1 + 豆腐1/珍珠1/米血1 → 觸發夜市總匯", () => {
+    it("SY-01: 按鍵 4 + 豆腐1/珍珠1/米血1 → 觸發夜市總匯", () => {
       // Prepare food
       boothSystem.storeFood("Tofu" as FoodType);
       boothSystem.storeFood("Pearl" as FoodType);
@@ -60,21 +60,39 @@ describe("SynthesisSystem", () => {
         recipeId = (data as { recipeId: string }).recipeId;
       });
 
-      // Simulate key press "1"
-      const event = new KeyboardEvent("keydown", { key: "1" });
+      // Simulate key press "4"
+      const event = new KeyboardEvent("keydown", { key: "4" });
       window.dispatchEvent(event);
 
       synthesisSystem.update();
 
       expect(synthesisTriggered).toBe(true);
-      expect(recipeId).toBe("1");
+      expect(recipeId).toBe("4");
     });
 
-    it("SY-02: 按鍵 2 + 豆腐3 → 觸發臭豆腐", () => {
+    it("SY-02: 按鍵 1 + 豆腐3 → 觸發臭豆腐", () => {
       // Prepare 3 tofu
       boothSystem.storeFood("Tofu" as FoodType);
       boothSystem.storeFood("Tofu" as FoodType);
       boothSystem.storeFood("Tofu" as FoodType);
+
+      let recipeId = "";
+      eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
+        recipeId = (data as { recipeId: string }).recipeId;
+      });
+
+      const event = new KeyboardEvent("keydown", { key: "1" });
+      window.dispatchEvent(event);
+
+      synthesisSystem.update();
+
+      expect(recipeId).toBe("1");
+    });
+
+    it("SY-03: 按鍵 2 + 珍珠3 → 觸發珍珠奶茶", () => {
+      boothSystem.storeFood("Pearl" as FoodType);
+      boothSystem.storeFood("Pearl" as FoodType);
+      boothSystem.storeFood("Pearl" as FoodType);
 
       let recipeId = "";
       eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
@@ -89,10 +107,10 @@ describe("SynthesisSystem", () => {
       expect(recipeId).toBe("2");
     });
 
-    it("SY-03: 按鍵 3 + 珍珠3 → 觸發珍珠奶茶", () => {
-      boothSystem.storeFood("Pearl" as FoodType);
-      boothSystem.storeFood("Pearl" as FoodType);
-      boothSystem.storeFood("Pearl" as FoodType);
+    it("SY-04: 按鍵 3 + 米血3 → 觸發豬血糕", () => {
+      boothSystem.storeFood("BloodCake" as FoodType);
+      boothSystem.storeFood("BloodCake" as FoodType);
+      boothSystem.storeFood("BloodCake" as FoodType);
 
       let recipeId = "";
       eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
@@ -105,24 +123,6 @@ describe("SynthesisSystem", () => {
       synthesisSystem.update();
 
       expect(recipeId).toBe("3");
-    });
-
-    it("SY-04: 按鍵 4 + 米血3 → 觸發豬血糕", () => {
-      boothSystem.storeFood("BloodCake" as FoodType);
-      boothSystem.storeFood("BloodCake" as FoodType);
-      boothSystem.storeFood("BloodCake" as FoodType);
-
-      let recipeId = "";
-      eventQueue.subscribe(EventType.SynthesisTriggered, (data) => {
-        recipeId = (data as { recipeId: string }).recipeId;
-      });
-
-      const event = new KeyboardEvent("keydown", { key: "4" });
-      window.dispatchEvent(event);
-
-      synthesisSystem.update();
-
-      expect(recipeId).toBe("4");
     });
 
     it("SY-05: 按鍵 5 + 擊殺數 ≥ 20 → 觸發蚵仔煎", () => {
@@ -156,12 +156,12 @@ describe("SynthesisSystem", () => {
       boothSystem.storeFood("Pearl" as FoodType);
       boothSystem.storeFood("BloodCake" as FoodType);
 
-      const event = new KeyboardEvent("keydown", { key: "1" });
+      const event = new KeyboardEvent("keydown", { key: "4" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 
-      expect(boothSystem.getFoodCount(2)).toBe(0); // Tofu (Booth 2)
-      expect(boothSystem.getFoodCount(1)).toBe(0); // Pearl (Booth 1)
+      expect(boothSystem.getFoodCount(1)).toBe(0); // Tofu (Booth 1)
+      expect(boothSystem.getFoodCount(2)).toBe(0); // Pearl (Booth 2)
       expect(boothSystem.getFoodCount(3)).toBe(0); // BloodCake (Booth 3)
     });
 
@@ -170,13 +170,13 @@ describe("SynthesisSystem", () => {
       boothSystem.storeFood("Tofu" as FoodType);
       boothSystem.storeFood("Tofu" as FoodType);
 
-      expect(boothSystem.getFoodCount(2)).toBe(3); // Tofu is Booth 2
+      expect(boothSystem.getFoodCount(1)).toBe(3); // Tofu is Booth 1
 
-      const event = new KeyboardEvent("keydown", { key: "2" });
+      const event = new KeyboardEvent("keydown", { key: "1" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 
-      expect(boothSystem.getFoodCount(2)).toBe(0);
+      expect(boothSystem.getFoodCount(1)).toBe(0);
     });
 
     it("SY-08: 蚵仔煎不消耗食材，但消耗擊殺數", () => {
@@ -205,7 +205,7 @@ describe("SynthesisSystem", () => {
   });
 
   describe("Error Scenarios", () => {
-    it("SY-09: 按鍵 1 + 食材不足 → 無反應", () => {
+    it("SY-09: 按鍵 4 + 食材不足 → 無反應", () => {
       // Only 1 tofu (need 1 of each)
       boothSystem.storeFood("Tofu" as FoodType);
 
@@ -214,14 +214,14 @@ describe("SynthesisSystem", () => {
         synthesisTriggered = true;
       });
 
-      const event = new KeyboardEvent("keydown", { key: "1" });
+      const event = new KeyboardEvent("keydown", { key: "4" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 
       expect(synthesisTriggered).toBe(false);
     });
 
-    it("SY-10: 按鍵 2 + 豆腐只有2 → 無反應", () => {
+    it("SY-10: 按鍵 1 + 豆腐只有2 → 無反應", () => {
       boothSystem.storeFood("Tofu" as FoodType);
       boothSystem.storeFood("Tofu" as FoodType);
 
@@ -230,7 +230,7 @@ describe("SynthesisSystem", () => {
         synthesisTriggered = true;
       });
 
-      const event = new KeyboardEvent("keydown", { key: "2" });
+      const event = new KeyboardEvent("keydown", { key: "1" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 

@@ -87,11 +87,12 @@ export class BoothSystem extends InjectableSystem {
 
   private initializeBooths(): void {
     // Create 3 booths (SPEC § 2.3.1)
-    // Booth 1: Pearl (珍珠)
-    // Booth 2: Tofu (豆腐)
+    // Booth 1: Tofu (豆腐)
+    // Booth 2: Pearl (珍珠)
     // Booth 3: Blood Cake (米血)
 
     // Layout based on ui_rough_pixelSpec.png (SPEC § 2.7.2)
+    // Visual ordering (top to bottom): Booth 1 (Tofu), Booth 2 (Pearl), Booth 3 (BloodCake)
     // DropPool sprites are positioned right of baseline with 11px gap
     const boothHeight = LAYOUT.BOOTH_HEIGHT;
     const boothGap = LAYOUT.BOOTH_GAP; // 11px spacing (vertical between booths, horizontal from baseline)
@@ -100,14 +101,14 @@ export class BoothSystem extends InjectableSystem {
     const startY = LAYOUT.GAME_AREA_Y + LAYOUT.BOOTH_TOP_MARGIN; // 86 + 129 = 215
 
     this.booths.set(
-      BoothId.Pearl,
-      new Booth(BoothId.Pearl, FoodType.Pearl, startX, startY, this.container),
+      BoothId.Tofu,
+      new Booth(BoothId.Tofu, FoodType.Tofu, startX, startY, this.container),
     );
     this.booths.set(
-      BoothId.Tofu,
+      BoothId.Pearl,
       new Booth(
-        BoothId.Tofu,
-        FoodType.Tofu,
+        BoothId.Pearl,
+        FoodType.Pearl,
         startX,
         startY + boothHeight + boothGap,
         this.container,
@@ -278,12 +279,13 @@ export class Booth {
 
   private createSprite(): Sprite {
     // Map booth id to DropItemPool asset
+    // Visual ordering: Booth 1 (Tofu) = boothPool0, Booth 2 (Pearl) = boothPool1, Booth 3 (BloodCake) = boothPool2
     let assetKey: keyof typeof AssetKeys;
     switch (this.id) {
-      case BoothId.Pearl:
+      case BoothId.Tofu:
         assetKey = "boothPool0";
         break;
-      case BoothId.Tofu:
+      case BoothId.Pearl:
         assetKey = "boothPool1";
         break;
       case BoothId.BloodCake:
@@ -301,10 +303,10 @@ export class Booth {
 
   private getFoodName(): string {
     switch (this.foodType) {
-      case FoodType.Pearl:
-        return "珍珠 (1)";
       case FoodType.Tofu:
-        return "豆腐 (2)";
+        return "豆腐 (1)";
+      case FoodType.Pearl:
+        return "珍珠 (2)";
       case FoodType.BloodCake:
         return "米血 (3)";
     }

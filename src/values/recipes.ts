@@ -19,12 +19,13 @@ export interface Recipe {
 
 /**
  * Recipe ID to SpecialBulletType mapping (SPEC § 2.3.3)
+ * Key 1 = StinkyTofu (Tofu), Key 2 = BubbleTea (Pearl), Key 3 = BloodCake, Key 4 = NightMarket, Key 5 = OysterOmelette
  */
 export const RECIPE_BUFF_MAPPING: Record<string, SpecialBulletType> = {
-  "1": SpecialBulletType.NightMarket,
-  "2": SpecialBulletType.StinkyTofu,
-  "3": SpecialBulletType.BubbleTea,
-  "4": SpecialBulletType.BloodCake,
+  "1": SpecialBulletType.StinkyTofu,
+  "2": SpecialBulletType.BubbleTea,
+  "3": SpecialBulletType.BloodCake,
+  "4": SpecialBulletType.NightMarket,
   "5": SpecialBulletType.OysterOmelette,
 };
 
@@ -54,23 +55,24 @@ export interface RecipeDisplayConfig {
 
 /**
  * Recipe display configurations for HUD (SPEC § 2.3.3)
+ * Key 1 = StinkyTofu, Key 2 = BubbleTea, Key 3 = BloodCake, Key 4 = NightMarket, Key 5 = OysterOmelette
  */
 export const RECIPE_DISPLAY: Record<string, RecipeDisplayConfig> = {
   "1": {
     label: "技能1",
-    costs: [FoodType.Pearl, FoodType.Tofu, FoodType.BloodCake],
+    costs: [FoodType.Tofu, FoodType.Tofu, FoodType.Tofu],
   },
   "2": {
     label: "技能2",
-    costs: [FoodType.Tofu, FoodType.Tofu, FoodType.Tofu],
+    costs: [FoodType.Pearl, FoodType.Pearl, FoodType.Pearl],
   },
   "3": {
     label: "技能3",
-    costs: [FoodType.Pearl, FoodType.Pearl, FoodType.Pearl],
+    costs: [FoodType.BloodCake, FoodType.BloodCake, FoodType.BloodCake],
   },
   "4": {
     label: "技能4",
-    costs: [FoodType.BloodCake, FoodType.BloodCake, FoodType.BloodCake],
+    costs: [FoodType.Pearl, FoodType.Tofu, FoodType.BloodCake],
   },
   "5": {
     label: "大招",
@@ -81,31 +83,32 @@ export const RECIPE_DISPLAY: Record<string, RecipeDisplayConfig> = {
 /**
  * All available recipes (SPEC § 2.3.3)
  * 配方消耗量從 config.ts 讀取
+ * Key 1 = StinkyTofu, Key 2 = BubbleTea, Key 3 = BloodCake, Key 4 = NightMarket, Key 5 = OysterOmelette
  */
 export const RECIPES: Record<string, Recipe> = {
   "1": {
     id: "1",
+    name: "臭豆腐",
+    foodRequirements: { Tofu: RECIPE_CONFIG.stinkyTofu.tofu },
+  },
+  "2": {
+    id: "2",
+    name: "珍珠奶茶",
+    foodRequirements: { Pearl: RECIPE_CONFIG.bubbleTea.pearl },
+  },
+  "3": {
+    id: "3",
+    name: "豬血糕",
+    foodRequirements: { BloodCake: RECIPE_CONFIG.bloodCake.bloodCake },
+  },
+  "4": {
+    id: "4",
     name: "夜市總匯",
     foodRequirements: {
       Pearl: RECIPE_CONFIG.nightMarket.pearl,
       Tofu: RECIPE_CONFIG.nightMarket.tofu,
       BloodCake: RECIPE_CONFIG.nightMarket.bloodCake,
     },
-  },
-  "2": {
-    id: "2",
-    name: "臭豆腐",
-    foodRequirements: { Tofu: RECIPE_CONFIG.stinkyTofu.tofu },
-  },
-  "3": {
-    id: "3",
-    name: "珍珠奶茶",
-    foodRequirements: { Pearl: RECIPE_CONFIG.bubbleTea.pearl },
-  },
-  "4": {
-    id: "4",
-    name: "豬血糕",
-    foodRequirements: { BloodCake: RECIPE_CONFIG.bloodCake.bloodCake },
   },
   "5": {
     id: "5",
