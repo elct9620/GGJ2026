@@ -122,8 +122,8 @@
 
 | 食材名稱 | 攤位編號 | 最大儲存量 |
 | -------- | -------- | ---------- |
-| 珍珠     | 1        | 6          |
-| 豆腐     | 2        | 6          |
+| 豆腐     | 1        | 6          |
+| 珍珠     | 2        | 6          |
 | 米血     | 3        | 6          |
 
 ### 2.3.2 Combat System
@@ -1284,8 +1284,8 @@ Application.stage
 │   └── 攤位區域背景
 ├── Game Layer (z-index: 1)
 │   ├── Booth Container
-│   │   ├── Booth 1 (珍珠)
-│   │   ├── Booth 2 (豆腐)
+│   │   ├── Booth 1 (豆腐)
+│   │   ├── Booth 2 (珍珠)
 │   │   └── Booth 3 (米血)
 │   ├── Food Drops Container
 │   │   └── Food Sprites (動態生成)

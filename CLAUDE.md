@@ -135,7 +135,7 @@ Application.stage
 │   └── 攤位區域背景 (340px width)
 ├── Game Layer (z-index: 1)
 │   ├── Booth Container
-│   │   ├── 3 booths (Pearl/Tofu/BloodCake) - BoothSystem.getContainer()
+│   │   ├── 3 booths (Tofu/Pearl/BloodCake) - BoothSystem.getContainer()
 │   │   └── Box sprite (x=340) - BoxSystem.getContainer()
 │   ├── Food Drops Container (dynamic, auto-collected)
 │   ├── Player Sprite (256×256 collision box)
@@ -269,7 +269,7 @@ interface System {
 6. 碰撞箱與視覺同步: Player/Enemy 256×256 px, Bullet 24~192 px (依類型), Food 16×16 px
 7. 食材掉落率: 100%（類型隨機）
 8. 使用物件池管理子彈和敵人（**計劃中，尚未實作**）
-9. Booth ID mapping: **1-indexed** (1=Pearl, 2=Tofu, 3=BloodCake)
+9. Booth ID mapping: **1-indexed** (1=Tofu, 2=Pearl, 3=BloodCake)
 
 ## Git Workflow
 

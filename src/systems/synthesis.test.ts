@@ -160,8 +160,8 @@ describe("SynthesisSystem", () => {
       window.dispatchEvent(event);
       synthesisSystem.update();
 
-      expect(boothSystem.getFoodCount(2)).toBe(0); // Tofu (Booth 2)
-      expect(boothSystem.getFoodCount(1)).toBe(0); // Pearl (Booth 1)
+      expect(boothSystem.getFoodCount(1)).toBe(0); // Tofu (Booth 1)
+      expect(boothSystem.getFoodCount(2)).toBe(0); // Pearl (Booth 2)
       expect(boothSystem.getFoodCount(3)).toBe(0); // BloodCake (Booth 3)
     });
 
@@ -170,13 +170,13 @@ describe("SynthesisSystem", () => {
       boothSystem.storeFood("Tofu" as FoodType);
       boothSystem.storeFood("Tofu" as FoodType);
 
-      expect(boothSystem.getFoodCount(2)).toBe(3); // Tofu is Booth 2
+      expect(boothSystem.getFoodCount(1)).toBe(3); // Tofu is Booth 1
 
       const event = new KeyboardEvent("keydown", { key: "2" });
       window.dispatchEvent(event);
       synthesisSystem.update();
 
-      expect(boothSystem.getFoodCount(2)).toBe(0);
+      expect(boothSystem.getFoodCount(1)).toBe(0);
     });
 
     it("SY-08: 蚵仔煎不消耗食材，但消耗擊殺數", () => {

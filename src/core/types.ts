@@ -81,8 +81,8 @@ export type FoodType = (typeof FoodType)[keyof typeof FoodType];
  * Use these instead of magic numbers for type safety
  */
 export const BoothId = {
-  Pearl: 1,
-  Tofu: 2,
+  Tofu: 1,
+  Pearl: 2,
   BloodCake: 3,
 } as const;
 
@@ -93,8 +93,8 @@ export type BoothId = (typeof BoothId)[keyof typeof BoothId];
  */
 export function getBoothIdForFood(foodType: FoodType): BoothId {
   const mapping: Record<FoodType, BoothId> = {
-    Pearl: BoothId.Pearl,
     Tofu: BoothId.Tofu,
+    Pearl: BoothId.Pearl,
     BloodCake: BoothId.BloodCake,
   };
   return mapping[foodType];

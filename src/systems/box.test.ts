@@ -85,7 +85,7 @@ describe("BoxSystem", () => {
       boothSystem.storeFood(FoodType.Pearl);
       expect(boxSystem.isBoxActive()).toBe(true);
 
-      boothSystem.retrieveFood(1); // Consume the food
+      boothSystem.retrieveFood(2); // Consume the food (Pearl is Booth 2)
       expect(boxSystem.isBoxActive()).toBe(false);
       expect(boxSystem.getTotalFoodCount()).toBe(0);
     });
@@ -97,21 +97,21 @@ describe("BoxSystem", () => {
       }
       expect(boxSystem.getTotalFoodCount()).toBe(3);
 
-      // Consume 2 food
-      boothSystem.retrieveFood(1);
-      boothSystem.retrieveFood(1);
+      // Consume 2 food (Pearl is Booth 2)
+      boothSystem.retrieveFood(2);
+      boothSystem.retrieveFood(2);
       expect(boxSystem.isBoxActive()).toBe(true);
       expect(boxSystem.getTotalFoodCount()).toBe(1);
 
       // Consume last food
-      boothSystem.retrieveFood(1);
+      boothSystem.retrieveFood(2);
       expect(boxSystem.isBoxActive()).toBe(false);
       expect(boxSystem.getTotalFoodCount()).toBe(0);
     });
 
     it("BX-07: 食材歸零後再入庫重新生成寶箱", () => {
       boothSystem.storeFood(FoodType.Pearl);
-      boothSystem.retrieveFood(1);
+      boothSystem.retrieveFood(2); // Pearl is Booth 2
       expect(boxSystem.isBoxActive()).toBe(false);
 
       boothSystem.storeFood(FoodType.Pearl);
@@ -127,8 +127,8 @@ describe("BoxSystem", () => {
         boothSystem.storeFood(FoodType.Pearl);
       }
 
-      // Calculate Pearl booth Y position (top booth)
-      const pearlBoothY = POOL_START_Y + 256 / 2; // Center of first booth
+      // Calculate Pearl booth Y position (middle booth, after swap)
+      const pearlBoothY = POOL_START_Y + 256 + 256 / 2; // Center of second booth
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
@@ -138,7 +138,7 @@ describe("BoxSystem", () => {
       boxSystem.update();
 
       // SPEC § 2.3.7: Enemy collision consumes 1 food from Pearl booth only
-      expect(boothSystem.getFoodCount(1)).toBe(2); // Pearl booth
+      expect(boothSystem.getFoodCount(2)).toBe(2); // Pearl booth (Booth 2 after swap)
       expect(enemy.active).toBe(false);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
@@ -147,8 +147,8 @@ describe("BoxSystem", () => {
       // Spawn Pearl box with 1 food
       boothSystem.storeFood(FoodType.Pearl);
 
-      // Spawn enemy at Pearl booth position
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      // Spawn enemy at Pearl booth position (middle booth, after swap)
+      const pearlBoothY = POOL_START_Y + 256 + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
@@ -158,7 +158,7 @@ describe("BoxSystem", () => {
       boxSystem.update();
 
       // SPEC § 2.3.7: Last food consumed, Pearl box despawns
-      expect(boothSystem.getFoodCount(1)).toBe(0);
+      expect(boothSystem.getFoodCount(2)).toBe(0); // Pearl is Booth 2 after swap
       expect(enemy.active).toBe(false);
       expect(boxSystem.isBoxActive()).toBe(false); // No boxes active
     });
@@ -166,8 +166,8 @@ describe("BoxSystem", () => {
     it("BX-10: 遠距離敵人不觸發碰撞", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      // Spawn enemy far from box
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      // Spawn enemy far from box (Pearl is middle booth after swap)
+      const pearlBoothY = POOL_START_Y + 256 + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 200, pearlBoothY),
@@ -176,7 +176,7 @@ describe("BoxSystem", () => {
 
       boxSystem.update();
 
-      expect(boothSystem.getFoodCount(1)).toBe(1);
+      expect(boothSystem.getFoodCount(2)).toBe(1); // Pearl is Booth 2
       expect(enemy.active).toBe(true);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
@@ -202,8 +202,8 @@ describe("BoxSystem", () => {
         boothSystem.storeFood(FoodType.Pearl);
       }
 
-      // Spawn 3 enemies at Pearl booth position
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      // Spawn 3 enemies at Pearl booth position (middle booth after swap)
+      const pearlBoothY = POOL_START_Y + 256 + 256 / 2;
       enemies.push(
         new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY)),
       );
@@ -220,13 +220,13 @@ describe("BoxSystem", () => {
       const activeEnemies = enemies.filter((e) => e.active);
       expect(activeEnemies.length).toBe(2);
       // SPEC § 2.3.7: 1 food consumed per collision from Pearl booth
-      expect(boothSystem.getFoodCount(1)).toBe(4);
+      expect(boothSystem.getFoodCount(2)).toBe(4); // Pearl is Booth 2
     });
 
     it("BX-13: 非活躍敵人不觸發碰撞", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const pearlBoothY = POOL_START_Y + 256 + 256 / 2; // Middle booth after swap
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
@@ -236,7 +236,7 @@ describe("BoxSystem", () => {
 
       boxSystem.update();
 
-      expect(boothSystem.getFoodCount(1)).toBe(1);
+      expect(boothSystem.getFoodCount(2)).toBe(1); // Pearl is Booth 2
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
@@ -247,8 +247,8 @@ describe("BoxSystem", () => {
       boothSystem.storeFood(FoodType.Tofu);
       boothSystem.storeFood(FoodType.Tofu);
 
-      // Enemy hits Tofu booth (middle)
-      const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
+      // Enemy hits Tofu booth (top, after swap)
+      const tofuBoothY = POOL_START_Y + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 6, tofuBoothY),
@@ -258,8 +258,8 @@ describe("BoxSystem", () => {
       boxSystem.update();
 
       // Only Tofu booth should lose food
-      expect(boothSystem.getFoodCount(1)).toBe(2); // Pearl unchanged
-      expect(boothSystem.getFoodCount(2)).toBe(1); // Tofu -1
+      expect(boothSystem.getFoodCount(2)).toBe(2); // Pearl unchanged (Booth 2)
+      expect(boothSystem.getFoodCount(1)).toBe(1); // Tofu -1 (Booth 1)
       expect(enemy.active).toBe(false);
     });
 
@@ -280,7 +280,7 @@ describe("BoxSystem", () => {
       boxSystem.update();
 
       // Only BloodCake booth should lose food
-      expect(boothSystem.getFoodCount(1)).toBe(1); // Pearl unchanged
+      expect(boothSystem.getFoodCount(2)).toBe(1); // Pearl unchanged (Booth 2)
       expect(boothSystem.getFoodCount(3)).toBe(1); // BloodCake -1
       expect(enemy.active).toBe(false);
     });
@@ -290,8 +290,8 @@ describe("BoxSystem", () => {
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.BloodCake);
 
-      // Enemy passes through Tofu booth position (no box)
-      const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
+      // Enemy passes through Tofu booth position (top, after swap - no box)
+      const tofuBoothY = POOL_START_Y + 256 / 2;
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 6, tofuBoothY),
@@ -302,8 +302,8 @@ describe("BoxSystem", () => {
 
       // Enemy should pass through (not deactivated)
       expect(enemy.active).toBe(true);
-      expect(boothSystem.getFoodCount(1)).toBe(1); // Pearl unchanged
-      expect(boothSystem.getFoodCount(2)).toBe(0); // Tofu still 0
+      expect(boothSystem.getFoodCount(2)).toBe(1); // Pearl unchanged (Booth 2)
+      expect(boothSystem.getFoodCount(1)).toBe(0); // Tofu still 0 (Booth 1)
       expect(boothSystem.getFoodCount(3)).toBe(1); // BloodCake unchanged
     });
   });
@@ -368,7 +368,7 @@ describe("BoxSystem", () => {
 
       boothSystem.storeFood(FoodType.Pearl);
 
-      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const pearlBoothY = POOL_START_Y + 256 + 256 / 2; // Pearl is middle booth
       const enemy = new Enemy(
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),

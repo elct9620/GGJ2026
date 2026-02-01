@@ -87,8 +87,8 @@ export class BoothSystem extends InjectableSystem {
 
   private initializeBooths(): void {
     // Create 3 booths (SPEC § 2.3.1)
-    // Booth 1: Pearl (珍珠)
-    // Booth 2: Tofu (豆腐)
+    // Booth 1: Tofu (豆腐)
+    // Booth 2: Pearl (珍珠)
     // Booth 3: Blood Cake (米血)
 
     // Layout based on ui_rough_pixelSpec.png (SPEC § 2.7.2)
@@ -100,14 +100,14 @@ export class BoothSystem extends InjectableSystem {
     const startY = LAYOUT.GAME_AREA_Y + LAYOUT.BOOTH_TOP_MARGIN; // 86 + 129 = 215
 
     this.booths.set(
-      BoothId.Pearl,
-      new Booth(BoothId.Pearl, FoodType.Pearl, startX, startY, this.container),
+      BoothId.Tofu,
+      new Booth(BoothId.Tofu, FoodType.Tofu, startX, startY, this.container),
     );
     this.booths.set(
-      BoothId.Tofu,
+      BoothId.Pearl,
       new Booth(
-        BoothId.Tofu,
-        FoodType.Tofu,
+        BoothId.Pearl,
+        FoodType.Pearl,
         startX,
         startY + boothHeight + boothGap,
         this.container,
