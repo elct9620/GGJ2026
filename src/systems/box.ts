@@ -89,13 +89,13 @@ export class BoxSystem extends InjectableSystem {
     this.boxes.set(BoothId.BloodCake, false);
 
     // Setup booth Y position ranges for collision detection
-    // Pearl: booth 1 (top), Tofu: booth 2 (middle), BloodCake: booth 3 (bottom)
+    // Tofu: booth 1 (top), Pearl: booth 2 (middle), BloodCake: booth 3 (bottom)
     const boothHeight = BOOTH_POOL_HEIGHT;
-    this.boothYPositions.set(BoothId.Pearl, {
+    this.boothYPositions.set(BoothId.Tofu, {
       min: this.poolStartY,
       max: this.poolStartY + boothHeight,
     });
-    this.boothYPositions.set(BoothId.Tofu, {
+    this.boothYPositions.set(BoothId.Pearl, {
       min: this.poolStartY + boothHeight,
       max: this.poolStartY + boothHeight * 2,
     });
