@@ -80,7 +80,10 @@ export class BulletVisualEffectsSystem implements ISystem {
    * Create hit effect when bullet hits enemy
    * Called by CombatSystem on collision
    */
-  public createHitEffect(position: Vector, bulletType: SpecialBulletType): void {
+  public createHitEffect(
+    position: Vector,
+    bulletType: SpecialBulletType,
+  ): void {
     this.effects.createHitEffect(position, bulletType);
   }
 

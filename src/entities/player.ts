@@ -4,15 +4,29 @@ import { Health } from "../values/health";
 import { Ammo } from "../values/ammo";
 import type { CollisionBox } from "../values/collision";
 import { Container, Sprite } from "pixi.js";
-import { getTexture, AssetKeys } from "../core/assets";
+import { getTexture, AssetKeys, type AssetKey } from "../core/assets";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
+import { SpecialBulletType } from "../values/special-bullet";
 
 /**
  * Player entity with keyboard controls and shooting capability
  * Spec: § 2.6.1 Player
  */
 export class Player extends SpriteEntity {
+  /**
+   * Buff type to player sprite asset key mapping
+   * SPEC § 2.6.1: Player appearance changes based on active buff
+   */
+  private static readonly BUFF_SPRITE_MAP: Record<SpecialBulletType, AssetKey> =
+    {
+      [SpecialBulletType.None]: AssetKeys.playerBase,
+      [SpecialBulletType.NightMarket]: AssetKeys.playerNightMarket,
+      [SpecialBulletType.StinkyTofu]: AssetKeys.playerStinkyTofu,
+      [SpecialBulletType.BubbleTea]: AssetKeys.playerBubbleTea,
+      [SpecialBulletType.BloodCake]: AssetKeys.playerBloodCake,
+      [SpecialBulletType.OysterOmelette]: AssetKeys.playerOysterOmelette,
+    };
   public position: Vector;
   public readonly speed: number = PLAYER_CONFIG.speed;
 
@@ -80,7 +94,7 @@ export class Player extends SpriteEntity {
   }
 
   private createPlayerSprite(): Sprite {
-    const sprite = new Sprite(getTexture(AssetKeys.player));
+    const sprite = new Sprite(getTexture(AssetKeys.playerBase));
 
     // Asset size is 256×256, use full size per SPEC § 2.7.2
     sprite.width = LAYOUT.PLAYER_SIZE;
@@ -217,6 +231,16 @@ export class Player extends SpriteEntity {
   }
 
   /**
+   * Update player appearance based on active buff
+   * SPEC § 2.6.1: Player visual changes based on buff state
+   * @param buffType The current active buff type
+   */
+  public updateAppearanceForBuff(buffType: SpecialBulletType): void {
+    const assetKey = Player.BUFF_SPRITE_MAP[buffType];
+    this.playerSprite.texture = getTexture(assetKey);
+  }
+
+  /**
    * Reset player state for object pool reuse
    */
   public reset(position: Vector): void {
@@ -227,6 +251,7 @@ export class Player extends SpriteEntity {
     this.isReloading = false;
     this.reloadTimer = 0;
     this.reloadTimeReduction = 0;
+    this.updateAppearanceForBuff(SpecialBulletType.None);
     this.updateSpritePosition();
   }
 }
