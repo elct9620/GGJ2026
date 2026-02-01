@@ -24,6 +24,10 @@ export class Bullet extends SpriteEntity {
   // Tracking bullet properties (SPEC § 2.3.3 - 豬血糕)
   public isTracking: boolean = false;
   public trackingTarget: Enemy | null = null;
+  public trackingRange: number = 0;
+  private findNearestEnemy:
+    | ((position: Vector, maxRange: number) => Enemy | null)
+    | null = null;
 
   // Bullet type for visual differentiation
   private bulletType: SpecialBulletType = SpecialBulletType.None;
@@ -135,13 +139,34 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Update velocity to track target (SPEC § 2.3.3)
-   * Recalculates direction toward tracking target each frame
+   * Dynamically finds nearest enemy within tracking range and recalculates direction
    */
   private updateTrackingDirection(): void {
-    if (!this.trackingTarget) return;
+    // Find nearest enemy within tracking range (SPEC § 2.3.3 + issue #76)
+    if (this.findNearestEnemy && this.trackingRange > 0) {
+      this.trackingTarget = this.findNearestEnemy(
+        this.position,
+        this.trackingRange,
+      );
+    }
 
+    // If no valid target found, continue in current direction
+    if (!this.trackingTarget || !this.trackingTarget.active) {
+      return;
+    }
+
+    // Calculate distance to target
     const direction = this.trackingTarget.position.subtract(this.position);
-    if (direction.magnitude() > 0) {
+    const distance = direction.magnitude();
+
+    // Verify target is within tracking range
+    if (distance > this.trackingRange) {
+      this.trackingTarget = null;
+      return;
+    }
+
+    // Update velocity toward target
+    if (distance > 0) {
       this.velocity = direction.normalize().multiply(this.speed);
     }
   }
@@ -168,6 +193,8 @@ export class Bullet extends SpriteEntity {
     this._damage = Damage.normal();
     this.isTracking = false;
     this.trackingTarget = null;
+    this.trackingRange = 0;
+    this.findNearestEnemy = null;
     this.bulletType = bulletType;
     this.updateSprite();
     this.updateSpritePosition();
@@ -185,10 +212,16 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Enable tracking mode for this bullet (SPEC § 2.3.3 - 豬血糕)
-   * @param target Enemy to track
+   * @param range Tracking range in pixels
+   * @param findEnemyCallback Callback to find nearest enemy within range
    */
-  public setTracking(target: Enemy): void {
+  public setTracking(
+    range: number,
+    findEnemyCallback: (position: Vector, maxRange: number) => Enemy | null,
+  ): void {
     this.isTracking = true;
-    this.trackingTarget = target;
+    this.trackingRange = range;
+    this.findNearestEnemy = findEnemyCallback;
+    this.trackingTarget = null; // Target is dynamically found during flight
   }
 }

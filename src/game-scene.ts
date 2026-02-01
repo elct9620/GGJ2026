@@ -151,8 +151,12 @@ export class GameScene {
         request.direction,
         request.bulletType,
       );
-      if (request.isTracking && request.trackingTarget) {
-        bullet.setTracking(request.trackingTarget);
+      if (
+        request.isTracking &&
+        request.trackingRange &&
+        request.findNearestEnemy
+      ) {
+        bullet.setTracking(request.trackingRange, request.findNearestEnemy);
       }
       this.bullets.push(bullet);
       this.bulletsContainer.addChild(bullet.sprite);

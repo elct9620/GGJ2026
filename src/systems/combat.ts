@@ -33,7 +33,8 @@ export interface BulletSpawnRequest {
   direction: Vector;
   bulletType: SpecialBulletType;
   isTracking?: boolean;
-  trackingTarget?: Enemy;
+  trackingRange?: number;
+  findNearestEnemy?: (position: Vector, maxRange: number) => Enemy | null;
 }
 
 /**
@@ -320,40 +321,29 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Spawn BloodCake tracking bullet (SPEC § 2.3.3)
-   * Tracks the nearest enemy
+   * Dynamically tracks nearest enemy within range during flight
    */
   private spawnTrackingBullet(): Bullet[] {
     if (!this.bulletSpawner || !this.player) return [];
-
-    // Find nearest enemy to track
-    const target = this.findNearestEnemyToPlayer();
-
-    const bullet = this.bulletSpawner({
-      position: this.player.position,
-      direction: new Vector(1, 0),
-      bulletType: SpecialBulletType.BloodCake,
-      isTracking: target !== null,
-      trackingTarget: target ?? undefined,
-    });
-
-    return [bullet];
-  }
-
-  /**
-   * Find the nearest active enemy to the player
-   * For tracking bullets, applies tracking range limit (SPEC § 2.3.3 + § 2.3.4)
-   */
-  private findNearestEnemyToPlayer(): Enemy | null {
-    if (!this.player) return null;
 
     // Calculate tracking range with upgrade bonus (SPEC § 2.3.4: 加香菜)
     const baseRange = RECIPE_CONFIG.bloodCake.trackingRange;
     const upgradeState = this.upgradeSystem?.getState();
     const upgradeBonus = upgradeState?.bloodCakeRangeBonus ?? 0;
-    const maxRange = baseRange + upgradeBonus;
+    const trackingRange = baseRange + upgradeBonus;
 
-    return this.findClosestEnemy(this.player.position, undefined, maxRange);
+    const bullet = this.bulletSpawner({
+      position: this.player.position,
+      direction: new Vector(1, 0),
+      bulletType: SpecialBulletType.BloodCake,
+      isTracking: true,
+      trackingRange,
+      findNearestEnemy: this.findClosestEnemy.bind(this),
+    });
+
+    return [bullet];
   }
+
 
   /**
    * Get current special bullet buff type

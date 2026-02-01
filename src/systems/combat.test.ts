@@ -488,15 +488,20 @@ describe("CombatSystem", () => {
         direction: { x: number; y: number };
         bulletType: SpecialBulletType;
         isTracking?: boolean;
-        trackingTarget?: Enemy;
+        trackingRange?: number;
+        findNearestEnemy?: (position: Vector, maxRange: number) => Enemy | null;
       }) => {
         const bullet = new Bullet(
           new Vector(request.position.x, request.position.y),
           new Vector(request.direction.x, request.direction.y),
           request.bulletType,
         );
-        if (request.isTracking && request.trackingTarget) {
-          bullet.setTracking(request.trackingTarget);
+        if (
+          request.isTracking &&
+          request.trackingRange &&
+          request.findNearestEnemy
+        ) {
+          bullet.setTracking(request.trackingRange, request.findNearestEnemy);
         }
         spawnedBullets.push(bullet);
         return bullet;
@@ -561,7 +566,8 @@ describe("CombatSystem", () => {
       expect(result).toHaveLength(1);
       expect(spawnedBullets).toHaveLength(1);
       expect(spawnedBullets[0].isTracking).toBe(true);
-      expect(spawnedBullets[0].trackingTarget).toBe(enemy);
+      expect(spawnedBullets[0].trackingRange).toBe(500); // Base range from config
+      // Target is dynamically found during bullet update, so we don't check it here
     });
 
     it("should not track enemy beyond tracking range (Issue #59)", () => {
@@ -582,8 +588,10 @@ describe("CombatSystem", () => {
 
       expect(result).toHaveLength(1);
       expect(spawnedBullets).toHaveLength(1);
-      // Bullet should not track (target too far)
-      expect(spawnedBullets[0].isTracking).toBe(false);
+      // Bullet is tracking-enabled (isTracking = true)
+      expect(spawnedBullets[0].isTracking).toBe(true);
+      expect(spawnedBullets[0].trackingRange).toBe(500);
+      // But no target found initially (target too far)
       expect(spawnedBullets[0].trackingTarget).toBeNull();
     });
 
@@ -605,9 +613,10 @@ describe("CombatSystem", () => {
 
       expect(result).toHaveLength(1);
       expect(spawnedBullets).toHaveLength(1);
-      // Should track the nearest enemy within range
+      // Should have tracking enabled
       expect(spawnedBullets[0].isTracking).toBe(true);
-      expect(spawnedBullets[0].trackingTarget).toBe(nearEnemy);
+      expect(spawnedBullets[0].trackingRange).toBe(500);
+      // Target is dynamically found during bullet.update(), so we test that separately
     });
 
     it("should return empty array when no spawner is set", () => {
@@ -615,6 +624,34 @@ describe("CombatSystem", () => {
       const result = combatSystem.performShoot();
 
       expect(result).toEqual([]);
+    });
+
+    it("should set tracking parameters correctly for BloodCake bullets (Issue #76)", () => {
+      const spawnedBullets: Bullet[] = [];
+      combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
+
+      // Add enemy within range (player at 960, 540)
+      const enemy1 = new Enemy(EnemyType.Ghost, new Vector(1200, 540)); // 240px away
+      enemies.push(enemy1);
+
+      // Activate BloodCake buff
+      eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
+      expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
+
+      // Spawn bullet
+      const result = combatSystem.performShoot();
+      expect(result).toHaveLength(1);
+      const bullet = spawnedBullets[0];
+
+      // Verify tracking is enabled with correct parameters (Issue #76)
+      expect(bullet.isTracking).toBe(true);
+      expect(bullet.trackingRange).toBe(500); // Base range from config
+      // Verify findNearestEnemy callback is set (function exists)
+      expect(typeof bullet["findNearestEnemy"]).toBe("function");
+
+      // The callback is bound to CombatSystem.findClosestEnemy
+      // Dynamic tracking happens during bullet flight in actual gameplay
+      // (Integration tested via gameplay, unit test verifies parameters are set)
     });
   });
 });
