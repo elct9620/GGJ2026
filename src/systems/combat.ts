@@ -338,12 +338,12 @@ export class CombatSystem extends InjectableSystem {
       bulletType: SpecialBulletType.BloodCake,
       isTracking: true,
       trackingRange,
-      findNearestEnemy: this.findClosestEnemy.bind(this),
+      findNearestEnemy: (position: Vector, maxRange: number) =>
+        this.findClosestEnemy(position, undefined, maxRange),
     });
 
     return [bullet];
   }
-
 
   /**
    * Get current special bullet buff type
