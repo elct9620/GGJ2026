@@ -4,7 +4,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import { InjectableSystem } from "../core/systems/injectable";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
-import { getTexture, AssetKeys } from "../core/assets";
+import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 
@@ -263,7 +263,7 @@ export class Booth {
     this.countText = new Text({
       text: "0/6",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 24,
         fill: 0xffffff,
       },
@@ -272,7 +272,7 @@ export class Booth {
     this.nameText = new Text({
       text: this.getFoodName(),
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 18,
         fill: 0xffffff,
       },

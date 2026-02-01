@@ -1,5 +1,6 @@
 import { Container, Text, Graphics } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
+import { GAME_FONT_FAMILY } from "../core/assets";
 
 /**
  * Start Screen
@@ -30,11 +31,10 @@ export class StartScreen {
     const title = new Text({
       text: "夜市防衛戰\nNight Market Defense",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 72,
         fill: 0xffffff,
         align: "center",
-        fontWeight: "bold",
       },
     });
     title.anchor.set(0.5);
@@ -45,7 +45,7 @@ export class StartScreen {
     const subtitle = new Text({
       text: "Global Game Jam 2026 - 主題：「Mask」",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 24,
         fill: 0xaaaaaa,
         align: "center",
@@ -59,7 +59,7 @@ export class StartScreen {
     const instructions = new Text({
       text: "按 Space 開始遊戲\nPress Space to Start",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 32,
         fill: 0x00ff00,
         align: "center",
@@ -73,7 +73,7 @@ export class StartScreen {
     const controls = new Text({
       text: "操作說明：WASD 移動 | Space 射擊 | 1/2/3 提取食材",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 20,
         fill: 0xcccccc,
         align: "center",

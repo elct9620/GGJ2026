@@ -1,5 +1,11 @@
 import { Assets, Texture } from "pixi.js";
 
+/**
+ * Game font family constant
+ * Used by all UI text elements for consistent styling
+ */
+export const GAME_FONT_FAMILY = "UnboundedSans, Arial, sans-serif";
+
 // Import assets using Vite's static import
 import bgRoad from "../assets/BG_Road.png";
 import dropItemPool0 from "../assets/DropItemPool_0.png";
@@ -71,10 +77,26 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
 };
 
 /**
+ * Load custom game fonts
+ * Uses FontFace API for dynamic font loading
+ */
+async function loadFonts(): Promise<void> {
+  const fontFace = new FontFace(
+    "UnboundedSans",
+    "url(/fonts/UnboundedSans-Regular.ttf)",
+  );
+  await fontFace.load();
+  document.fonts.add(fontFace);
+}
+
+/**
  * Load all game assets
  * Should be called before game initialization
  */
 export async function loadAssets(): Promise<void> {
+  // Load fonts first to ensure they're available for text rendering
+  await loadFonts();
+
   const loadPromises = Object.entries(ASSET_MANIFEST).map(([key, url]) =>
     Assets.load({ alias: key, src: url }),
   );

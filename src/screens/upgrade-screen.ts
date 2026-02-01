@@ -1,5 +1,6 @@
 import { Container, Text, Graphics } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
+import { GAME_FONT_FAMILY } from "../core/assets";
 import type { UpgradeOption } from "../systems/upgrade";
 
 /**
@@ -35,11 +36,10 @@ export class UpgradeScreen {
     const title = new Text({
       text: "選擇升級\nChoose Upgrade",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 48,
         fill: 0xffd700,
         align: "center",
-        fontWeight: "bold",
       },
     });
     title.anchor.set(0.5);
@@ -50,7 +50,7 @@ export class UpgradeScreen {
     const instructions = new Text({
       text: "點選升級項目\nClick to select",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 24,
         fill: 0xaaaaaa,
         align: "center",
@@ -129,10 +129,9 @@ export class UpgradeScreen {
     const nameText = new Text({
       text: option.name,
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 36,
         fill: 0xffffff,
-        fontWeight: "bold",
       },
     });
     nameText.position.set(20, 20);
@@ -142,7 +141,7 @@ export class UpgradeScreen {
     const descText = new Text({
       text: option.description,
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 24,
         fill: 0xcccccc,
         wordWrap: true,
@@ -156,7 +155,7 @@ export class UpgradeScreen {
     const freeText = new Text({
       text: "免費升級",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 18,
         fill: 0x6bff6b,
       },

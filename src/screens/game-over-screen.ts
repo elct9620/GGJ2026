@@ -1,5 +1,6 @@
 import { Container, Text, Graphics } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
+import { GAME_FONT_FAMILY } from "../core/assets";
 import type { GameStats } from "../core/game-state";
 
 /**
@@ -32,11 +33,10 @@ export class GameOverScreen {
     const title = new Text({
       text: "遊戲結束\nGAME OVER",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 64,
         fill: 0xff0000,
         align: "center",
-        fontWeight: "bold",
       },
     });
     title.anchor.set(0.5);
@@ -47,7 +47,7 @@ export class GameOverScreen {
     this.statsText = new Text({
       text: "",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 28,
         fill: 0xffffff,
         align: "center",
@@ -62,7 +62,7 @@ export class GameOverScreen {
     const restartText = new Text({
       text: "按 Space 重新開始\nPress Space to Restart",
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 32,
         fill: 0x00ff00,
         align: "center",

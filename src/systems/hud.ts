@@ -1,7 +1,7 @@
 import { Container, Sprite, Text } from "pixi.js";
 import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
-import { getTexture, AssetKeys } from "../core/assets";
+import { getTexture, AssetKeys, GAME_FONT_FAMILY } from "../core/assets";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, LAYOUT } from "../utils/constants";
 import { RECIPE_DISPLAY, FOOD_HUD_COLOR } from "../values/recipes";
 
@@ -132,10 +132,9 @@ export class HUDSystem extends InjectableSystem {
     const text = new Text({
       text: content,
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 24,
         fill: 0xffffff,
-        fontWeight: "bold",
       },
     });
     text.position.set(x, y);
@@ -312,10 +311,9 @@ export class HUDSystem extends InjectableSystem {
     const text = new Text({
       text: content,
       style: {
-        fontFamily: "Arial",
+        fontFamily: GAME_FONT_FAMILY,
         fontSize: 16,
         fill: 0xffffff,
-        fontWeight: "bold",
       },
     });
     text.position.set(x, y);
