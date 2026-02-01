@@ -87,6 +87,9 @@
 | **Vector（向量）**           | 不可變的 2D 座標值物件，用於位置和方向計算                                 |
 | **Event（事件）**            | 遊戲中發生的狀態變更通知，包含類型和可選資料                               |
 | **EventQueue（事件佇列）**   | 管理和調度遊戲事件的系統，統一處理延遲執行                                 |
+| **Audio System（音效系統）** | 管理背景音樂和音效播放的系統，透過事件觸發音效                             |
+| **Sound Effect（音效）**     | 短暫的音訊回饋，回應玩家操作或遊戲事件                                     |
+| **Background Music（背景音樂）** | 循環播放的遊戲音樂，營造遊戲氛圍                                       |
 
 ## 2.3 Core Systems
 
@@ -425,6 +428,8 @@
 | `PlayerDeath`        | `{}`                                    | 玩家生命值歸零               | Game Scene                                |
 | `FoodStored`         | `{ boothId: string, foodType: string }` | 食材進入攤位                 | Box System                                |
 | `FoodConsumed`       | `{ boothId: string, amount: number }`   | 攤位食材被消耗               | Box System                                |
+| `SoundEffectTriggered` | `{ soundId: string }`                 | 需要播放音效時               | Audio System                              |
+| `BackgroundMusicStart` | `{ musicId: string, loop: boolean }` | 場景初始化時                 | Audio System                              |
 
 **Integration with Systems**:
 
@@ -545,6 +550,82 @@
 - **Upgrade System**: 快吃升級提升蚵仔煎傷害（+10%）
 - **UI System**: 顯示擊殺總數和蚵仔煎可用狀態
 - **Game Over Screen**: 顯示最終擊殺統計
+
+### 2.3.9 Audio System
+
+**Purpose**: 透過音效和音樂強化遊戲沉浸感和玩家回饋
+
+**Constraints**:
+
+- 背景音樂：單一循環播放檔案（`src/assets/se/Leisure song.mp3`）
+- 音效播放：即時觸發，不阻塞遊戲進程
+- 音量控制：所有音效和音樂可全域靜音（初始版本無音量調整）
+- 檔案格式：MP3（瀏覽器相容性）
+- 背景音樂檔案大小：< 2 MB
+- 音效檔案大小：< 100 KB
+
+**Behaviors**:
+
+- **Play Background Music（播放背景音樂）**:
+  - 遊戲場景（Game Scene）進入時開始播放
+  - 循環播放（loop = true）
+  - 遊戲暫停時音樂繼續播放
+  - 遊戲結束時音樂繼續播放（不停止）
+
+- **Play Sound Effect（播放音效）**:
+  - 音效觸發時立即播放（非同步）
+  - 同一音效可重疊播放（不等待前一次播放完成）
+  - 音效播放失敗不影響遊戲進程
+
+- **Trigger Conditions（觸發條件）**:
+  - 按鈕點擊：播放 `src/assets/se/select03.mp3`
+  - 玩家發射子彈：播放 `src/assets/se/shoot5.mp3`
+  - 敵人被子彈擊中：播放 `src/assets/se/short_punch1.mp3`
+
+**Audio Trigger Decision Table**:
+
+| 事件                   | 音效檔案                          | 播放條件           | 重疊播放 |
+| ---------------------- | --------------------------------- | ------------------ | -------- |
+| 遊戲場景進入           | Leisure song.mp3                  | 場景初始化完成     | 否（單一 loop） |
+| 任何按鈕點擊           | select03.mp3                      | 按鈕 onClick 觸發  | 是       |
+| 玩家發射子彈（Space）  | shoot5.mp3                        | 子彈生成時         | 是       |
+| 合成觸發（1-5 按鍵）   | select03.mp3                      | 合成成功時         | 是       |
+| 敵人被子彈擊中         | short_punch1.mp3                  | 子彈碰撞敵人時     | 是       |
+| 升級選擇               | select03.mp3                      | 升級按鈕點擊時     | 是       |
+
+**Error Scenarios**:
+
+| 操作           | 當前狀態         | 結果                                 |
+| -------------- | ---------------- | ------------------------------------ |
+| 播放背景音樂   | 音檔載入失敗     | 記錄錯誤，遊戲繼續（無音樂）         |
+| 播放音效       | 音檔載入失敗     | 忽略錯誤，遊戲繼續（無音效）         |
+| 播放音效       | 瀏覽器限制自動播放 | 使用者互動後再次嘗試播放             |
+| 重複播放同音效 | 前一次未播放完   | 建立新音效實例同時播放（重疊）       |
+
+**Integration with Systems**:
+
+- **Game Scene**: 初始化時載入並播放背景音樂
+- **Input System**: 按鍵觸發時發佈音效事件（透過 EventQueue）
+- **Combat System**: 子彈發射和敵人受傷時發佈音效事件
+- **Synthesis System**: 合成成功時發佈音效事件
+- **Upgrade System**: 升級選擇時發佈音效事件
+- **EventQueue**: 新增音效事件類型（`SoundEffectTriggered`）
+
+**Event Types**:
+
+| 事件類型              | 資料結構                      | 發佈時機           | 訂閱系統      |
+| --------------------- | ----------------------------- | ------------------ | ------------- |
+| `SoundEffectTriggered` | `{ soundId: string }`         | 需要播放音效時     | Audio System  |
+| `BackgroundMusicStart` | `{ musicId: string, loop: boolean }` | 場景初始化時 | Audio System  |
+
+**音效檔案映射**:
+
+| 音效 ID       | 檔案路徑                          | 用途           |
+| ------------- | --------------------------------- | -------------- |
+| `bgm`         | `src/assets/se/Leisure song.mp3`  | 背景音樂       |
+| `button`      | `src/assets/se/select03.mp3`      | 按鈕點擊       |
+| `shoot`       | `src/assets/se/shoot5.mp3`        | 玩家射擊       |
+| `hit`         | `src/assets/se/short_punch1.mp3`  | 敵人受擊       |
 
 ## 2.4 Player Interactions
 
@@ -1314,9 +1395,8 @@ Application.stage
 4. 子彈飛行距離上限（穿透類子彈何時消失？）
 5. 夜市總匯閃電跳躍距離（多遠內的敵人可被連鎖？）
 6. 升級選項池大小（是否只有 3 種升級？）
-7. 音效和背景音樂規格
-8. 視覺風格（像素風、手繪風、3D 渲染？）
-9. 敵人生成間隔（同時生成還是逐個生成？）
-10. 合成失敗提示（食材不足時的 UI 反饋）
-11. Sprite Sheet 規格（每個精靈的尺寸和佈局）
-12. 粒子特效細節（爆炸、拾取、合成特效）
+7. 視覺風格（像素風、手繪風、3D 渲染？）
+8. 敵人生成間隔（同時生成還是逐個生成？）
+9. 合成失敗提示（食材不足時的 UI 反饋）
+10. Sprite Sheet 規格（每個精靈的尺寸和佈局）
+11. 粒子特效細節（爆炸、拾取、合成特效）
