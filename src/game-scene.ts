@@ -456,7 +456,8 @@ export class GameScene {
   }
 
   /**
-   * Update bottom HUD (recipes)
+   * Update bottom HUD (recipes and kill counter)
+   * SPEC § 2.3.8: UI 顯示擊殺總數和蚵仔煎可用狀態
    */
   private updateBottomHUD(
     hudSystem: HUDSystem,
@@ -466,6 +467,12 @@ export class GameScene {
     // Recipe availability display
     const recipes = this.getRecipeStatuses(boothSystem, killCounterSystem);
     hudSystem.updateRecipeAvailability(recipes);
+
+    // Kill counter display (SPEC § 2.3.8)
+    hudSystem.updateKillCount(
+      killCounterSystem.getKillCount(),
+      killCounterSystem.getConsumeThreshold(),
+    );
   }
 
   /**
