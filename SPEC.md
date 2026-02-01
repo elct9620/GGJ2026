@@ -66,30 +66,30 @@
 
 ## 2.2 Terminology
 
-| 術語                         | 定義                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| **Entity（實體）**           | 遊戲中所有物件的基礎類別，提供唯一 ID 和生命週期管理                       |
-| **Player（玩家）**           | 可操作的角色，能在遊戲畫面中自由移動                                       |
-| **Booth（攤位）**            | 用來儲存食材的固定區域，每種食材有專屬攤位                                 |
-| **Food（食材）**             | 合成技能的素材，擊敗敵人掉落，敵人也會奪取                                 |
-| **Ghost（餓鬼）**            | 小怪，基礎生命值 1 點，不掉落食材                                          |
-| **Elite（菁英）**            | 彩色餓鬼（紅/綠/藍），基礎生命值 2 點，100% 掉落對應食材                   |
-| **Red Ghost（紅惡鬼）**      | 菁英敵人，基礎生命值 2 點，100% 掉落豆腐                                   |
-| **Green Ghost（綠惡鬼）**    | 菁英敵人，基礎生命值 2 點，100% 掉落珍珠                                   |
-| **Blue Ghost（藍惡鬼）**     | 菁英敵人，基礎生命值 2 點，100% 掉落米血                                   |
-| **Boss（餓死鬼）**           | Boss 敵人，基礎生命值 10 點，每 5 回合出現，擊敗後提供特殊升級             |
-| **Wave（回合）**             | 每回合生成固定數量敵人，回合數越高敵人越多                                 |
-| **Bullet（子彈）**           | 玩家攻擊單位，包含普通子彈和特殊子彈                                       |
-| **Synthesis（合成）**        | 消耗食材產生特殊子彈效果                                                   |
-| **Upgrade（升級）**          | 回合間強化能力的永久效果                                                   |
-| **Box（寶箱）**              | 出現在攤位前方的防禦機制，用食材數量阻擋敵人，敵人碰撞時消耗食材並消除敵人 |
-| **Kill Counter（擊殺計數）** | 追踪玩家擊殺敵人數量的系統，用於遊戲統計和結算畫面                         |
-| **Vector（向量）**           | 不可變的 2D 座標值物件，用於位置和方向計算                                 |
-| **Event（事件）**            | 遊戲中發生的狀態變更通知，包含類型和可選資料                               |
-| **EventQueue（事件佇列）**   | 管理和調度遊戲事件的系統，統一處理延遲執行                                 |
-| **Audio System（音效系統）** | 管理背景音樂和音效播放的系統，透過事件觸發音效                             |
-| **Sound Effect（音效）**     | 短暫的音訊回饋，回應玩家操作或遊戲事件                                     |
-| **Background Music（背景音樂）** | 循環播放的遊戲音樂，營造遊戲氛圍                                       |
+| 術語                             | 定義                                                                       |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| **Entity（實體）**               | 遊戲中所有物件的基礎類別，提供唯一 ID 和生命週期管理                       |
+| **Player（玩家）**               | 可操作的角色，能在遊戲畫面中自由移動                                       |
+| **Booth（攤位）**                | 用來儲存食材的固定區域，每種食材有專屬攤位                                 |
+| **Food（食材）**                 | 合成技能的素材，擊敗敵人掉落，敵人也會奪取                                 |
+| **Ghost（餓鬼）**                | 小怪，基礎生命值 1 點，不掉落食材                                          |
+| **Elite（菁英）**                | 彩色餓鬼（紅/綠/藍），基礎生命值 2 點，100% 掉落對應食材                   |
+| **Red Ghost（紅惡鬼）**          | 菁英敵人，基礎生命值 2 點，100% 掉落豆腐                                   |
+| **Green Ghost（綠惡鬼）**        | 菁英敵人，基礎生命值 2 點，100% 掉落珍珠                                   |
+| **Blue Ghost（藍惡鬼）**         | 菁英敵人，基礎生命值 2 點，100% 掉落米血                                   |
+| **Boss（餓死鬼）**               | Boss 敵人，基礎生命值 10 點，每 5 回合出現，擊敗後提供特殊升級             |
+| **Wave（回合）**                 | 每回合生成固定數量敵人，回合數越高敵人越多                                 |
+| **Bullet（子彈）**               | 玩家攻擊單位，包含普通子彈和特殊子彈                                       |
+| **Synthesis（合成）**            | 消耗食材產生特殊子彈效果                                                   |
+| **Upgrade（升級）**              | 回合間強化能力的永久效果                                                   |
+| **Box（寶箱）**                  | 出現在攤位前方的防禦機制，用食材數量阻擋敵人，敵人碰撞時消耗食材並消除敵人 |
+| **Kill Counter（擊殺計數）**     | 追踪玩家擊殺敵人數量的系統，用於遊戲統計和結算畫面                         |
+| **Vector（向量）**               | 不可變的 2D 座標值物件，用於位置和方向計算                                 |
+| **Event（事件）**                | 遊戲中發生的狀態變更通知，包含類型和可選資料                               |
+| **EventQueue（事件佇列）**       | 管理和調度遊戲事件的系統，統一處理延遲執行                                 |
+| **Audio System（音效系統）**     | 管理背景音樂和音效播放的系統，透過事件觸發音效                             |
+| **Sound Effect（音效）**         | 短暫的音訊回饋，回應玩家操作或遊戲事件                                     |
+| **Background Music（背景音樂）** | 循環播放的遊戲音樂，營造遊戲氛圍                                           |
 
 ## 2.3 Core Systems
 
@@ -415,21 +415,21 @@
 
 遊戲中定義的事件類型：
 
-| 事件類型             | 資料結構                                | 發佈時機                     | 訂閱系統                                  |
-| -------------------- | --------------------------------------- | ---------------------------- | ----------------------------------------- |
-| `WaveComplete`       | `{ waveNumber: number }`                | 回合內所有敵人清除           | Wave System                               |
-| `WaveStart`          | `{ waveNumber: number }`                | 新回合開始                   | Wave System, UI                           |
-| `UpgradeSelected`    | `{ upgradeId: string }`                 | 玩家選擇升級                 | Upgrade System                            |
-| `ReloadComplete`     | `{}`                                    | 彈夾重裝完成（3 秒後）       | Combat System                             |
-| `SynthesisTriggered` | `{ recipeId: string }`                  | 按鍵 1-5 觸發特殊子彈        | Synthesis System                          |
-| `BuffExpired`        | `{ buffType: string }`                  | 特殊子彈 Buff 結束（2 秒後） | Combat System                             |
-| `EnemyDeath`         | `{ enemyId: string, position: Vector }` | 敵人生命值歸零               | Combat System, Booth System, Kill Counter |
-| `EnemyReachedEnd`    | `{ enemyId: string }`                   | 敵人到達底線                 | Wave System, Player                       |
-| `PlayerDeath`        | `{}`                                    | 玩家生命值歸零               | Game Scene                                |
-| `FoodStored`         | `{ boothId: string, foodType: string }` | 食材進入攤位                 | Box System                                |
-| `FoodConsumed`       | `{ boothId: string, amount: number }`   | 攤位食材被消耗               | Box System                                |
-| `SoundEffectTriggered` | `{ soundId: string }`                 | 需要播放音效時               | Audio System                              |
-| `BackgroundMusicStart` | `{ musicId: string, loop: boolean }` | 場景初始化時                 | Audio System                              |
+| 事件類型               | 資料結構                                | 發佈時機                     | 訂閱系統                                  |
+| ---------------------- | --------------------------------------- | ---------------------------- | ----------------------------------------- |
+| `WaveComplete`         | `{ waveNumber: number }`                | 回合內所有敵人清除           | Wave System                               |
+| `WaveStart`            | `{ waveNumber: number }`                | 新回合開始                   | Wave System, UI                           |
+| `UpgradeSelected`      | `{ upgradeId: string }`                 | 玩家選擇升級                 | Upgrade System                            |
+| `ReloadComplete`       | `{}`                                    | 彈夾重裝完成（3 秒後）       | Combat System                             |
+| `SynthesisTriggered`   | `{ recipeId: string }`                  | 按鍵 1-5 觸發特殊子彈        | Synthesis System                          |
+| `BuffExpired`          | `{ buffType: string }`                  | 特殊子彈 Buff 結束（2 秒後） | Combat System                             |
+| `EnemyDeath`           | `{ enemyId: string, position: Vector }` | 敵人生命值歸零               | Combat System, Booth System, Kill Counter |
+| `EnemyReachedEnd`      | `{ enemyId: string }`                   | 敵人到達底線                 | Wave System, Player                       |
+| `PlayerDeath`          | `{}`                                    | 玩家生命值歸零               | Game Scene                                |
+| `FoodStored`           | `{ boothId: string, foodType: string }` | 食材進入攤位                 | Box System                                |
+| `FoodConsumed`         | `{ boothId: string, amount: number }`   | 攤位食材被消耗               | Box System                                |
+| `SoundEffectTriggered` | `{ soundId: string }`                   | 需要播放音效時               | Audio System                              |
+| `BackgroundMusicStart` | `{ musicId: string, loop: boolean }`    | 場景初始化時                 | Audio System                              |
 
 **Integration with Systems**:
 
@@ -584,23 +584,23 @@
 
 **Audio Trigger Decision Table**:
 
-| 事件                   | 音效檔案                          | 播放條件           | 重疊播放 |
-| ---------------------- | --------------------------------- | ------------------ | -------- |
-| 遊戲場景進入           | Leisure song.mp3                  | 場景初始化完成     | 否（單一 loop） |
-| 任何按鈕點擊           | select03.mp3                      | 按鈕 onClick 觸發  | 是       |
-| 玩家發射子彈（Space）  | shoot5.mp3                        | 子彈生成時         | 是       |
-| 合成觸發（1-5 按鍵）   | select03.mp3                      | 合成成功時         | 是       |
-| 敵人被子彈擊中         | short_punch1.mp3                  | 子彈碰撞敵人時     | 是       |
-| 升級選擇               | select03.mp3                      | 升級按鈕點擊時     | 是       |
+| 事件                  | 音效檔案         | 播放條件          | 重疊播放        |
+| --------------------- | ---------------- | ----------------- | --------------- |
+| 遊戲場景進入          | Leisure song.mp3 | 場景初始化完成    | 否（單一 loop） |
+| 任何按鈕點擊          | select03.mp3     | 按鈕 onClick 觸發 | 是              |
+| 玩家發射子彈（Space） | shoot5.mp3       | 子彈生成時        | 是              |
+| 合成觸發（1-5 按鍵）  | select03.mp3     | 合成成功時        | 是              |
+| 敵人被子彈擊中        | short_punch1.mp3 | 子彈碰撞敵人時    | 是              |
+| 升級選擇              | select03.mp3     | 升級按鈕點擊時    | 是              |
 
 **Error Scenarios**:
 
-| 操作           | 當前狀態         | 結果                                 |
-| -------------- | ---------------- | ------------------------------------ |
-| 播放背景音樂   | 音檔載入失敗     | 記錄錯誤，遊戲繼續（無音樂）         |
-| 播放音效       | 音檔載入失敗     | 忽略錯誤，遊戲繼續（無音效）         |
-| 播放音效       | 瀏覽器限制自動播放 | 使用者互動後再次嘗試播放             |
-| 重複播放同音效 | 前一次未播放完   | 建立新音效實例同時播放（重疊）       |
+| 操作           | 當前狀態           | 結果                           |
+| -------------- | ------------------ | ------------------------------ |
+| 播放背景音樂   | 音檔載入失敗       | 記錄錯誤，遊戲繼續（無音樂）   |
+| 播放音效       | 音檔載入失敗       | 忽略錯誤，遊戲繼續（無音效）   |
+| 播放音效       | 瀏覽器限制自動播放 | 使用者互動後再次嘗試播放       |
+| 重複播放同音效 | 前一次未播放完     | 建立新音效實例同時播放（重疊） |
 
 **Integration with Systems**:
 
@@ -613,19 +613,19 @@
 
 **Event Types**:
 
-| 事件類型              | 資料結構                      | 發佈時機           | 訂閱系統      |
-| --------------------- | ----------------------------- | ------------------ | ------------- |
-| `SoundEffectTriggered` | `{ soundId: string }`         | 需要播放音效時     | Audio System  |
-| `BackgroundMusicStart` | `{ musicId: string, loop: boolean }` | 場景初始化時 | Audio System  |
+| 事件類型               | 資料結構                             | 發佈時機       | 訂閱系統     |
+| ---------------------- | ------------------------------------ | -------------- | ------------ |
+| `SoundEffectTriggered` | `{ soundId: string }`                | 需要播放音效時 | Audio System |
+| `BackgroundMusicStart` | `{ musicId: string, loop: boolean }` | 場景初始化時   | Audio System |
 
 **音效檔案映射**:
 
-| 音效 ID       | 檔案路徑                          | 用途           |
-| ------------- | --------------------------------- | -------------- |
-| `bgm`         | `src/assets/se/Leisure song.mp3`  | 背景音樂       |
-| `button`      | `src/assets/se/select03.mp3`      | 按鈕點擊       |
-| `shoot`       | `src/assets/se/shoot5.mp3`        | 玩家射擊       |
-| `hit`         | `src/assets/se/short_punch1.mp3`  | 敵人受擊       |
+| 音效 ID  | 檔案路徑                         | 用途     |
+| -------- | -------------------------------- | -------- |
+| `bgm`    | `src/assets/se/Leisure song.mp3` | 背景音樂 |
+| `button` | `src/assets/se/select03.mp3`     | 按鈕點擊 |
+| `shoot`  | `src/assets/se/shoot5.mp3`       | 玩家射擊 |
+| `hit`    | `src/assets/se/short_punch1.mp3` | 敵人受擊 |
 
 ## 2.4 Player Interactions
 

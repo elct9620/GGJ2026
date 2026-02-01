@@ -158,7 +158,10 @@ export class AudioSystem implements ISystem {
       });
     } catch (error) {
       // SPEC § 2.3.9: Error Scenarios - 音效播放失敗不影響遊戲進程
-      console.error(`AudioSystem: Failed to load sound effect '${soundId}'`, error);
+      console.error(
+        `AudioSystem: Failed to load sound effect '${soundId}'`,
+        error,
+      );
     }
   }
 }
