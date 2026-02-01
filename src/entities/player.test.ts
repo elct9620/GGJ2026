@@ -164,7 +164,8 @@ describe("Player", () => {
     });
 
     it("PL-14: 生命 1 + 敵人到達底線 → 生命 0，遊戲結束", () => {
-      player.health = 1;
+      // Take 4 damage to reduce health from 5 to 1
+      player.takeDamage(4);
       expect(player.health).toBe(1);
 
       player.takeDamage(1);

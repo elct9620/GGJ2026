@@ -360,7 +360,7 @@ describe("CombatSystem", () => {
 
       // Wave 5 Boss has 10 HP, damage it to 6 HP first
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
-      boss.health = 6; // Injured boss
+      boss.takeDamage(4); // 10 - 4 = 6 HP (injured boss)
       enemies.push(boss);
 
       const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
@@ -378,7 +378,7 @@ describe("CombatSystem", () => {
 
       // Elite with 4 HP (Wave 5), damage it to 3 HP first
       const elite = new Enemy(EnemyType.RedGhost, new Vector(500, 540), 5);
-      elite.health = 3; // Injured elite
+      elite.takeDamage(1); // 4 - 1 = 3 HP (injured elite)
       enemies.push(elite);
 
       const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));

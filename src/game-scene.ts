@@ -435,7 +435,7 @@ export class GameScene {
    * Check game over condition (Spec: § 2.8.2)
    */
   private checkGameOver(): void {
-    if (this.player.health <= 0 && this.onGameOver) {
+    if (this.player.healthVO.isDead() && this.onGameOver) {
       this.onGameOver(this.gameState.stats);
     }
   }

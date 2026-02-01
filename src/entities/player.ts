@@ -25,13 +25,9 @@ export class Player extends SpriteEntity {
   private baseReloadTime: number = PLAYER_CONFIG.reloadTime;
   private reloadTimeReduction: number = 0;
 
-  // Backward compatible getters/setters
+  // Read-only health accessor (use takeDamage/heal for modifications)
   public get health(): number {
     return this._health.current;
-  }
-
-  public set health(value: number) {
-    this._health = new Health(value, this._health.max);
   }
 
   public get ammo(): number {

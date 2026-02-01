@@ -49,13 +49,9 @@ export class Enemy extends SpriteEntity {
   private slowDuration: number = 0;
   private readonly slowEffectDuration: number = 3; // seconds
 
-  // Backward compatible getters
+  // Read-only health accessor (use takeDamage for modifications)
   public get health(): number {
     return this._health.current;
-  }
-
-  public set health(value: number) {
-    this._health = new Health(value, this._health.max);
   }
 
   public get maxHealth(): number {
