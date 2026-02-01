@@ -17,6 +17,7 @@ import { Damage } from "../values/damage";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
+import type { GameStateManager } from "../core/game-state";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
@@ -43,6 +44,10 @@ type PierceHitResult = { consumed: boolean };
  * - 特殊子彈 Buff 管理（2 秒）
  * - 子彈 vs 敵人碰撞檢測
  * - 發佈事件: ReloadComplete, BuffExpired, EnemyDeath
+ *
+ * State Management:
+ * - Buff state (currentBuff, buffTimeRemaining) is stored in GameStateManager
+ * - Internal details (shootCooldown) remain in this system
  */
 export class CombatSystem extends InjectableSystem {
   public readonly name = "CombatSystem";
@@ -53,19 +58,18 @@ export class CombatSystem extends InjectableSystem {
   private bullets: Bullet[] = [];
   private enemies: Enemy[] = [];
 
-  // Shooting cooldown (SPEC § 2.3.2)
+  // Shooting cooldown (SPEC § 2.3.2) - internal implementation detail
   private shootCooldown = 0;
   private readonly shootCooldownTime = COMBAT_CONFIG.shootCooldown;
 
-  // Special bullet buff state (SPEC § 2.3.2)
-  private currentBuff: SpecialBulletType = SpecialBulletType.None;
-  private buffTimer = 0;
+  // Buff duration config
   private readonly buffDuration = COMBAT_CONFIG.buffDuration;
 
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue, false); // Optional for testing
     this.declareDependency(DependencyKeys.UpgradeSystem, false); // Optional for testing
+    this.declareDependency(DependencyKeys.GameState); // Required
   }
 
   /**
@@ -89,12 +93,18 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
+   * Get GameStateManager dependency
+   */
+  private get gameState(): GameStateManager {
+    return this.getDependency<GameStateManager>(DependencyKeys.GameState);
+  }
+
+  /**
    * Initialize combat system
    */
   public initialize(): void {
     this.shootCooldown = 0;
-    this.currentBuff = SpecialBulletType.None;
-    this.buffTimer = 0;
+    // Combat state is initialized by GameStateManager
   }
 
   /**
@@ -181,21 +191,25 @@ export class CombatSystem extends InjectableSystem {
    * Get current special bullet buff type
    */
   public getCurrentBuff(): SpecialBulletType {
-    return this.currentBuff;
+    return this.gameState.combat.currentBuff;
   }
 
   /**
    * Get remaining buff time
    */
   public getBuffTimer(): number {
-    return this.buffTimer;
+    return this.gameState.combat.buffTimeRemaining;
   }
 
   /**
    * Check if buff is active
    */
   public isBuffActive(): boolean {
-    return this.currentBuff !== SpecialBulletType.None && this.buffTimer > 0;
+    const combat = this.gameState.combat;
+    return (
+      combat.currentBuff !== SpecialBulletType.None &&
+      combat.buffTimeRemaining > 0
+    );
   }
 
   /**
@@ -209,22 +223,13 @@ export class CombatSystem extends InjectableSystem {
    * Update buff timer (SPEC § 2.3.2)
    */
   private updateBuff(deltaTime: number): void {
-    if (this.buffTimer > 0) {
-      this.buffTimer -= deltaTime;
+    const expired = this.gameState.updateBuffTimer(deltaTime);
 
-      if (this.buffTimer <= 0) {
-        // Buff expired
-        const expiredBuff = this.currentBuff;
-        this.currentBuff = SpecialBulletType.None;
-        this.buffTimer = 0;
-
-        // Publish BuffExpired event (SPEC § 2.3.6)
-        if (this.eventQueue) {
-          this.eventQueue.publish(EventType.BuffExpired, {
-            buffType: expiredBuff,
-          });
-        }
-      }
+    if (expired && this.eventQueue) {
+      // GameStateManager already cleared the buff, just publish the event
+      this.eventQueue.publish(EventType.BuffExpired, {
+        buffType: SpecialBulletType.None, // Already cleared
+      });
     }
   }
 
@@ -233,7 +238,9 @@ export class CombatSystem extends InjectableSystem {
    * 使用 AABB 碰撞檢測，根據當前 Buff 分派至對應處理器
    */
   private checkCollisions(): void {
-    switch (this.currentBuff) {
+    const currentBuff = this.gameState.combat.currentBuff;
+
+    switch (currentBuff) {
       case SpecialBulletType.NightMarket:
         this.handleNightMarketCollision();
         break;
@@ -519,9 +526,8 @@ export class CombatSystem extends InjectableSystem {
       this.upgradeSystem?.getState().buffDurationMultiplier ?? 1;
     const effectiveDuration = this.buffDuration + (durationBonus - 1);
 
-    // Activate buff
-    this.currentBuff = buffType;
-    this.buffTimer = effectiveDuration;
+    // Activate buff via GameStateManager
+    this.gameState.activateBuff(buffType, effectiveDuration);
 
     // Publish BuffExpired event with delay (SPEC § 2.3.6)
     if (this.eventQueue) {

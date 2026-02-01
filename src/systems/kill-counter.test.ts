@@ -6,17 +6,21 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { KillCounterSystem } from "./kill-counter";
 import { EventQueue, EventType } from "./event-queue";
+import { GameStateManager } from "../core/game-state";
 
 describe("KillCounterSystem", () => {
   let killCounterSystem: KillCounterSystem;
   let eventQueue: EventQueue;
+  let gameState: GameStateManager;
 
   beforeEach(() => {
     killCounterSystem = new KillCounterSystem();
     eventQueue = new EventQueue();
+    gameState = new GameStateManager();
 
     // Inject dependencies using new API
     killCounterSystem.inject("EventQueue", eventQueue);
+    killCounterSystem.inject("GameState", gameState);
     killCounterSystem.validateDependencies();
     killCounterSystem.initialize();
     eventQueue.initialize();
@@ -256,7 +260,7 @@ describe("KillCounterSystem", () => {
 
       expect(killCounterSystem.getKillCount()).toBe(15);
 
-      killCounterSystem.reset();
+      gameState.reset();
 
       expect(killCounterSystem.getKillCount()).toBe(0);
       expect(killCounterSystem.canConsume()).toBe(false);

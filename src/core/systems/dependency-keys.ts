@@ -8,6 +8,7 @@ export const DependencyKeys = {
   BoothSystem: "BoothSystem",
   KillCounterSystem: "KillCounterSystem",
   UpgradeSystem: "UpgradeSystem",
+  GameState: "GameState",
 } as const;
 
 export type DependencyKey =

@@ -17,7 +17,7 @@ import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import { RECIPES } from "./values/recipes";
 import { RECIPE_CONFIG, PLAYER_CONFIG } from "./config";
-import type { GameStats } from "./core/game-state";
+import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
 
 /**
@@ -34,6 +34,9 @@ export class GameScene {
   // Systems
   private systemManager: SystemManager;
 
+  // Centralized Game State Manager
+  private gameState: GameStateManager;
+
   // Containers for rendering
   private playerContainer: Container;
   private enemiesContainer: Container;
@@ -41,15 +44,6 @@ export class GameScene {
   private foodsContainer: Container;
   private boothContainer: Container;
   private uiLayer: Container;
-
-  // Game state (now managed by Wave System)
-
-  // Game statistics (Spec: § 2.8.2)
-  private stats: GameStats = {
-    wavesSurvived: 0,
-    enemiesDefeated: 0,
-    specialBulletsUsed: 0,
-  };
 
   // Game over callback
   private onGameOver: ((stats: GameStats) => void) | null = null;
@@ -75,6 +69,9 @@ export class GameScene {
     this.boothContainer = boothContainer;
     this.uiLayer = uiLayer;
     this.onGameOver = onGameOver || null;
+
+    // Initialize centralized game state
+    this.gameState = new GameStateManager();
 
     // Initialize SystemManager and register all systems
     this.systemManager = new SystemManager();
@@ -108,6 +105,7 @@ export class GameScene {
       killCounterSystem,
     );
     this.systemManager.provideDependency("UpgradeSystem", upgradeSystem);
+    this.systemManager.provideDependency("GameState", this.gameState);
 
     this.systemManager.initialize();
 
@@ -430,7 +428,7 @@ export class GameScene {
     }
 
     // Track statistics (Spec: § 2.8.2)
-    this.stats.enemiesDefeated++;
+    this.gameState.incrementEnemiesDefeated();
   }
 
   private spawnFood(type: FoodType, position: Vector): void {
@@ -454,7 +452,7 @@ export class GameScene {
    */
   private updateTopHUD(hudSystem: HUDSystem): void {
     hudSystem.updateEnemyCount(this.enemies.length);
-    hudSystem.updateScore(this.stats.enemiesDefeated * 10);
+    hudSystem.updateScore(this.gameState.stats.enemiesDefeated * 10);
   }
 
   /**
@@ -524,7 +522,7 @@ export class GameScene {
    */
   private checkGameOver(): void {
     if (this.player.health <= 0 && this.onGameOver) {
-      this.onGameOver(this.stats);
+      this.onGameOver(this.gameState.stats);
     }
   }
 
@@ -534,7 +532,7 @@ export class GameScene {
    */
   private onWaveComplete(data: { waveNumber: number }): void {
     // Update statistics - track waves survived (Spec: § 2.8.2)
-    this.stats.wavesSurvived = data.waveNumber;
+    this.gameState.setWavesSurvived(data.waveNumber);
 
     // Store pending wave for after upgrade selection
     this.pendingWaveNumber = data.waveNumber + 1;
@@ -642,12 +640,8 @@ export class GameScene {
     this.isPaused = false;
     this.pendingWaveNumber = 0;
 
-    // Reset statistics
-    this.stats = {
-      wavesSurvived: 0,
-      enemiesDefeated: 0,
-      specialBulletsUsed: 0,
-    };
+    // Reset game state (includes statistics, kills, wave, combat)
+    this.gameState.reset();
 
     // Start wave 1
     waveSystem.startWave(1);

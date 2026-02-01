@@ -8,6 +8,7 @@ import { WaveSystem } from "./wave";
 import { EventQueue, EventType } from "./event-queue";
 import { WAVE_CONFIG } from "../config";
 import { LAYOUT } from "../utils/constants";
+import { GameStateManager } from "../core/game-state";
 
 /**
  * Helper function to simulate time passing and spawn all enemies
@@ -35,15 +36,18 @@ function simulateFullWaveSpawn(
 describe("WaveSystem", () => {
   let waveSystem: WaveSystem;
   let eventQueue: EventQueue;
+  let gameState: GameStateManager;
   let spawnedEnemies: Array<{ type: string; x: number; y: number }>;
 
   beforeEach(() => {
     waveSystem = new WaveSystem();
     eventQueue = new EventQueue();
+    gameState = new GameStateManager();
     spawnedEnemies = [];
 
     // Inject dependencies using new API
     waveSystem.inject("EventQueue", eventQueue);
+    waveSystem.inject("GameState", gameState);
     waveSystem.validateDependencies();
     waveSystem.setSpawnCallback((type, x, y) => {
       spawnedEnemies.push({ type, x, y });
@@ -323,6 +327,7 @@ describe("WaveSystem", () => {
       waveSystem.startWave(5);
 
       waveSystem.reset();
+      gameState.reset(); // GameState also needs reset
 
       expect(waveSystem.getCurrentWave()).toBe(0);
       expect(waveSystem.isActive()).toBe(false);

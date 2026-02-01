@@ -10,6 +10,7 @@ import { BoothSystem } from "./booth";
 import { KillCounterSystem } from "./kill-counter";
 import { EventQueue, EventType } from "./event-queue";
 import type { FoodType } from "../entities/booth";
+import { GameStateManager } from "../core/game-state";
 
 describe("SynthesisSystem", () => {
   let synthesisSystem: SynthesisSystem;
@@ -17,6 +18,7 @@ describe("SynthesisSystem", () => {
   let boothSystem: BoothSystem;
   let killCounterSystem: KillCounterSystem;
   let eventQueue: EventQueue;
+  let gameState: GameStateManager;
 
   beforeEach(() => {
     synthesisSystem = new SynthesisSystem();
@@ -24,6 +26,7 @@ describe("SynthesisSystem", () => {
     boothSystem = new BoothSystem();
     killCounterSystem = new KillCounterSystem();
     eventQueue = new EventQueue();
+    gameState = new GameStateManager();
 
     // Inject dependencies using new API
     synthesisSystem.inject("InputSystem", inputSystem);
@@ -33,6 +36,7 @@ describe("SynthesisSystem", () => {
     synthesisSystem.validateDependencies();
 
     killCounterSystem.inject("EventQueue", eventQueue);
+    killCounterSystem.inject("GameState", gameState);
     killCounterSystem.validateDependencies();
 
     synthesisSystem.initialize();

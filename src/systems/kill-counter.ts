@@ -9,28 +9,33 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { KILL_COUNTER_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
+import type { GameStateManager } from "../core/game-state";
 
 /**
  * Kill Counter System
- * SPEC § 2.3.8: 追踪玩家擊殺敵人數量
+ * SPEC § 2.3.8: 追踪玩家擊殺敵人數量，蚵仔煎消耗擊殺數
  *
  * Responsibilities:
  * - 訂閱 EnemyDeath 事件（僅限子彈擊殺）
  * - 累積擊殺計數（全局，不重置）
  * - 提供蚵仔煎消耗機制（消耗 20 擊殺數）
  * - 提供 UI 顯示用的進度資訊
+ *
+ * State Management:
+ * - Kill count is stored in GameStateManager
+ * - This system handles event subscription and provides convenience methods
  */
 export class KillCounterSystem extends InjectableSystem {
   public readonly name = "KillCounterSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Kill counter state (SPEC § 2.3.8)
-  private killCount = 0;
+  // Configuration
   private readonly consumeThreshold = KILL_COUNTER_CONFIG.oysterOmeletThreshold;
 
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue);
+    this.declareDependency(DependencyKeys.GameState);
   }
 
   /**
@@ -41,10 +46,17 @@ export class KillCounterSystem extends InjectableSystem {
   }
 
   /**
+   * Get GameStateManager dependency
+   */
+  private get gameState(): GameStateManager {
+    return this.getDependency<GameStateManager>(DependencyKeys.GameState);
+  }
+
+  /**
    * Initialize kill counter system
    */
   public initialize(): void {
-    this.killCount = 0;
+    // Kill count is initialized by GameStateManager
 
     // Subscribe to EnemyDeath event (SPEC § 2.3.8)
     this.eventQueue.subscribe(
@@ -72,7 +84,7 @@ export class KillCounterSystem extends InjectableSystem {
    * Get current kill count
    */
   public getKillCount(): number {
-    return this.killCount;
+    return this.gameState.kills;
   }
 
   /**
@@ -87,7 +99,7 @@ export class KillCounterSystem extends InjectableSystem {
    * SPEC § 2.3.8: 需要 20 擊殺數才能使用蚵仔煎
    */
   public canConsume(): boolean {
-    return this.killCount >= this.consumeThreshold;
+    return this.gameState.kills >= this.consumeThreshold;
   }
 
   /**
@@ -100,12 +112,15 @@ export class KillCounterSystem extends InjectableSystem {
       return false;
     }
 
-    this.killCount -= this.consumeThreshold;
+    const consumed = this.gameState.consumeKills(this.consumeThreshold);
+    if (!consumed) {
+      return false;
+    }
 
     // Publish consumption event
     this.eventQueue.publish(EventType.KillCounterConsumed, {
       consumed: this.consumeThreshold,
-      remaining: this.killCount,
+      remaining: this.gameState.kills,
     });
 
     return true;
@@ -115,7 +130,7 @@ export class KillCounterSystem extends InjectableSystem {
    * Get progress string for UI (e.g., "7/20")
    */
   public getProgressString(): string {
-    return `${this.killCount}/${this.consumeThreshold}`;
+    return `${this.gameState.kills}/${this.consumeThreshold}`;
   }
 
   /**
@@ -123,13 +138,6 @@ export class KillCounterSystem extends InjectableSystem {
    * Only count kills from bullet hits, not from box blocking
    */
   private onEnemyDeath(): void {
-    this.killCount++;
-  }
-
-  /**
-   * Reset kill counter (for new game)
-   */
-  public reset(): void {
-    this.killCount = 0;
+    this.gameState.incrementKills();
   }
 }

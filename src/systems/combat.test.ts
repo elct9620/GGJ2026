@@ -10,6 +10,7 @@ import { Enemy, EnemyType } from "../entities/enemy";
 import { Bullet } from "../entities/bullet";
 import { EventQueue, EventType } from "./event-queue";
 import { Vector } from "../values/vector";
+import { GameStateManager } from "../core/game-state";
 
 describe("CombatSystem", () => {
   let combatSystem: CombatSystem;
@@ -17,6 +18,7 @@ describe("CombatSystem", () => {
   let bullets: Bullet[];
   let enemies: Enemy[];
   let eventQueue: EventQueue;
+  let gameState: GameStateManager;
 
   beforeEach(() => {
     combatSystem = new CombatSystem();
@@ -24,9 +26,11 @@ describe("CombatSystem", () => {
     bullets = [];
     enemies = [];
     eventQueue = new EventQueue();
+    gameState = new GameStateManager();
 
     // Inject dependencies using new API
     combatSystem.inject("EventQueue", eventQueue);
+    combatSystem.inject("GameState", gameState);
     combatSystem.initialize();
     combatSystem.setPlayer(player);
     combatSystem.setBullets(bullets);
