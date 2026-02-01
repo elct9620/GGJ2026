@@ -44,6 +44,13 @@ export const LAYOUT = {
   BOOTH_GAP: 23, // Vertical gap between booths, also horizontal gap from baseline
   BOOTH_TOP_MARGIN: 23, // Distance from game area top to first booth
 
+  // Top HUD layout (from ui_rough_pixelSpec.png)
+  TOP_HUD: {
+    FONT_SIZE_LARGE: 50, // 剩餘敵人、分數
+    FONT_SIZE_SMALL: 33, // 餓鬼人潮
+    WAVE_AREA_HEIGHT: 56, // 餓鬼人潮區域高度 (512×56px)
+  },
+
   // Bottom HUD layout (from ui_rough_pixelSpec.png)
   UPGRADE_SECTION: {
     LEFT_MARGIN: 40,

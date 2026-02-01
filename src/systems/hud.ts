@@ -55,29 +55,46 @@ export class HUDSystem extends InjectableSystem {
 
     // Top HUD text elements (SPEC § 2.7.3: 86px height)
     // Based on ui_rough_pixelSpec.png layout:
-    // - Center-top: "剩餘敵人:20" 50px font
-    // - Center-bottom: "餓鬼人潮:1/3" 33px font (512×56px area)
-    // - Right: "分數:9999" 50px font
+    // Row 1: 剩餘敵人 (center) + 分數 (right) - container height = 86px (full HUD height)
+    // Row 2: 餓鬼人潮 (center) - container height = 56px, placed below row 1
+    // Container defines the vertical centering range, not a clipping boundary
 
-    // Center-top: "剩餘敵人:20" - 50px font
+    // Row 1: container height = 86px (full HUD), text vertically centered
+    const row1CenterY = LAYOUT.TOP_HUD_HEIGHT / 2; // 43
+
+    // Row 2: container height = 56px, starts after row 1
+    const row2CenterY =
+      LAYOUT.TOP_HUD_HEIGHT + LAYOUT.TOP_HUD.WAVE_AREA_HEIGHT / 2; // 86 + 28 = 114
+
+    // Row 1: "剩餘敵人:20" - 50px font, vertically centered in 50px container
     this.enemyCountText = this.createText(
       "剩餘敵人: 0",
-      CANVAS_WIDTH / 2 - 100,
-      10,
-      50,
+      CANVAS_WIDTH / 2,
+      row1CenterY,
+      LAYOUT.TOP_HUD.FONT_SIZE_LARGE,
     );
+    this.enemyCountText.anchor.set(0.5, 0.5);
+    this.topHUD.addChild(this.enemyCountText);
 
-    // Center-bottom: "餓鬼人潮:1/3" (512×56px area) - 33px font
+    // Row 1: "分數:9999" - 50px font, right-aligned, same level as 剩餘敵人
+    this.scoreText = this.createText(
+      "分數: 0",
+      CANVAS_WIDTH - 20,
+      row1CenterY,
+      LAYOUT.TOP_HUD.FONT_SIZE_LARGE,
+    );
+    this.scoreText.anchor.set(1, 0.5);
+    this.topHUD.addChild(this.scoreText);
+
+    // Row 2: "餓鬼人潮:1/3" - 33px font, vertically centered in 56px container
     this.waveText = this.createText(
       "餓鬼人潮: 1/1",
-      CANVAS_WIDTH / 2 - 80,
-      50,
-      33,
+      CANVAS_WIDTH / 2,
+      row2CenterY,
+      LAYOUT.TOP_HUD.FONT_SIZE_SMALL,
     );
-
-    // Right: "分數:9999" - 50px font (right-aligned to prevent overflow)
-    this.scoreText = this.createText("分數: 0", CANVAS_WIDTH - 20, 10, 50);
-    this.scoreText.anchor.set(1, 0); // Right-align
+    this.waveText.anchor.set(0.5, 0.5);
+    this.topHUD.addChild(this.waveText);
 
     // Create bottom UI base sprites
     this.upgradeBaseSprite = this.createUpgradeBaseSprite();
@@ -157,10 +174,7 @@ export class HUDSystem extends InjectableSystem {
   }
 
   private setupHUD(): void {
-    // Top HUD
-    this.topHUD.addChild(this.enemyCountText);
-    this.topHUD.addChild(this.waveText);
-    this.topHUD.addChild(this.scoreText);
+    // Top HUD texts are added in constructor
 
     // Bottom HUD base sprites
     this.bottomHUD.addChild(this.upgradeBaseSprite);
