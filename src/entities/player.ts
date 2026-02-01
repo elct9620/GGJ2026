@@ -1,4 +1,4 @@
-import { Entity } from "./entity";
+import { SpriteEntity } from "./entity";
 import { Vector } from "../values/vector";
 import { Health } from "../values/health";
 import { Ammo } from "../values/ammo";
@@ -12,7 +12,7 @@ import { PLAYER_CONFIG } from "../config";
  * Player entity with keyboard controls and shooting capability
  * Spec: § 2.6.1 Player
  */
-export class Player extends Entity {
+export class Player extends SpriteEntity {
   public position: Vector;
   public readonly speed: number = PLAYER_CONFIG.speed;
 
@@ -200,13 +200,6 @@ export class Player extends Entity {
     if (this._health.isDead()) {
       this.active = false;
     }
-  }
-
-  /**
-   * Update sprite position to match entity position
-   */
-  private updateSpritePosition(): void {
-    this.sprite.position.set(this.position.x, this.position.y);
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Entity } from "./entity";
+import { SpriteEntity } from "./entity";
 import { Vector } from "../values/vector";
 import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
@@ -12,7 +12,7 @@ import { SpecialBulletType } from "../values/special-bullet";
  * Bullet entity fired by player
  * Spec: § 2.6.3 Bullets
  */
-export class Bullet extends Entity {
+export class Bullet extends SpriteEntity {
   public position: Vector;
   public velocity: Vector;
   public readonly speed: number = BULLET_CONFIG.speed;
@@ -145,13 +145,6 @@ export class Bullet extends Entity {
    */
   public isOffScreen(): boolean {
     return this.position.x > 1920 || this.position.x < LAYOUT.BASELINE_X;
-  }
-
-  /**
-   * Update sprite position to match entity position
-   */
-  private updateSpritePosition(): void {
-    this.sprite.position.set(this.position.x, this.position.y);
   }
 
   /**

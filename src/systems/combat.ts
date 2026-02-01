@@ -333,22 +333,7 @@ export class CombatSystem extends InjectableSystem {
    */
   private findNearestEnemyToPlayer(): Enemy | null {
     if (!this.player) return null;
-
-    let nearest: Enemy | null = null;
-    let minDistance = Infinity;
-
-    for (const enemy of this.enemies) {
-      if (!enemy.active) continue;
-
-      const distance = enemy.position.distance(this.player.position);
-
-      if (distance < minDistance) {
-        nearest = enemy;
-        minDistance = distance;
-      }
-    }
-
-    return nearest;
+    return this.findClosestEnemy(this.player.position);
   }
 
   /**
@@ -591,21 +576,25 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Find closest active enemy to a position
-   * @param position Reference position
-   * @param excludeIds Set of enemy IDs to exclude
+   * @param position Reference position (Vector or object with x, y)
+   * @param excludeIds Set of enemy IDs to exclude (optional)
    * @param maxRange Maximum distance (optional)
    */
   private findClosestEnemy(
-    position: { x: number; y: number },
-    excludeIds: Set<string>,
+    position: Vector | { x: number; y: number },
+    excludeIds?: Set<string>,
     maxRange?: number,
   ): Enemy | null {
     let closest: Enemy | null = null;
     let closestDistance = maxRange ?? Infinity;
-    const positionVector = new Vector(position.x, position.y);
+    const positionVector =
+      position instanceof Vector
+        ? position
+        : new Vector(position.x, position.y);
 
     for (const enemy of this.enemies) {
-      if (!enemy.active || excludeIds.has(enemy.id)) continue;
+      if (!enemy.active) continue;
+      if (excludeIds && excludeIds.has(enemy.id)) continue;
 
       const distance = enemy.position.distance(positionVector);
 

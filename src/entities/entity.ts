@@ -1,4 +1,6 @@
+import type { Container, Graphics, Sprite } from "pixi.js";
 import type { CollisionBox } from "../values/collision";
+import type { Vector } from "../values/vector";
 
 /**
  * Entity - 遊戲物件基礎類別
@@ -47,4 +49,24 @@ export abstract class Entity {
  */
 export function resetEntityIdCounter(): void {
   nextEntityId = 1;
+}
+
+/**
+ * SpriteEntity - 具有視覺表示的遊戲物件基礎類別
+ *
+ * 繼承 Entity，新增：
+ * - position: 物件位置（Vector）
+ * - sprite: 視覺表示（Pixi.js Container/Graphics/Sprite）
+ * - updateSpritePosition(): 同步 sprite 位置
+ */
+export abstract class SpriteEntity extends Entity {
+  public abstract position: Vector;
+  public abstract sprite: Container | Graphics | Sprite;
+
+  /**
+   * 同步 sprite 位置與 entity 位置
+   */
+  protected updateSpritePosition(): void {
+    this.sprite.position.set(this.position.x, this.position.y);
+  }
 }

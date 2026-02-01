@@ -155,6 +155,31 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
+   * Consume multiple food items from a booth
+   * Returns true if all food was consumed, false if insufficient
+   * SPEC § 2.3.3: 合成時消耗食材
+   */
+  public consumeFood(boothId: BoothId, amount: number): boolean {
+    const booth = this.booths.get(boothId);
+    if (!booth || booth.count < amount) {
+      return false;
+    }
+
+    for (let i = 0; i < amount; i++) {
+      booth.removeFood();
+    }
+
+    if (this.eventQueue) {
+      this.eventQueue.publish(EventType.FoodConsumed, {
+        boothId: String(boothId),
+        amount,
+      });
+    }
+
+    return true;
+  }
+
+  /**
    * Enemy steals food from booth
    */
   public stealFood(boothId: BoothId): boolean {

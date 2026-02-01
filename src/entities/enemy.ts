@@ -1,4 +1,4 @@
-import { Entity } from "./entity";
+import { SpriteEntity } from "./entity";
 import { Vector } from "../values/vector";
 import { Health } from "../values/health";
 import { Damage } from "../values/damage";
@@ -35,7 +35,7 @@ export function isEliteType(type: EnemyType): boolean {
  * Enemy entity (Ghost or Boss)
  * Spec: § 2.6.2 Enemies
  */
-export class Enemy extends Entity {
+export class Enemy extends SpriteEntity {
   public position: Vector;
   public readonly type: EnemyType;
   public readonly baseSpeed!: number; // px/s (original speed, assigned in constructor)
@@ -269,13 +269,6 @@ export class Enemy extends Entity {
       this.healthBarContainer.rect(x, startY, barWidth, barHeight);
       this.healthBarContainer.fill(i < this.health ? 0x2ecc71 : 0x7f8c8d);
     }
-  }
-
-  /**
-   * Update sprite position to match entity position
-   */
-  private updateSpritePosition(): void {
-    this.sprite.position.set(this.position.x, this.position.y);
   }
 
   /**

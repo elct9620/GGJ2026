@@ -280,15 +280,9 @@ export class UpgradeSystem extends InjectableSystem {
     // Check and consume food for normal upgrades
     if (option.cost) {
       const boothId = getBoothIdForFood(option.cost.foodType);
-      const availableFood = this.boothSystem.getFoodCount(boothId);
-
-      if (availableFood < option.cost.amount) {
+      const success = this.boothSystem.consumeFood(boothId, option.cost.amount);
+      if (!success) {
         return false; // Insufficient food
-      }
-
-      // Consume food
-      for (let i = 0; i < option.cost.amount; i++) {
-        this.boothSystem.retrieveFood(boothId);
       }
     }
 

@@ -179,10 +179,7 @@ export class SynthesisSystem extends InjectableSystem {
     for (const [foodType, amount] of Object.entries(recipe.foodRequirements)) {
       const boothId = getBoothIdForFood(foodType as FoodType);
       const adjustedCost = this.getAdjustedCost(amount);
-
-      for (let i = 0; i < adjustedCost; i++) {
-        this.boothSystem.retrieveFood(boothId);
-      }
+      this.boothSystem.consumeFood(boothId, adjustedCost);
     }
   }
 

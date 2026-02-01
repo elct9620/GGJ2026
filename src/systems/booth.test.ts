@@ -116,6 +116,42 @@ describe("BoothSystem", () => {
     });
   });
 
+  describe("Consume Food", () => {
+    it("應成功消耗指定數量的食材", () => {
+      // 儲存 4 個珍珠
+      for (let i = 0; i < 4; i++) {
+        boothSystem.storeFood(FoodType.Pearl);
+      }
+
+      const result = boothSystem.consumeFood(BoothId.Pearl, 3);
+      expect(result).toBe(true);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(1);
+    });
+
+    it("食材不足時應回傳 false 且不消耗", () => {
+      boothSystem.storeFood(FoodType.Pearl);
+
+      const result = boothSystem.consumeFood(BoothId.Pearl, 3);
+      expect(result).toBe(false);
+      expect(boothSystem.getFoodCount(BoothId.Pearl)).toBe(1);
+    });
+
+    it("攤位空時應回傳 false", () => {
+      const result = boothSystem.consumeFood(BoothId.Pearl, 1);
+      expect(result).toBe(false);
+    });
+
+    it("消耗全部食材應成功", () => {
+      for (let i = 0; i < 3; i++) {
+        boothSystem.storeFood(FoodType.Tofu);
+      }
+
+      const result = boothSystem.consumeFood(BoothId.Tofu, 3);
+      expect(result).toBe(true);
+      expect(boothSystem.getFoodCount(BoothId.Tofu)).toBe(0);
+    });
+  });
+
   describe("getTotalFoodCount", () => {
     it("空攤位應回傳 0", () => {
       expect(boothSystem.getTotalFoodCount()).toBe(0);
