@@ -120,7 +120,9 @@ export class BoxSystem extends InjectableSystem {
    */
   public update(): void {
     // Check if any boxes are active
-    const hasActiveBox = Array.from(this.boxes.values()).some((active) => active);
+    const hasActiveBox = Array.from(this.boxes.values()).some(
+      (active) => active,
+    );
     if (!hasActiveBox) return;
 
     // Check enemy collisions with each booth's box (SPEC § 2.3.7)
@@ -210,7 +212,6 @@ export class BoxSystem extends InjectableSystem {
   public isBoothBoxActive(boothId: BoothId): boolean {
     return this.boxes.get(boothId) ?? false;
   }
-
 
   /**
    * Handle FoodStored event (SPEC § 2.3.7)

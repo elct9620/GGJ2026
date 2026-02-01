@@ -131,7 +131,10 @@ describe("BoxSystem", () => {
 
       // Calculate Pearl booth Y position (top booth)
       const pearlBoothY = POOL_START_Y + 256 / 2; // Center of first booth
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -148,7 +151,10 @@ describe("BoxSystem", () => {
 
       // Spawn enemy at Pearl booth position
       const pearlBoothY = POOL_START_Y + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -164,7 +170,10 @@ describe("BoxSystem", () => {
 
       // Spawn enemy far from box
       const pearlBoothY = POOL_START_Y + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 200, pearlBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 200, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -177,7 +186,10 @@ describe("BoxSystem", () => {
     it("BX-11: 無寶箱時敵人不受影響", () => {
       // No box spawned
       const pearlBoothY = POOL_START_Y + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -194,7 +206,9 @@ describe("BoxSystem", () => {
 
       // Spawn 3 enemies at Pearl booth position
       const pearlBoothY = POOL_START_Y + 256 / 2;
-      enemies.push(new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY)));
+      enemies.push(
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY)),
+      );
       enemies.push(
         new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY + 5)),
       );
@@ -215,7 +229,10 @@ describe("BoxSystem", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
       const pearlBoothY = POOL_START_Y + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemy.active = false;
       enemies.push(enemy);
 
@@ -234,7 +251,10 @@ describe("BoxSystem", () => {
 
       // Enemy hits Tofu booth (middle)
       const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, tofuBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, tofuBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -253,7 +273,10 @@ describe("BoxSystem", () => {
 
       // Enemy hits BloodCake booth (bottom)
       const bloodCakeBoothY = POOL_START_Y + 256 * 2 + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, bloodCakeBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, bloodCakeBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -271,7 +294,10 @@ describe("BoxSystem", () => {
 
       // Enemy passes through Tofu booth position (no box)
       const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, tofuBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, tofuBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -345,7 +371,10 @@ describe("BoxSystem", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
       const pearlBoothY = POOL_START_Y + 256 / 2;
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY));
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
