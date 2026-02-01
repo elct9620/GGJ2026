@@ -11,6 +11,8 @@ export class InputSystem extends InjectableSystem {
   public readonly priority = SystemPriority.INPUT;
 
   private keysPressed: Set<string> = new Set();
+  private keysPressedLastFrame: Set<string> = new Set();
+
   private handleKeyDown = (event: KeyboardEvent): void => {
     this.keysPressed.add(event.key.toLowerCase());
   };
@@ -29,10 +31,11 @@ export class InputSystem extends InjectableSystem {
 
   /**
    * Update method (ISystem lifecycle)
-   * InputSystem is event-driven, no update needed
+   * SPEC § 2.3.3: Update last frame state for edge detection
    */
   public update(_deltaTime: number): void {
-    // Input is event-driven, no per-frame update needed
+    // Update last frame state for edge detection
+    this.keysPressedLastFrame = new Set(this.keysPressed);
   }
 
   /**
@@ -61,24 +64,38 @@ export class InputSystem extends InjectableSystem {
   }
 
   /**
-   * Check if shoot button is pressed
-   * Spec: § 2.4.1 - Space for shooting
+   * Check if shoot button is pressed (edge detection)
+   * SPEC § 2.4.1: Space for shooting (edge trigger)
    */
   public isShootPressed(): boolean {
-    return this.keysPressed.has(" ");
+    return this.wasKeyJustPressed(" ");
   }
 
   /**
-   * Check if synthesis key is pressed (1-5)
-   * SPEC § 2.3.3: 數字鍵 1-5 直接觸發合成
+   * Check if synthesis key is pressed (1-5) with edge detection
+   * SPEC § 2.3.3: 數字鍵 1-5 直接觸發合成（邊緣觸發）
    */
   public getSynthesisKeyPressed(): number | null {
-    if (this.keysPressed.has("1")) return 1;
-    if (this.keysPressed.has("2")) return 2;
-    if (this.keysPressed.has("3")) return 3;
-    if (this.keysPressed.has("4")) return 4;
-    if (this.keysPressed.has("5")) return 5;
+    if (this.wasKeyJustPressed("1")) return 1;
+    if (this.wasKeyJustPressed("2")) return 2;
+    if (this.wasKeyJustPressed("3")) return 3;
+    if (this.wasKeyJustPressed("4")) return 4;
+    if (this.wasKeyJustPressed("5")) return 5;
     return null;
+  }
+
+  /**
+   * Edge detection: Check if key was just pressed this frame
+   * SPEC § 2.3.3: 邊緣觸發（Edge Detection）
+   * @param key - The key to check
+   * @returns true if key is pressed this frame but was not pressed last frame
+   */
+  public wasKeyJustPressed(key: string): boolean {
+    const keyLower = key.toLowerCase();
+    return (
+      this.keysPressed.has(keyLower) &&
+      !this.keysPressedLastFrame.has(keyLower)
+    );
   }
 
   /**
@@ -93,6 +110,7 @@ export class InputSystem extends InjectableSystem {
    */
   public clear(): void {
     this.keysPressed.clear();
+    this.keysPressedLastFrame.clear();
   }
 
   /**

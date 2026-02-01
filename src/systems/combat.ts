@@ -7,25 +7,19 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Player } from "../entities/player";
 import type { Bullet } from "../entities/bullet";
-import { Enemy } from "../entities/enemy";
+import { Enemy, EnemyType, isEliteType } from "../entities/enemy";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
 import { RECIPE_BUFF_MAPPING } from "../values/recipes";
 import { SpecialBulletType } from "../values/special-bullet";
+import { Damage } from "../values/damage";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
 import type { BulletVisualEffectsSystem } from "./bullet-visual-effects";
 import type { GameStateManager } from "../core/game-state";
 import { Vector } from "../values/vector";
-import {
-  type CollisionContext,
-  type CollisionHandler,
-  CollisionHandlerRegistry,
-  createCollisionHandlerRegistry,
-  StinkyTofuCollisionHandler,
-} from "../collision";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
@@ -47,6 +41,18 @@ export interface BulletSpawnRequest {
  * GameScene implements this to handle Container management
  */
 export type BulletSpawner = (request: BulletSpawnRequest) => Bullet;
+
+/**
+ * 碰撞效果處理器類型
+ * 只負責傷害計算與效果應用，不管迴圈邏輯
+ */
+type HitEffect = (bullet: Bullet, enemy: Enemy) => void;
+
+/**
+ * 貫穿效果處理器回傳值
+ * 用於決定是否繼續貫穿
+ */
+type PierceHitResult = { consumed: boolean };
 
 /**
  * Combat System
@@ -82,18 +88,12 @@ export class CombatSystem extends InjectableSystem {
   // Buff duration config
   private readonly buffDuration = COMBAT_CONFIG.buffDuration;
 
-  // Collision handler registry (Strategy Pattern)
-  private collisionRegistry: CollisionHandlerRegistry;
-
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue, false); // Optional for testing
     this.declareDependency(DependencyKeys.UpgradeSystem, false); // Optional for testing
     this.declareDependency(DependencyKeys.BulletVisualEffects, false); // Optional for testing
     this.declareDependency(DependencyKeys.GameState); // Required
-
-    // Initialize collision handler registry
-    this.collisionRegistry = createCollisionHandlerRegistry();
   }
 
   /**
@@ -409,19 +409,25 @@ export class CombatSystem extends InjectableSystem {
   /**
    * Check bullet-enemy collisions (SPEC § 2.3.2, § 4.2.5)
    * 使用 AABB 碰撞檢測，根據當前 Buff 分派至對應處理器
-   * Uses Strategy Pattern via CollisionHandlerRegistry
    */
   private checkCollisions(): void {
     const currentBuff = this.gameState.combat.currentBuff;
-    const handler = this.collisionRegistry.getHandler(currentBuff);
 
-    if (!handler) return;
-
-    // Stinky Tofu has special pierce behavior
-    if (handler instanceof StinkyTofuCollisionHandler) {
-      this.processPierceCollision(handler.getTotalHits(), handler);
-    } else {
-      this.processFirstHitCollision(handler);
+    switch (currentBuff) {
+      case SpecialBulletType.NightMarket:
+        this.handleNightMarketCollision();
+        break;
+      case SpecialBulletType.StinkyTofu:
+        this.handleStinkyTofuCollision();
+        break;
+      case SpecialBulletType.BloodCake:
+        this.handleBloodCakeCollision();
+        break;
+      case SpecialBulletType.OysterOmelette:
+        this.handleOysterOmeletteCollision();
+        break;
+      default:
+        this.handleNormalCollision();
     }
   }
 
@@ -429,18 +435,21 @@ export class CombatSystem extends InjectableSystem {
    * 通用碰撞處理：擊中第一個敵人後停止
    * 4 個 handler (Normal, OysterOmelette, BloodCake, NightMarket) 共用此迴圈
    */
-  private processFirstHitCollision(handler: CollisionHandler): void {
-    this.processPierceCollision(1, handler);
+  private processFirstHitCollision(effect: HitEffect): void {
+    this.processPierceCollision(1, (bullet, enemy) => {
+      effect(bullet, enemy);
+      return { consumed: true };
+    });
   }
 
   /**
    * 貫穿碰撞處理：子彈可穿透多個敵人
    * @param maxPierceCount 最大貫穿次數（1 = 第一次命中後消耗）
-   * @param handler 碰撞處理器
+   * @param effect 每次命中時的效果處理器，回傳 consumed 決定是否消耗子彈
    */
   private processPierceCollision(
     maxPierceCount: number,
-    handler: CollisionHandler,
+    effect: (bullet: Bullet, enemy: Enemy) => PierceHitResult,
   ): void {
     for (const bullet of this.bullets) {
       if (!bullet.active) continue;
@@ -450,13 +459,11 @@ export class CombatSystem extends InjectableSystem {
         if (!enemy.active) continue;
 
         if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          const context = this.createCollisionContext(bullet, enemy);
-          handler.handle(context);
+          const result = effect(bullet, enemy);
           pierceCount++;
 
-          // Stinky Tofu allows multiple hits, others stop after first
-          const isPiercing = handler instanceof StinkyTofuCollisionHandler;
-          if (!isPiercing || pierceCount >= maxPierceCount) {
+          // 當效果要求消耗或達到最大貫穿次數時，停止此子彈
+          if (result.consumed || pierceCount >= maxPierceCount) {
             bullet.active = false;
             break;
           }
@@ -466,23 +473,149 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
-   * Create collision context for handler
+   * Normal bullet collision (SPEC § 2.6.3)
+   * Damage: 1, consumed on hit
    */
-  private createCollisionContext(
-    bullet: Bullet,
-    enemy: Enemy,
-  ): CollisionContext {
-    return {
-      bullet,
-      enemy,
-      enemies: this.enemies,
-      visualEffects: this.visualEffects,
-      upgradeSystem: this.upgradeSystem,
-      eventQueue: this.eventQueue,
-      gameState: this.gameState,
-      applyDamageAndPublishDeath: this.applyDamageAndPublishDeath.bind(this),
-      findClosestEnemy: this.findClosestEnemy.bind(this),
-    };
+  private handleNormalCollision(): void {
+    this.processFirstHitCollision((bullet, enemy) => {
+      this.applyDamageAndPublishDeath(enemy, bullet.damage);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
+    });
+  }
+
+  /**
+   * StinkyTofu (臭豆腐) - 貫穿效果 (SPEC § 2.3.3)
+   * Damage: 2 + stinkyTofuDamageBonus (加辣升級)
+   * Pierces 1 enemy (hits up to pierceCount + 1 enemies)
+   */
+  private handleStinkyTofuCollision(): void {
+    const baseDamage = RECIPE_CONFIG.stinkyTofu.baseDamage;
+    const damageBonus =
+      this.upgradeSystem?.getState().stinkyTofuDamageBonus ?? 0;
+    const damage = baseDamage + damageBonus;
+    // pierceCount = 1 means hit first + pierce through 1 more = 2 total hits
+    const totalHits = RECIPE_CONFIG.stinkyTofu.pierceCount + 1;
+
+    this.processPierceCollision(totalHits, (bullet, enemy) => {
+      this.applyDamageAndPublishDeath(enemy, damage);
+      this.visualEffects?.createPierceEffect(enemy.position);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
+      return { consumed: false }; // Never consume early, let pierce count handle it
+    });
+  }
+
+  /**
+   * OysterOmelette (蚵仔煎) - 百分比傷害 (SPEC § 2.3.3)
+   * Boss: 10% HP, Elite: 50% HP, Ghost: 70% HP
+   */
+  private handleOysterOmeletteCollision(): void {
+    this.processFirstHitCollision((bullet, enemy) => {
+      const percentDamage = this.calculatePercentDamage(enemy);
+      this.applyDamageAndPublishDeath(enemy, percentDamage.toNumber());
+      this.visualEffects?.createExplosionEffect(enemy.position);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
+    });
+  }
+
+  /**
+   * BloodCake (豬血糕) - 追蹤 + 減速 (SPEC § 2.3.3)
+   * Damage: 2, tracks nearest enemy, applies -10% speed debuff on hit
+   */
+  private handleBloodCakeCollision(): void {
+    const damage = RECIPE_CONFIG.bloodCake.baseDamage;
+    const slowPercent = RECIPE_CONFIG.bloodCake.slowEffect;
+
+    this.processFirstHitCollision((bullet, enemy) => {
+      this.applyDamageAndPublishDeath(enemy, damage);
+      this.visualEffects?.createHitEffect(enemy.position, bullet.type);
+
+      // Apply slow debuff if enemy survived
+      if (enemy.active) {
+        enemy.applySlowDebuff(slowPercent);
+      }
+    });
+  }
+
+  /**
+   * NightMarket (夜市總匯) - 連鎖攻擊 (SPEC § 2.3.3)
+   * Damage: 2, chains 5 targets × chainMultiplier, -20% + decayReduction per hit
+   * 總匯吃到飽升級增加連鎖數並減少衰減
+   */
+  private handleNightMarketCollision(): void {
+    const baseDamage = RECIPE_CONFIG.nightMarket.baseDamage;
+    const baseChainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
+    const baseDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
+    const chainRange = 300; // Maximum chain distance in pixels
+
+    // 總匯吃到飽 upgrade effects
+    const chainMultiplier =
+      this.upgradeSystem?.getState().nightMarketChainMultiplier ?? 1;
+    const decayReduction =
+      this.upgradeSystem?.getState().nightMarketDecayReduction ?? 0;
+
+    const chainTargets = Math.floor(baseChainTargets * chainMultiplier);
+    const damageDecay = Math.max(0, baseDecay - decayReduction);
+
+    this.processFirstHitCollision((_bullet, enemy) => {
+      // Start chain attack from first hit
+      this.performChainAttack(
+        enemy,
+        baseDamage,
+        chainTargets,
+        damageDecay,
+        chainRange,
+      );
+    });
+  }
+
+  /**
+   * Perform chain attack for NightMarket buff
+   * @param firstTarget First enemy hit
+   * @param baseDamage Starting damage
+   * @param maxTargets Maximum targets to chain
+   * @param decayRate Damage decay per hit (0.2 = -20%)
+   * @param maxRange Maximum chain distance
+   */
+  private performChainAttack(
+    firstTarget: Enemy,
+    baseDamage: number,
+    maxTargets: number,
+    decayRate: number,
+    maxRange: number,
+  ): void {
+    const hitEnemies = new Set<string>();
+    let currentTarget: Enemy | null = firstTarget;
+    let previousTarget: Enemy | null = null;
+    let currentDamage = baseDamage;
+
+    for (let i = 0; i < maxTargets && currentTarget !== null; i++) {
+      // Create chain lightning effect from previous to current target
+      if (previousTarget && this.visualEffects) {
+        this.visualEffects.createChainEffect(
+          previousTarget.position,
+          currentTarget.position,
+        );
+      }
+
+      // Apply damage to current target
+      this.applyDamageAndPublishDeath(currentTarget, Math.round(currentDamage));
+      this.visualEffects?.createHitEffect(
+        currentTarget.position,
+        SpecialBulletType.NightMarket,
+      );
+      hitEnemies.add(currentTarget.id);
+
+      // Apply damage decay for next hit
+      currentDamage = currentDamage * (1 - decayRate);
+
+      // Move to next target
+      previousTarget = currentTarget;
+      currentTarget = this.findClosestEnemy(
+        currentTarget.position,
+        hitEnemies,
+        maxRange,
+      );
+    }
   }
 
   /**
@@ -519,6 +652,32 @@ export class CombatSystem extends InjectableSystem {
   }
 
   /**
+   * Calculate percentage damage based on enemy type (SPEC § 2.3.3)
+   * 蚵仔煎：Boss 10% 當前 HP, 菁英 50% 當前 HP, 小怪 70% 當前 HP
+   * 快吃升級增加百分比傷害
+   */
+  private calculatePercentDamage(enemy: Enemy): Damage {
+    const { bossDamagePercent, eliteDamagePercent, ghostDamagePercent } =
+      RECIPE_CONFIG.oysterOmelet;
+
+    // 快吃 upgrade bonus (killThresholdDivisor adds +10% per stack)
+    const damageBonus =
+      this.upgradeSystem?.getState().killThresholdDivisor ?? 1;
+    const bonusPercent = damageBonus - 1; // Convert multiplier to bonus (1 = no bonus)
+
+    let percentage: number;
+    if (enemy.type === EnemyType.Boss) {
+      percentage = bossDamagePercent + bonusPercent;
+    } else if (isEliteType(enemy.type)) {
+      percentage = eliteDamagePercent + bonusPercent;
+    } else {
+      percentage = ghostDamagePercent + bonusPercent;
+    }
+
+    return Damage.fromPercentage(enemy.health, percentage);
+  }
+
+  /**
    * Check AABB collision between bullet and enemy
    */
   private checkBulletEnemyCollision(bullet: Bullet, enemy: Enemy): boolean {
@@ -546,6 +705,7 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Handle SynthesisTriggered event (SPEC § 2.3.6)
+   * SPEC § 2.3.3: 蚵仔煎為即時施放，其他為限時 Buff
    */
   private onSynthesisTriggered(data: { recipeId: string }): void {
     // Prevent buff stacking (SPEC § 2.3.2 Error Scenarios)
@@ -559,6 +719,16 @@ export class CombatSystem extends InjectableSystem {
       return;
     }
 
+    // SPEC § 2.3.3: Oyster Omelet is instant-cast, not a buff
+    // Recipe ID "5" = Oyster Omelet (蚵仔煎)
+    if (data.recipeId === "5") {
+      // Instant-cast: Fire one bullet immediately with percentage damage
+      // No buff activation, no duration, no BuffExpired event
+      this.fireOysterOmeletBullet();
+      return;
+    }
+
+    // For other recipes (1-4): Activate timed buff
     // Calculate buff duration with 飢餓三十 upgrade bonus
     const durationBonus =
       this.upgradeSystem?.getState().buffDurationMultiplier ?? 1;
@@ -578,6 +748,27 @@ export class CombatSystem extends InjectableSystem {
         effectiveDuration * 1000,
       );
     }
+  }
+
+  /**
+   * Fire one Oyster Omelet bullet immediately
+   * SPEC § 2.3.3: 蚵仔煎為即時施放（單發核彈）
+   */
+  private fireOysterOmeletBullet(): void {
+    if (!this.bulletSpawner || !this.player) {
+      return;
+    }
+
+    // Fire one bullet with OysterOmelette type
+    // Percentage damage is handled by the damage calculation in collision detection
+    const bullet = this.bulletSpawner({
+      position: this.player.position,
+      direction: new Vector(1, 0),
+      bulletType: SpecialBulletType.OysterOmelette,
+    });
+
+    // Add to bullets array for collision detection
+    this.bullets.push(bullet);
   }
 
   /**
