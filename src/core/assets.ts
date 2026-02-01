@@ -14,7 +14,8 @@ import dropItemPool1 from "../assets/DropItemPool_1.png";
 import dropItemPool2 from "../assets/DropItemPool_2.png";
 import imageStalls from "../assets/image_Stalls.png";
 import playerSprite from "../assets/Player.png";
-import playerDirHint from "../assets/Player_DirHint.png";
+import playerDirHint01 from "../assets/Player_DirHint01.png";
+import playerDirHint02 from "../assets/Player_DirHint02.png";
 import playerBase from "../assets/Player_Base.png";
 import playerBubbleTea from "../assets/Player_BubbleTea.png";
 import playerOysterOmelette from "../assets/Player_OysterOmelette.png";
@@ -43,7 +44,9 @@ export const AssetKeys = {
   boothPool2: "boothPool2",
   stalls: "stalls",
   player: "player",
-  playerDirHint: "playerDirHint",
+  playerDirHint: "playerDirHint", // Legacy, redirects to playerDirHint01
+  playerDirHint01: "playerDirHint01",
+  playerDirHint02: "playerDirHint02",
   playerBase: "playerBase",
   playerBubbleTea: "playerBubbleTea",
   playerOysterOmelette: "playerOysterOmelette",
@@ -75,7 +78,9 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.boothPool2]: dropItemPool2,
   [AssetKeys.stalls]: imageStalls,
   [AssetKeys.player]: playerSprite,
-  [AssetKeys.playerDirHint]: playerDirHint,
+  [AssetKeys.playerDirHint]: playerDirHint01, // Legacy support
+  [AssetKeys.playerDirHint01]: playerDirHint01,
+  [AssetKeys.playerDirHint02]: playerDirHint02,
   [AssetKeys.playerBase]: playerBase,
   [AssetKeys.playerBubbleTea]: playerBubbleTea,
   [AssetKeys.playerOysterOmelette]: playerOysterOmelette,

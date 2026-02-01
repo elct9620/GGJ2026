@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Player } from "./player";
 import { Vector } from "../values/vector";
 import { LAYOUT, CANVAS_WIDTH } from "../utils/constants";
+import { SpecialBulletType } from "../values/special-bullet";
 
 describe("Player", () => {
   let player: Player;
@@ -263,6 +264,43 @@ describe("Player", () => {
       expect(player.isReloading).toBe(false);
       expect(player.position.x).toBe(500);
       expect(player.position.y).toBe(500);
+    });
+  });
+
+  describe("Appearance for Buff", () => {
+    it("updateAppearanceForBuff 不會拋出錯誤", () => {
+      // Verify that updateAppearanceForBuff can be called without errors
+      expect(() => {
+        player.updateAppearanceForBuff(SpecialBulletType.BubbleTea);
+      }).not.toThrow();
+    });
+
+    it("所有 Buff 類型都可以正確切換外觀", () => {
+      // Verify all buff types can be applied without errors
+      const buffTypes = [
+        SpecialBulletType.None,
+        SpecialBulletType.NightMarket,
+        SpecialBulletType.StinkyTofu,
+        SpecialBulletType.BubbleTea,
+        SpecialBulletType.BloodCake,
+        SpecialBulletType.OysterOmelette,
+      ];
+
+      for (const buffType of buffTypes) {
+        expect(() => {
+          player.updateAppearanceForBuff(buffType);
+        }).not.toThrow();
+      }
+    });
+
+    it("reset 時呼叫 updateAppearanceForBuff(None)", () => {
+      // First set to BubbleTea
+      player.updateAppearanceForBuff(SpecialBulletType.BubbleTea);
+
+      // Reset player - should internally call updateAppearanceForBuff(None)
+      expect(() => {
+        player.reset(new Vector(500, 500));
+      }).not.toThrow();
     });
   });
 });

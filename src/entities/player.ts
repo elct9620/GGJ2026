@@ -27,6 +27,20 @@ export class Player extends SpriteEntity {
       [SpecialBulletType.BloodCake]: AssetKeys.playerBloodCake,
       [SpecialBulletType.OysterOmelette]: AssetKeys.playerOysterOmelette,
     };
+
+  /**
+   * Buff type to direction hint sprite asset key mapping
+   * DirHint01: Normal single shot indicator (default)
+   * DirHint02: Scatter/spread shot indicator (BubbleTea)
+   */
+  private static readonly DIR_HINT_MAP: Record<SpecialBulletType, AssetKey> = {
+    [SpecialBulletType.None]: AssetKeys.playerDirHint01,
+    [SpecialBulletType.NightMarket]: AssetKeys.playerDirHint01,
+    [SpecialBulletType.StinkyTofu]: AssetKeys.playerDirHint01,
+    [SpecialBulletType.BubbleTea]: AssetKeys.playerDirHint02, // Scatter indicator
+    [SpecialBulletType.BloodCake]: AssetKeys.playerDirHint01,
+    [SpecialBulletType.OysterOmelette]: AssetKeys.playerDirHint01,
+  };
   public position: Vector;
   public readonly speed: number = PLAYER_CONFIG.speed;
 
@@ -107,7 +121,7 @@ export class Player extends SpriteEntity {
   }
 
   private createDirHintSprite(): Sprite {
-    const sprite = new Sprite(getTexture(AssetKeys.playerDirHint));
+    const sprite = new Sprite(getTexture(AssetKeys.playerDirHint01));
 
     // Asset size is 100×256, use full size proportional to player
     sprite.width = 100;
@@ -233,11 +247,15 @@ export class Player extends SpriteEntity {
   /**
    * Update player appearance based on active buff
    * SPEC § 2.6.1: Player visual changes based on buff state
+   * Updates both player sprite and direction hint indicator
    * @param buffType The current active buff type
    */
   public updateAppearanceForBuff(buffType: SpecialBulletType): void {
-    const assetKey = Player.BUFF_SPRITE_MAP[buffType];
-    this.playerSprite.texture = getTexture(assetKey);
+    const playerAssetKey = Player.BUFF_SPRITE_MAP[buffType];
+    this.playerSprite.texture = getTexture(playerAssetKey);
+
+    const dirHintAssetKey = Player.DIR_HINT_MAP[buffType];
+    this.dirHintSprite.texture = getTexture(dirHintAssetKey);
   }
 
   /**
