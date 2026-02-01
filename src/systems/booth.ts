@@ -39,6 +39,28 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
+   * Publish FoodStored event (SPEC § 2.3.7)
+   * Helper method to reduce code duplication
+   */
+  private publishFoodStored(boothId: BoothId, foodType: FoodType): void {
+    this.eventQueue?.publish(EventType.FoodStored, {
+      boothId: String(boothId),
+      foodType,
+    });
+  }
+
+  /**
+   * Publish FoodConsumed event (SPEC § 2.3.7)
+   * Helper method to reduce code duplication
+   */
+  private publishFoodConsumed(boothId: BoothId, amount: number): void {
+    this.eventQueue?.publish(EventType.FoodConsumed, {
+      boothId: String(boothId),
+      amount,
+    });
+  }
+
+  /**
    * Initialize stalls background sprite
    * SPEC § 2.7.2: 340×868 positioned at (0, 86)
    */
@@ -122,12 +144,8 @@ export class BoothSystem extends InjectableSystem {
     for (const [id, booth] of this.booths) {
       if (booth.foodType === foodType) {
         const success = booth.addFood();
-        if (success && this.eventQueue) {
-          // Publish FoodStored event (SPEC § 2.3.7)
-          this.eventQueue.publish(EventType.FoodStored, {
-            boothId: String(id),
-            foodType,
-          });
+        if (success) {
+          this.publishFoodStored(id, foodType);
         }
         return success;
       }
@@ -142,13 +160,7 @@ export class BoothSystem extends InjectableSystem {
   public retrieveFood(boothId: BoothId): FoodType | null {
     const booth = this.booths.get(boothId);
     if (booth && booth.removeFood()) {
-      // Publish FoodConsumed event (SPEC § 2.3.7)
-      if (this.eventQueue) {
-        this.eventQueue.publish(EventType.FoodConsumed, {
-          boothId: String(boothId),
-          amount: 1,
-        });
-      }
+      this.publishFoodConsumed(boothId, 1);
       return booth.foodType;
     }
     return null;
@@ -169,12 +181,7 @@ export class BoothSystem extends InjectableSystem {
       booth.removeFood();
     }
 
-    if (this.eventQueue) {
-      this.eventQueue.publish(EventType.FoodConsumed, {
-        boothId: String(boothId),
-        amount,
-      });
-    }
+    this.publishFoodConsumed(boothId, amount);
 
     return true;
   }
@@ -185,12 +192,8 @@ export class BoothSystem extends InjectableSystem {
   public stealFood(boothId: BoothId): boolean {
     const booth = this.booths.get(boothId);
     const success = booth ? booth.removeFood() : false;
-    if (success && this.eventQueue) {
-      // Publish FoodConsumed event (SPEC § 2.3.7)
-      this.eventQueue.publish(EventType.FoodConsumed, {
-        boothId: String(boothId),
-        amount: 1,
-      });
+    if (success) {
+      this.publishFoodConsumed(boothId, 1);
     }
     return success;
   }
