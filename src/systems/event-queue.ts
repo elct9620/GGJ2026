@@ -262,20 +262,33 @@ export class EventQueue implements System {
 
   /**
    * Insert delayed event into queue (sorted by executeAt)
+   * Uses binary search for O(log n) insertion point lookup
    */
   private insertDelayedEvent<T extends EventType>(
     event: DelayedEvent<T>,
   ): void {
-    // Find insertion point (binary search could be used for optimization)
-    let insertIndex = this.delayedEvents.length;
+    const insertIndex = this.binarySearchInsertIndex(event.executeAt);
+    this.delayedEvents.splice(insertIndex, 0, event);
+  }
 
-    for (let i = 0; i < this.delayedEvents.length; i++) {
-      if (this.delayedEvents[i].executeAt > event.executeAt) {
-        insertIndex = i;
-        break;
+  /**
+   * Binary search to find insertion index for maintaining sorted order
+   * @param executeAt Target execution time to insert
+   * @returns Index where new event should be inserted
+   */
+  private binarySearchInsertIndex(executeAt: number): number {
+    let left = 0;
+    let right = this.delayedEvents.length;
+
+    while (left < right) {
+      const mid = Math.floor((left + right) / 2);
+      if (this.delayedEvents[mid].executeAt <= executeAt) {
+        left = mid + 1;
+      } else {
+        right = mid;
       }
     }
 
-    this.delayedEvents.splice(insertIndex, 0, event);
+    return left;
   }
 }

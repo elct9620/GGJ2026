@@ -45,6 +45,25 @@ export interface UpgradeState {
 }
 
 /**
+ * Create default upgrade state
+ * Single source of truth for initial upgrade values
+ */
+export function createDefaultUpgradeState(): UpgradeState {
+  return {
+    stinkyTofuDamageBonus: 0,
+    bubbleTeaBulletBonus: 0,
+    bloodCakeRangeBonus: 0,
+    recipeCostReduction: 0,
+    magazineMultiplier: 1,
+    killThresholdDivisor: 1,
+    buffDurationMultiplier: 1,
+    reloadTimeReduction: 0,
+    nightMarketChainMultiplier: 1,
+    nightMarketDecayReduction: 0,
+  };
+}
+
+/**
  * Upgrade System
  * SPEC § 2.3.4: 回合間及 Boss 擊敗後永久強化玩家能力
  *
@@ -58,19 +77,8 @@ export class UpgradeSystem extends InjectableSystem {
   public readonly name = "UpgradeSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Upgrade state
-  private state: UpgradeState = {
-    stinkyTofuDamageBonus: 0,
-    bubbleTeaBulletBonus: 0,
-    bloodCakeRangeBonus: 0,
-    recipeCostReduction: 0,
-    magazineMultiplier: 1,
-    killThresholdDivisor: 1,
-    buffDurationMultiplier: 1,
-    reloadTimeReduction: 0,
-    nightMarketChainMultiplier: 1,
-    nightMarketDecayReduction: 0,
-  };
+  // Upgrade state (initialized using factory function)
+  private state: UpgradeState = createDefaultUpgradeState();
 
   // Current upgrade options (shown to player)
   private currentOptions: UpgradeOption[] = [];
@@ -314,17 +322,6 @@ export class UpgradeSystem extends InjectableSystem {
    * Reset upgrade state to initial values
    */
   private resetState(): void {
-    this.state = {
-      stinkyTofuDamageBonus: 0,
-      bubbleTeaBulletBonus: 0,
-      bloodCakeRangeBonus: 0,
-      recipeCostReduction: 0,
-      magazineMultiplier: 1,
-      killThresholdDivisor: 1,
-      buffDurationMultiplier: 1,
-      reloadTimeReduction: 0,
-      nightMarketChainMultiplier: 1,
-      nightMarketDecayReduction: 0,
-    };
+    this.state = createDefaultUpgradeState();
   }
 }

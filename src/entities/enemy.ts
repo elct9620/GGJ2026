@@ -4,32 +4,18 @@ import { Health } from "../values/health";
 import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
 import { Container, Graphics, Sprite } from "pixi.js";
-import { getTexture, AssetKeys, type AssetKey } from "../core/assets";
+import { getTexture } from "../core/assets";
+import type { FoodType } from "./booth";
 import { LAYOUT } from "../utils/constants";
-import { FoodType } from "./booth";
-import { ENEMY_CONFIG } from "../config";
+import { EnemyType, isEliteType } from "../values/enemy-type";
+import {
+  getEnemyProperties,
+  getEnemyFoodDrop,
+  shouldShowHealthBar,
+} from "../values/enemy-type-registry";
 
-export const EnemyType = {
-  Ghost: "Ghost", // 餓鬼 (SPEC § 2.6.2) - 小怪，不掉落食材
-  RedGhost: "RedGhost", // 紅餓鬼 (SPEC § 2.6.2) - 菁英，掉落豆腐
-  GreenGhost: "GreenGhost", // 綠餓鬼 (SPEC § 2.6.2) - 菁英，掉落珍珠
-  BlueGhost: "BlueGhost", // 藍餓鬼 (SPEC § 2.6.2) - 菁英，掉落米血
-  Boss: "Boss", // 餓死鬼 (SPEC § 2.6.2)
-} as const;
-
-export type EnemyType = (typeof EnemyType)[keyof typeof EnemyType];
-
-/**
- * Check if enemy type is Elite (colored ghost)
- * SPEC § 2.6.2: 菁英敵人有 2 HP，固定掉落對應食材
- */
-export function isEliteType(type: EnemyType): boolean {
-  return (
-    type === EnemyType.RedGhost ||
-    type === EnemyType.GreenGhost ||
-    type === EnemyType.BlueGhost
-  );
-}
+// Re-export for backwards compatibility
+export { EnemyType, isEliteType } from "../values/enemy-type";
 
 /**
  * Enemy entity (Ghost or Boss)
@@ -86,27 +72,25 @@ export class Enemy extends SpriteEntity {
     this.type = type;
     this.position = initialPosition;
 
-    // Set stats based on enemy type (SPEC § 2.6.2)
+    // Get properties from registry (SPEC § 2.6.2)
+    const props = getEnemyProperties(type);
+    this.baseSpeed = props.speed;
+
     // HP scales with wave number
     if (type === EnemyType.Ghost) {
       this._health = Health.ghostForWave(wave);
-      this.baseSpeed = ENEMY_CONFIG.ghost.speed;
     } else if (isEliteType(type)) {
-      // Elite enemies: Red/Green/Blue Ghost
       this._health = Health.eliteForWave(wave);
-      this.baseSpeed = ENEMY_CONFIG.elite.speed;
     } else {
-      // Boss
       this._health = Health.bossForWave(wave);
-      this.baseSpeed = ENEMY_CONFIG.boss.speed;
     }
 
     this.sprite = new Container();
     this.enemySprite = this.createSprite();
     this.sprite.addChild(this.enemySprite);
 
-    // Add health bar for Boss or Elite
-    if (type === EnemyType.Boss || isEliteType(type)) {
+    // Add health bar if needed
+    if (shouldShowHealthBar(type)) {
       this.healthBarContainer = new Graphics();
       this.sprite.addChild(this.healthBarContainer);
       this.updateHealthBar();
@@ -116,42 +100,16 @@ export class Enemy extends SpriteEntity {
   }
 
   private createSprite(): Sprite {
-    const assetKey = this.getAssetKey();
-    const sprite = new Sprite(getTexture(assetKey));
+    const props = getEnemyProperties(this.type);
+    const sprite = new Sprite(getTexture(props.assetKey));
 
-    // Boss 使用 512×512，其他使用 256×256
-    const size =
-      this.type === EnemyType.Boss ? LAYOUT.BOSS_SIZE : LAYOUT.ENEMY_SIZE;
-
-    sprite.width = size;
-    sprite.height = size;
+    sprite.width = props.size;
+    sprite.height = props.size;
 
     // Set anchor to center
     sprite.anchor.set(0.5, 0.5);
 
-    // 不再需要 tint（各敵人有專屬圖檔）
     return sprite;
-  }
-
-  /**
-   * Get asset key based on enemy type
-   * SPEC § 2.6.2: Each enemy type has its own sprite
-   */
-  private getAssetKey(): AssetKey {
-    switch (this.type) {
-      case EnemyType.Ghost:
-        return AssetKeys.ghost;
-      case EnemyType.RedGhost:
-        return AssetKeys.redGhost;
-      case EnemyType.GreenGhost:
-        return AssetKeys.greenGhost;
-      case EnemyType.BlueGhost:
-        return AssetKeys.blueGhost;
-      case EnemyType.Boss:
-        return AssetKeys.boss;
-      default:
-        return AssetKeys.ghost;
-    }
   }
 
   /**
@@ -237,8 +195,8 @@ export class Enemy extends SpriteEntity {
     const damage = typeof amount === "number" ? new Damage(amount) : amount;
     this._health = this._health.takeDamage(damage);
 
-    // Update health bar for Boss and Elite enemies
-    if (this.type === EnemyType.Boss || isEliteType(this.type)) {
+    // Update health bar if applicable
+    if (shouldShowHealthBar(this.type)) {
       this.updateHealthBar();
     }
 
@@ -260,47 +218,26 @@ export class Enemy extends SpriteEntity {
 
   /**
    * 碰撞箱（與視覺大小同步）
-   * SPEC § 4.2.5: AABB 碰撞檢測
-   * Boss 使用 512×512，其他使用 256×256
+   * SPEC § 4.2.5: AABB 碰撞檢測，使用 EnemyTypeRegistry 取得尺寸
    */
   public get collisionBox(): CollisionBox {
-    const size =
-      this.type === EnemyType.Boss ? LAYOUT.BOSS_SIZE : LAYOUT.ENEMY_SIZE;
+    const size = getEnemyProperties(this.type).size;
     return { width: size, height: size };
   }
 
   /**
    * Drop food item when defeated (or null if no drop)
-   * SPEC § 2.6.2:
-   * - Ghost (餓鬼): 不掉落食材
-   * - RedGhost (紅餓鬼): 100% 掉落豆腐
-   * - GreenGhost (綠餓鬼): 100% 掉落珍珠
-   * - BlueGhost (藍餓鬼): 100% 掉落米血
-   * - Boss: 不掉落食材（掉落特殊升級，由 UpgradeSystem 處理）
+   * SPEC § 2.6.2: Uses EnemyTypeRegistry for food drop mapping
    */
   public dropFood(): FoodType | null {
-    switch (this.type) {
-      case EnemyType.RedGhost:
-        return FoodType.Tofu;
-      case EnemyType.GreenGhost:
-        return FoodType.Pearl;
-      case EnemyType.BlueGhost:
-        return FoodType.BloodCake;
-      default:
-        // Ghost and Boss don't drop food
-        return null;
-    }
+    return getEnemyFoodDrop(this.type);
   }
 
   /**
    * Update health bar visualization for Boss and Elite enemies
    */
   private updateHealthBar(): void {
-    if (
-      (this.type !== EnemyType.Boss && !isEliteType(this.type)) ||
-      !this.healthBarContainer
-    )
-      return;
+    if (!shouldShowHealthBar(this.type) || !this.healthBarContainer) return;
 
     this.healthBarContainer.clear();
 
@@ -310,9 +247,8 @@ export class Enemy extends SpriteEntity {
     const totalWidth =
       this.maxHealth * barWidth + (this.maxHealth - 1) * barSpacing;
     const startX = -totalWidth / 2;
-    // Boss 健康條需要配合 512×512 大小調整位置
-    const spriteHeight =
-      this.type === EnemyType.Boss ? LAYOUT.BOSS_SIZE : LAYOUT.ENEMY_SIZE;
+    // Health bar position based on sprite size from registry
+    const spriteHeight = getEnemyProperties(this.type).size;
     const startY = -spriteHeight / 2 - 15;
 
     // Draw health bars (green for remaining health, gray for lost health)
