@@ -165,8 +165,8 @@ export const RECIPE_CONFIG = {
     pearl: 3,
     /** 基礎傷害 */
     baseDamage: 1,
-    /** 額外子彈數（散射） */
-    extraBullets: 1,
+    /** 額外子彈數（散射）- 三向散射 = 1 中心 + 2 側向 */
+    extraBullets: 2,
   },
   /** 豬血糕 */
   bloodCake: {

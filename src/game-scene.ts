@@ -267,23 +267,35 @@ export class GameScene {
   }
 
   /**
-   * Spawn BubbleTea spread bullets (SPEC § 2.3.3)
-   * Creates 3 bullets: center + 2 at ±15° angles
+   * Spawn BubbleTea spread bullets (SPEC § 2.3.3, § 2.3.4)
+   * Creates 3+ bullets: center + extra at alternating ±15°, ±30°, etc.
+   * Base: 2 extra bullets (for 3-way spread)
+   * Upgrade bonus: +1 per 加椰果 upgrade (SPEC § 2.3.4)
    */
   private spawnBubbleTeaBullets(): void {
-    const extraBullets = RECIPE_CONFIG.bubbleTea.extraBullets;
+    const upgradeSystem =
+      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
+    const upgradeState = upgradeSystem.getState();
+
+    // Base extra bullets + upgrade bonus (SPEC § 2.3.4: 加椰果)
+    const baseExtra = RECIPE_CONFIG.bubbleTea.extraBullets;
+    const upgradeBonus = upgradeState.bubbleTeaBulletBonus;
+    const totalExtraBullets = baseExtra + upgradeBonus;
+
     const spreadAngle = 15; // degrees
     const bulletType = SpecialBulletType.BubbleTea;
 
     // Center bullet
     this.spawnTypedBullet(bulletType);
 
-    // Extra spread bullets
-    for (let i = 0; i < extraBullets; i++) {
-      const angleOffset = i % 2 === 0 ? spreadAngle : -spreadAngle;
+    // Extra spread bullets (alternating left/right at increasing angles)
+    for (let i = 0; i < totalExtraBullets; i++) {
+      const angleIndex = Math.floor(i / 2) + 1;
+      const direction = i % 2 === 0 ? 1 : -1;
+      const angleOffset = spreadAngle * angleIndex * direction;
       const radians = (angleOffset * Math.PI) / 180;
-      const direction = new Vector(Math.cos(radians), Math.sin(radians));
-      const bullet = new Bullet(this.player.position, direction, bulletType);
+      const dir = new Vector(Math.cos(radians), Math.sin(radians));
+      const bullet = new Bullet(this.player.position, dir, bulletType);
       this.bullets.push(bullet);
       this.bulletsContainer.addChild(bullet.sprite);
     }

@@ -149,6 +149,10 @@ describe("Game Balance Config", () => {
       expect(RECIPE_CONFIG.bubbleTea.pearl).toBe(3);
     });
 
+    it("珍珠奶茶額外子彈數應為 2 (三向散射 = 中心 + 左 + 右) (SPEC § 2.3.3)", () => {
+      expect(RECIPE_CONFIG.bubbleTea.extraBullets).toBe(2);
+    });
+
     it("豬血糕消耗應為 米血3 (SPEC § 2.3.3)", () => {
       expect(RECIPE_CONFIG.bloodCake.bloodCake).toBe(3);
     });
