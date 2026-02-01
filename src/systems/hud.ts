@@ -180,22 +180,21 @@ export class HUDSystem extends InjectableSystem {
   /**
    * Setup upgrade icons in the upgradeBase area (550×126px)
    * 5 icons of 88×88px each
+   * Layout: 40px left margin, 7px gap between icons
    */
   private setupUpgradeIcons(): void {
     const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
-    const iconSize = 88;
-    const sectionWidth = 550;
+    const { LEFT_MARGIN, ICON_SIZE, ICON_GAP } = LAYOUT.UPGRADE_SECTION;
     const iconCount = 5;
-    const spacing = sectionWidth / iconCount; // 110px per icon area
-    const iconOffsetY = (LAYOUT.BOTTOM_HUD_HEIGHT - iconSize) / 2; // Center vertically
+    const iconOffsetY = (LAYOUT.BOTTOM_HUD_HEIGHT - ICON_SIZE) / 2; // Center vertically
 
     for (let i = 0; i < iconCount; i++) {
       const icon = new Sprite(getTexture(AssetKeys.upgradeIcon));
-      icon.width = iconSize;
-      icon.height = iconSize;
+      icon.width = ICON_SIZE;
+      icon.height = ICON_SIZE;
 
-      // Center icon in its area
-      const x = i * spacing + (spacing - iconSize) / 2;
+      // Position with left margin and gap
+      const x = LEFT_MARGIN + i * (ICON_SIZE + ICON_GAP);
       const y = bottomY + iconOffsetY;
       icon.position.set(x, y);
 
@@ -207,17 +206,23 @@ export class HUDSystem extends InjectableSystem {
   /**
    * Setup skill buttons in the bulletClassBase area (820×126px)
    * Each skill has: btn_skillIcon (116×116px) background, keyBindTip (46×46px), cost indicators (20×20px)
+   * Layout: 30px left margin, 68px gap between buttons
    */
   private setupSkillButtons(): void {
     const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
     const baseX = 550; // Start of bulletClassBase
-    const sectionWidth = 820;
     const buttonCount = 5;
-    const spacing = sectionWidth / buttonCount; // 164px per button area
+    const {
+      LEFT_MARGIN,
+      BUTTON_GAP,
+      BACKGROUND_SIZE,
+      BUTTON_SIZE,
+      INDICATOR_SIZE,
+    } = LAYOUT.SKILL_SECTION;
 
-    const skillIconSize = 116;
-    const keyTipSize = 46;
-    const costIndicatorSize = 20;
+    const skillIconSize = BACKGROUND_SIZE; // 116px
+    const keyTipSize = BUTTON_SIZE; // 46px
+    const costIndicatorSize = INDICATOR_SIZE; // 20px
 
     // Get skill display configs from centralized recipes
     const recipeIds = ["1", "2", "3", "4", "5"];
@@ -228,7 +233,12 @@ export class HUDSystem extends InjectableSystem {
     );
 
     for (let i = 0; i < buttonCount; i++) {
-      const buttonCenterX = baseX + i * spacing + spacing / 2;
+      // Calculate button center: left margin + half icon size + i * (icon size + gap)
+      const buttonCenterX =
+        baseX +
+        LEFT_MARGIN +
+        skillIconSize / 2 +
+        i * (skillIconSize + BUTTON_GAP);
 
       // Add skill button background (btn_skillIcon.png 116×116px)
       const skillBg = new Sprite(getTexture(AssetKeys.skillIcon));

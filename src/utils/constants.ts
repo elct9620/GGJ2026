@@ -39,6 +39,23 @@ export const LAYOUT = {
   ENEMY_SIZE: 256,
   BOOTH_WIDTH: 128,
   BOOTH_HEIGHT: 256,
+
+  // Booth spacing (from ui_rough_pixelSpec.png)
+  BOOTH_GAP: 11,
+
+  // Bottom HUD layout (from ui_rough_pixelSpec.png)
+  UPGRADE_SECTION: {
+    LEFT_MARGIN: 40,
+    ICON_SIZE: 88,
+    ICON_GAP: 7,
+  },
+  SKILL_SECTION: {
+    LEFT_MARGIN: 30,
+    BUTTON_GAP: 68,
+    BUTTON_SIZE: 46,
+    BACKGROUND_SIZE: 116,
+    INDICATOR_SIZE: 20,
+  },
 } as const;
 
 /**

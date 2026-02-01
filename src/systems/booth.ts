@@ -84,9 +84,12 @@ export class BoothSystem extends InjectableSystem {
     // DropItemPool position: x=340 (baseline), right side of booth area
     // Y position: vertically centered within 868px game area
     const boothHeight = LAYOUT.BOOTH_HEIGHT;
+    const boothGap = LAYOUT.BOOTH_GAP; // 11px vertical spacing between booths
     const startX = LAYOUT.BASELINE_X; // 340 - DropItemPool position
+    // Total height: 3 booths + 2 gaps = 3*256 + 2*11 = 790px
+    const totalHeight = boothHeight * 3 + boothGap * 2;
     const startY =
-      LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - boothHeight * 3) / 2; // 136
+      LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - totalHeight) / 2;
 
     this.booths.set(
       BoothId.Pearl,
@@ -98,7 +101,7 @@ export class BoothSystem extends InjectableSystem {
         BoothId.Tofu,
         FoodType.Tofu,
         startX,
-        startY + boothHeight,
+        startY + boothHeight + boothGap,
         this.container,
       ),
     );
@@ -108,7 +111,7 @@ export class BoothSystem extends InjectableSystem {
         BoothId.BloodCake,
         FoodType.BloodCake,
         startX,
-        startY + boothHeight * 2,
+        startY + (boothHeight + boothGap) * 2,
         this.container,
       ),
     );
