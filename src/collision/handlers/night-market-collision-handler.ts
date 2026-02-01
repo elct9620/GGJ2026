@@ -8,7 +8,7 @@
 import type { CollisionContext } from "../collision-handler";
 import { BaseCollisionHandler } from "./base-collision-handler";
 import { SpecialBulletType } from "../../values/special-bullet";
-import { RECIPE_CONFIG } from "../../config";
+import { RECIPE_CONFIG, HIT_EFFECTS_CONFIG } from "../../config";
 import type { Enemy } from "../../entities/enemy";
 
 export class NightMarketCollisionHandler extends BaseCollisionHandler {
@@ -63,6 +63,11 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
     let previousTarget: Enemy | null = null;
     let currentDamage = baseDamage;
 
+    // Get flash config for chain hits
+    const flashConfig = HIT_EFFECTS_CONFIG.flash.nightMarket;
+    const knockbackConfig = HIT_EFFECTS_CONFIG.knockback;
+    const shakeConfig = HIT_EFFECTS_CONFIG.screenShake.nightMarket;
+
     for (let i = 0; i < maxTargets && currentTarget !== null; i++) {
       // Create chain lightning effect from previous to current target
       if (previousTarget && context.visualEffects) {
@@ -77,10 +82,22 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
         currentTarget,
         Math.round(currentDamage),
       );
+
+      // Apply universal hit effects for each chain target
+      currentTarget.flashHit(flashConfig.color, flashConfig.duration);
+      currentTarget.applyKnockback(
+        knockbackConfig.distance,
+        knockbackConfig.duration,
+      );
+      context.visualEffects?.triggerScreenShake(
+        shakeConfig.magnitude,
+        shakeConfig.duration,
+      );
       context.visualEffects?.createHitEffect(
         currentTarget.position,
         SpecialBulletType.NightMarket,
       );
+
       hitEnemies.add(currentTarget.id);
 
       // Apply damage decay for next hit

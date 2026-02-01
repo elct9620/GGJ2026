@@ -18,7 +18,7 @@ export class OysterOmeletteCollisionHandler extends BaseCollisionHandler {
     const percentDamage = this.calculatePercentDamage(context);
     context.applyDamageAndPublishDeath(context.enemy, percentDamage.toNumber());
     context.visualEffects?.createExplosionEffect(context.enemy.position);
-    this.createHitEffect(context);
+    this.applyUniversalHitEffects(context);
   }
 
   /**

@@ -12,6 +12,6 @@ export class NormalCollisionHandler extends BaseCollisionHandler {
 
   handle(context: CollisionContext): void {
     context.applyDamageAndPublishDeath(context.enemy, context.bullet.damage);
-    this.createHitEffect(context);
+    this.applyUniversalHitEffects(context);
   }
 }

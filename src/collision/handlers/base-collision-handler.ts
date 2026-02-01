@@ -1,18 +1,68 @@
 /**
  * Base Collision Handler
  * Provides common functionality for collision handlers
+ * SPEC § 2.6.3: Universal hit effects (flash, knockback, screen shake)
  */
 
 import type { CollisionHandler, CollisionContext } from "../collision-handler";
 import type { SpecialBulletType } from "../../values/special-bullet";
+import { SpecialBulletType as BulletType } from "../../values/special-bullet";
+import { HIT_EFFECTS_CONFIG } from "../../config";
+
+/** Config key type for HIT_EFFECTS_CONFIG */
+type HitEffectConfigKey = keyof typeof HIT_EFFECTS_CONFIG.flash;
 
 /**
  * Abstract base class for collision handlers
- * Provides common hit effect creation
+ * Provides common hit effect creation and universal hit effects
  */
 export abstract class BaseCollisionHandler implements CollisionHandler {
   abstract readonly bulletType: SpecialBulletType;
   abstract handle(context: CollisionContext): void;
+
+  /**
+   * Apply universal hit effects: flash, knockback, screen shake, hit visual
+   * All collision handlers should call this after applying damage
+   * SPEC § 2.6.3: 通用視覺效果規則
+   */
+  protected applyUniversalHitEffects(context: CollisionContext): void {
+    this.applyFlashEffect(context);
+    this.applyKnockback(context);
+    this.triggerScreenShake(context);
+    this.createHitEffect(context);
+  }
+
+  /**
+   * Apply flash effect to enemy based on bullet type
+   * SPEC § 2.6.3: 閃白效果 100~300ms
+   */
+  protected applyFlashEffect(context: CollisionContext): void {
+    const configKey = this.getConfigKey();
+    const config = HIT_EFFECTS_CONFIG.flash[configKey];
+    context.enemy.flashHit(config.color, config.duration);
+  }
+
+  /**
+   * Apply knockback effect to enemy
+   * Universal: 15px rightward displacement over 80ms
+   */
+  protected applyKnockback(context: CollisionContext): void {
+    const { distance, duration } = HIT_EFFECTS_CONFIG.knockback;
+    context.enemy.applyKnockback(distance, duration);
+  }
+
+  /**
+   * Trigger screen shake effect based on bullet type
+   * SPEC § 2.6.3: 螢幕震動（所有子彈）
+   */
+  protected triggerScreenShake(context: CollisionContext): void {
+    const configKey = this.getConfigKey();
+    const config = HIT_EFFECTS_CONFIG.screenShake[configKey];
+    context.visualEffects?.triggerScreenShake(
+      config.magnitude,
+      config.duration,
+    );
+  }
 
   /**
    * Create hit effect at enemy position
@@ -22,5 +72,25 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
       context.enemy.position,
       context.bullet.type,
     );
+  }
+
+  /**
+   * Get config key based on bullet type
+   */
+  private getConfigKey(): HitEffectConfigKey {
+    switch (this.bulletType) {
+      case BulletType.NightMarket:
+        return "nightMarket";
+      case BulletType.StinkyTofu:
+        return "stinkyTofu";
+      case BulletType.BubbleTea:
+        return "bubbleTea";
+      case BulletType.BloodCake:
+        return "bloodCake";
+      case BulletType.OysterOmelette:
+        return "oysterOmelette";
+      default:
+        return "normal";
+    }
   }
 }

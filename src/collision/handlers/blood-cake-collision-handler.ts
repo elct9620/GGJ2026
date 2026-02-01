@@ -17,7 +17,7 @@ export class BloodCakeCollisionHandler extends BaseCollisionHandler {
     const slowPercent = RECIPE_CONFIG.bloodCake.slowEffect;
 
     context.applyDamageAndPublishDeath(context.enemy, damage);
-    this.createHitEffect(context);
+    this.applyUniversalHitEffects(context);
 
     // Apply slow debuff if enemy survived
     if (context.enemy.active) {

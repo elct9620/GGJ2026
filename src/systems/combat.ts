@@ -409,58 +409,50 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Check bullet-enemy collisions (SPEC § 2.3.2, § 4.2.5)
-   * 使用 AABB 碰撞檢測，根據當前 Buff 分派至對應處理器
+   * 使用 AABB 碰撞檢測，根據子彈類型分派至對應處理器
    * Uses Strategy Pattern via CollisionHandlerRegistry
    */
   private checkCollisions(): void {
-    const currentBuff = this.gameState.combat.currentBuff;
-    const handler = this.collisionRegistry.getHandler(currentBuff);
+    for (const bullet of this.bullets) {
+      if (!bullet.active) continue;
 
-    if (!handler) return;
+      // Get handler based on bullet type, not current buff
+      const handler = this.collisionRegistry.getHandler(bullet.type);
+      if (!handler) continue;
 
-    // Stinky Tofu has special pierce behavior
-    if (handler instanceof StinkyTofuCollisionHandler) {
-      this.processPierceCollision(handler.getTotalHits(), handler);
-    } else {
-      this.processFirstHitCollision(handler);
+      // Process collision for this bullet
+      this.processBulletCollision(bullet, handler);
     }
   }
 
   /**
-   * 通用碰撞處理：擊中第一個敵人後停止
-   * 4 個 handler (Normal, OysterOmelette, BloodCake, NightMarket) 共用此迴圈
+   * Process collision for a single bullet
+   * @param bullet The bullet to check collisions for
+   * @param handler The collision handler for this bullet type
    */
-  private processFirstHitCollision(handler: CollisionHandler): void {
-    this.processPierceCollision(1, handler);
-  }
-
-  /**
-   * 貫穿碰撞處理：子彈可穿透多個敵人
-   * @param maxPierceCount 最大貫穿次數（1 = 第一次命中後消耗）
-   * @param handler 碰撞處理器
-   */
-  private processPierceCollision(
-    maxPierceCount: number,
+  private processBulletCollision(
+    bullet: Bullet,
     handler: CollisionHandler,
   ): void {
-    for (const bullet of this.bullets) {
-      if (!bullet.active) continue;
+    // Determine max pierce count based on handler type
+    const maxPierceCount =
+      handler instanceof StinkyTofuCollisionHandler
+        ? handler.getTotalHits()
+        : 1;
 
-      let pierceCount = 0;
-      for (const enemy of this.enemies) {
-        if (!enemy.active) continue;
+    let pierceCount = 0;
+    for (const enemy of this.enemies) {
+      if (!enemy.active) continue;
 
-        if (this.checkBulletEnemyCollision(bullet, enemy)) {
-          const context = this.createCollisionContext(bullet, enemy);
-          handler.handle(context);
-          pierceCount++;
+      if (this.checkBulletEnemyCollision(bullet, enemy)) {
+        const context = this.createCollisionContext(bullet, enemy);
+        handler.handle(context);
+        pierceCount++;
 
-          // Stinky Tofu allows multiple hits, others stop after first
-          const isPiercing = handler instanceof StinkyTofuCollisionHandler;
-          if (!isPiercing || pierceCount >= maxPierceCount) {
-            bullet.active = false;
-            break;
-          }
+        // Stop after max pierce count
+        if (pierceCount >= maxPierceCount) {
+          bullet.active = false;
+          break;
         }
       }
     }

@@ -218,7 +218,12 @@ describe("CombatSystem", () => {
       const enemy2 = new Enemy(EnemyType.Ghost, new Vector(1100, 540));
       enemies.push(enemy1, enemy2);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create StinkyTofu bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.StinkyTofu,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -249,7 +254,12 @@ describe("CombatSystem", () => {
       enemies.push(enemy);
       const initialSpeed = enemy.speed;
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create BloodCake bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.BloodCake,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -270,7 +280,12 @@ describe("CombatSystem", () => {
       const enemy3 = new Enemy(EnemyType.Ghost, new Vector(900, 540));
       enemies.push(enemy1, enemy2, enemy3);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create NightMarket bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.NightMarket,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -292,7 +307,12 @@ describe("CombatSystem", () => {
       const enemy2 = new Enemy(EnemyType.RedGhost, new Vector(700, 540));
       enemies.push(enemy1, enemy2);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create NightMarket bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.NightMarket,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -313,7 +333,12 @@ describe("CombatSystem", () => {
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
       enemies.push(boss);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create OysterOmelette bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.OysterOmelette,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -330,7 +355,12 @@ describe("CombatSystem", () => {
       const elite = new Enemy(EnemyType.RedGhost, new Vector(500, 540));
       enemies.push(elite);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create OysterOmelette bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.OysterOmelette,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -346,7 +376,12 @@ describe("CombatSystem", () => {
       const ghost = new Enemy(EnemyType.Ghost, new Vector(500, 540));
       enemies.push(ghost);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create OysterOmelette bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.OysterOmelette,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -363,7 +398,12 @@ describe("CombatSystem", () => {
       boss.takeDamage(4); // 10 - 4 = 6 HP (injured boss)
       enemies.push(boss);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create OysterOmelette bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.OysterOmelette,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);
@@ -381,7 +421,12 @@ describe("CombatSystem", () => {
       elite.takeDamage(1); // 4 - 1 = 3 HP (injured elite)
       enemies.push(elite);
 
-      const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));
+      // Create OysterOmelette bullet (collision handler based on bullet type)
+      const bullet = new Bullet(
+        new Vector(480, 540),
+        new Vector(1, 0),
+        SpecialBulletType.OysterOmelette,
+      );
       bullets.push(bullet);
 
       combatSystem.update(0.016);

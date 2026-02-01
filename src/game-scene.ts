@@ -256,6 +256,26 @@ export class GameScene {
     this.updateHUD();
     this.checkFoodCollection(); // Auto-collect dropped food
     this.checkGameOver(); // Check game over condition
+    this.applyScreenShake(); // Apply screen shake effect (SPEC § 2.6.3)
+  }
+
+  /**
+   * Apply screen shake offset to game containers
+   * SPEC § 2.6.3: Screen shake effect on bullet impacts
+   */
+  private applyScreenShake(): void {
+    const bulletVisualEffects =
+      this.systemManager.get<BulletVisualEffectsSystem>(
+        "BulletVisualEffectsSystem",
+      );
+    const shakeOffset = bulletVisualEffects.getScreenShakeOffset();
+
+    // Apply shake offset to all game containers
+    this.playerContainer.position.set(shakeOffset.x, shakeOffset.y);
+    this.enemiesContainer.position.set(shakeOffset.x, shakeOffset.y);
+    this.bulletsContainer.position.set(shakeOffset.x, shakeOffset.y);
+    this.foodsContainer.position.set(shakeOffset.x, shakeOffset.y);
+    this.boothContainer.position.set(shakeOffset.x, shakeOffset.y);
   }
 
   private handleInput(deltaTime: number): void {

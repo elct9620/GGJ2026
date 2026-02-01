@@ -61,6 +61,9 @@ export class BulletVisualEffectsSystem implements ISystem {
     // Update existing effects (fade trails, etc.)
     this.effects.update(deltaTime);
 
+    // Update screen shake
+    this.updateScreenShake(deltaTime);
+
     // Create trails for all active bullets
     for (const bullet of this.bullets) {
       if (!bullet.active) {
@@ -72,6 +75,27 @@ export class BulletVisualEffectsSystem implements ISystem {
       // Create trail particle for this bullet
       this.effects.createTrail(bullet.id, bullet.position, bullet.type);
       this.bulletTrailsThisFrame.add(bullet.id);
+    }
+  }
+
+  /**
+   * Update screen shake effect
+   */
+  private updateScreenShake(deltaTime: number): void {
+    if (this.screenShakeDuration > 0) {
+      this.screenShakeDuration -= deltaTime;
+
+      // Calculate random offset within magnitude
+      const offsetX = (Math.random() - 0.5) * 2 * this.screenShakeMagnitude;
+      const offsetY = (Math.random() - 0.5) * 2 * this.screenShakeMagnitude;
+      this.screenShakeOffset = { x: offsetX, y: offsetY };
+
+      // Reset when duration expires
+      if (this.screenShakeDuration <= 0) {
+        this.screenShakeMagnitude = 0;
+        this.screenShakeDuration = 0;
+        this.screenShakeOffset = { x: 0, y: 0 };
+      }
     }
   }
 
@@ -107,11 +131,31 @@ export class BulletVisualEffectsSystem implements ISystem {
     this.effects.createExplosionEffect(position);
   }
 
+  // Screen shake state
+  private screenShakeMagnitude: number = 0;
+  private screenShakeDuration: number = 0;
+  private screenShakeOffset: { x: number; y: number } = { x: 0, y: 0 };
+
   /**
-   * Trigger screen shake (returns shake parameters for GameScene)
+   * Trigger screen shake effect
+   * SPEC § 2.6.3: Screen shake on all bullet impacts
+   * @param magnitude Shake magnitude in pixels
+   * @param duration Shake duration in seconds
    */
-  public triggerScreenShake(): { magnitude: number; duration: number } {
-    return this.effects.triggerScreenShake();
+  public triggerScreenShake(magnitude: number, duration: number): void {
+    // Always apply new shake if stronger or equal (resets duration)
+    // This ensures each hit triggers visible feedback
+    if (magnitude >= this.screenShakeMagnitude) {
+      this.screenShakeMagnitude = magnitude;
+      this.screenShakeDuration = duration;
+    }
+  }
+
+  /**
+   * Get current screen shake offset for GameScene to apply
+   */
+  public getScreenShakeOffset(): { x: number; y: number } {
+    return this.screenShakeOffset;
   }
 
   /**

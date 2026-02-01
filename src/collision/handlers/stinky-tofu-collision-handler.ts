@@ -21,7 +21,7 @@ export class StinkyTofuCollisionHandler extends BaseCollisionHandler {
 
     context.applyDamageAndPublishDeath(context.enemy, damage);
     context.visualEffects?.createPierceEffect(context.enemy.position);
-    this.createHitEffect(context);
+    this.applyUniversalHitEffects(context);
   }
 
   /**

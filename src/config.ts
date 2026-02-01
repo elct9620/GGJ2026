@@ -265,6 +265,35 @@ export const UPGRADE_CONFIG = {
 } as const;
 
 // =============================================================================
+// HIT EFFECTS CONFIG (SPEC § 2.6.3 通用視覺效果)
+// =============================================================================
+export const HIT_EFFECTS_CONFIG = {
+  /** 閃白效果配置（各子彈類型） */
+  flash: {
+    normal: { color: 0xffcccc, duration: 0.12 }, // 淡紅色 120ms（白色在白色 tint 上看不見）
+    nightMarket: { color: 0xffd700, duration: 0.15 }, // 金黃 150ms
+    stinkyTofu: { color: 0x27ae60, duration: 0.12 }, // 綠色 120ms
+    bubbleTea: { color: 0xffcccc, duration: 0.12 }, // 淡紅色 120ms
+    bloodCake: { color: 0x8b0000, duration: 0.13 }, // 黑紅 130ms
+    oysterOmelette: { color: 0xff4444, duration: 0.3 }, // 紅白 300ms
+  },
+  /** 擊退效果配置（通用） */
+  knockback: {
+    distance: 15, // 像素
+    duration: 0.08, // 秒
+  },
+  /** 螢幕震動配置（各子彈類型） */
+  screenShake: {
+    normal: { magnitude: 2, duration: 0.08 }, // 輕微 2px 80ms（1px 太小看不見）
+    nightMarket: { magnitude: 3, duration: 0.1 }, // 3px
+    stinkyTofu: { magnitude: 4, duration: 0.15 }, // 4px
+    bubbleTea: { magnitude: 2, duration: 0.08 }, // 2px
+    bloodCake: { magnitude: 3, duration: 0.1 }, // 3px
+    oysterOmelette: { magnitude: 8, duration: 0.5 }, // 8px（終極）
+  },
+} as const;
+
+// =============================================================================
 // TYPE EXPORTS
 // =============================================================================
 export type PlayerConfig = typeof PLAYER_CONFIG;
@@ -276,3 +305,4 @@ export type BoothConfig = typeof BOOTH_CONFIG;
 export type KillCounterConfig = typeof KILL_COUNTER_CONFIG;
 export type RecipeConfig = typeof RECIPE_CONFIG;
 export type UpgradeConfig = typeof UPGRADE_CONFIG;
+export type HitEffectsConfig = typeof HIT_EFFECTS_CONFIG;

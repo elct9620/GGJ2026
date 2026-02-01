@@ -49,6 +49,14 @@ export class Enemy extends SpriteEntity {
   private slowDuration: number = 0;
   private readonly slowEffectDuration: number = 3; // seconds
 
+  // Flash effect system (SPEC § 2.6.3 通用視覺效果)
+  private originalTint: number = 0xffffff;
+  private flashDuration: number = 0;
+
+  // Knockback effect system (通用受擊效果)
+  private knockbackVelocity: number = 0;
+  private knockbackDuration: number = 0;
+
   // Read-only health accessor (use takeDamage for modifications)
   public get health(): number {
     return this._health.current;
@@ -147,11 +155,50 @@ export class Enemy extends SpriteEntity {
   }
 
   /**
+   * Apply flash effect when hit by bullet (SPEC § 2.6.3 通用視覺效果)
+   * @param color Tint color for flash effect
+   * @param duration Duration of flash in seconds
+   */
+  public flashHit(color: number = 0xffffff, duration: number = 0.1): void {
+    this.originalTint = 0xffffff; // Store original tint (always white)
+    this.enemySprite.tint = color;
+    this.flashDuration = duration;
+  }
+
+  /**
+   * Apply knockback effect when hit by bullet (通用受擊效果)
+   * Pushes enemy to the right (away from baseline)
+   * @param distance Distance to knock back in pixels
+   * @param duration Duration of knockback in seconds
+   */
+  public applyKnockback(distance: number, duration: number): void {
+    if (duration <= 0) return;
+    this.knockbackVelocity = distance / duration;
+    this.knockbackDuration = duration;
+  }
+
+  /**
    * Move enemy to the left (toward baseline)
    * Spec: § 2.6.2 / § 2.7.2 - enemies move left toward x = 340 baseline
    */
   public update(deltaTime: number): void {
     if (!this.active) return;
+
+    // Update flash effect duration
+    if (this.flashDuration > 0) {
+      this.flashDuration -= deltaTime;
+      if (this.flashDuration <= 0) {
+        this.enemySprite.tint = this.originalTint;
+        this.flashDuration = 0;
+      }
+    }
+
+    // Update knockback effect (push right, away from baseline)
+    if (this.knockbackDuration > 0) {
+      const knockbackDisplacement = this.knockbackVelocity * deltaTime;
+      this.position = this.position.add(new Vector(knockbackDisplacement, 0));
+      this.knockbackDuration -= deltaTime;
+    }
 
     // Update slow debuff duration
     if (this.slowDuration > 0) {
@@ -289,6 +336,15 @@ export class Enemy extends SpriteEntity {
     // Reset slow debuff
     this.speedMultiplier = 1.0;
     this.slowDuration = 0;
+
+    // Reset flash effect
+    this.enemySprite.tint = 0xffffff;
+    this.originalTint = 0xffffff;
+    this.flashDuration = 0;
+
+    // Reset knockback effect
+    this.knockbackVelocity = 0;
+    this.knockbackDuration = 0;
 
     if (type === EnemyType.Ghost) {
       this._health = Health.ghostForWave(wave);

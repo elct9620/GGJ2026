@@ -403,4 +403,133 @@ describe("Enemy", () => {
       expect(ghost.hasReachedBaseline()).toBe(true);
     });
   });
+
+  describe("Flash Hit Effect (SPEC § 2.6.3)", () => {
+    it("flashHit 設定敵人 tint 顏色", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+      // Access sprite to check tint (internal)
+      const sprite = ghost.sprite.children[0] as any;
+      expect(sprite.tint).toBe(0xffffff); // Default tint
+
+      ghost.flashHit(0xff0000, 0.1);
+
+      expect(sprite.tint).toBe(0xff0000); // Red flash
+    });
+
+    it("flashHit 持續時間後恢復原始顏色", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+      const sprite = ghost.sprite.children[0] as any;
+
+      ghost.flashHit(0xff0000, 0.1);
+      expect(sprite.tint).toBe(0xff0000);
+
+      // Update for the full duration
+      ghost.update(0.1);
+
+      expect(sprite.tint).toBe(0xffffff); // Restored to white
+    });
+
+    it("flashHit 持續時間內保持閃白顏色", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+      const sprite = ghost.sprite.children[0] as any;
+
+      ghost.flashHit(0xff0000, 0.2);
+
+      // Update for half the duration
+      ghost.update(0.1);
+
+      expect(sprite.tint).toBe(0xff0000); // Still flashing
+    });
+
+    it("reset 後閃白效果被清除", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+      const sprite = ghost.sprite.children[0] as any;
+
+      ghost.flashHit(0xff0000, 1.0);
+      expect(sprite.tint).toBe(0xff0000);
+
+      ghost.reset(EnemyType.Ghost, new Vector(1500, 300));
+
+      expect(sprite.tint).toBe(0xffffff); // Reset to white
+    });
+  });
+
+  describe("Knockback Effect", () => {
+    it("applyKnockback 使敵人向右移動", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+
+      // Apply 15px knockback over 0.08s
+      ghost.applyKnockback(15, 0.08);
+
+      // Update for full knockback duration
+      ghost.update(0.08);
+
+      // Ghost should have moved right by ~15px (minus normal movement)
+      // Normal movement: -50 * 0.08 = -4px
+      // Knockback: +15px
+      // Net: +11px
+      expect(ghost.position.x).toBeCloseTo(1011, 0);
+    });
+
+    it("applyKnockback 持續時間後停止擊退", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+
+      ghost.applyKnockback(15, 0.04);
+
+      // Update for full knockback duration
+      ghost.update(0.04);
+
+      const positionAfterKnockback = ghost.position.x;
+
+      // Update more time - no more knockback, just normal movement
+      ghost.update(0.04);
+
+      // Should only have normal left movement now (-50 * 0.04 = -2px)
+      expect(ghost.position.x).toBeCloseTo(positionAfterKnockback - 2, 0);
+    });
+
+    it("applyKnockback 不影響 Y 軸位置", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+
+      ghost.applyKnockback(15, 0.08);
+      ghost.update(0.08);
+
+      expect(ghost.position.y).toBe(500); // Y unchanged
+    });
+
+    it("reset 後擊退效果被清除", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+
+      ghost.applyKnockback(100, 1.0); // Long knockback
+      ghost.update(0.1); // Partial knockback
+
+      ghost.reset(EnemyType.Ghost, new Vector(1500, 300));
+
+      // After reset, only normal movement should apply
+      ghost.update(0.1);
+
+      // Normal movement: -50 * 0.1 = -5px
+      expect(ghost.position.x).toBeCloseTo(1495, 0);
+    });
+
+    it("applyKnockback 距離為 0 時不產生效果", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+
+      ghost.applyKnockback(0, 0.08);
+      ghost.update(0.08);
+
+      // Only normal movement
+      expect(ghost.position.x).toBeCloseTo(996, 0); // 1000 - 50 * 0.08
+    });
+
+    it("applyKnockback 持續時間為 0 時不產生效果", () => {
+      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+
+      ghost.applyKnockback(15, 0);
+      ghost.update(0.08);
+
+      // Only normal movement
+      expect(ghost.position.x).toBeCloseTo(996, 0); // 1000 - 50 * 0.08
+    });
+  });
 });

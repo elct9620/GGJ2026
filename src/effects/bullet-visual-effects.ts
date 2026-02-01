@@ -258,18 +258,23 @@ export class BulletVisualEffects {
   }
 
   /**
-   * Trigger screen shake effect for Oyster Omelette
-   * SPEC § 2.6.3.6: Screen shake on impact
+   * Trigger screen shake effect
+   * SPEC § 2.6.3: Screen shake on impact (all bullets)
    * Returns shake data for the game scene to apply
+   * @param magnitude Shake magnitude in pixels (default: oyster omelette config)
+   * @param duration Shake duration in seconds (default: oyster omelette config)
    */
-  public triggerScreenShake(): {
+  public triggerScreenShake(
+    magnitude?: number,
+    duration?: number,
+  ): {
     magnitude: number;
     duration: number;
   } {
     const config = VISUAL_EFFECTS_CONFIG.oysterOmelette;
     return {
-      magnitude: config.screenShakeMagnitude,
-      duration: config.screenShakeDuration,
+      magnitude: magnitude ?? config.screenShakeMagnitude,
+      duration: duration ?? config.screenShakeDuration,
     };
   }
 
