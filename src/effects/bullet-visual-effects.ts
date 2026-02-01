@@ -414,7 +414,12 @@ export class BulletVisualEffects {
         break; // Performance limit reached
       }
 
-      const particle = this.createParticle(position, velocity, bulletType, "trail");
+      const particle = this.createParticle(
+        position,
+        velocity,
+        bulletType,
+        "trail",
+      );
       if (particle) {
         this.activeParticles.push(particle);
         this.totalParticleCount++;
@@ -448,14 +453,19 @@ export class BulletVisualEffects {
       }
 
       // Random velocity for 360° burst
-      const angle = (Math.random() * Math.PI * 2);
+      const angle = Math.random() * Math.PI * 2;
       const speed = this.getHitParticleSpeed(bulletType);
       const velocity = new Vector(
         Math.cos(angle) * speed,
         Math.sin(angle) * speed,
       );
 
-      const particle = this.createParticle(position, velocity, bulletType, "hit");
+      const particle = this.createParticle(
+        position,
+        velocity,
+        bulletType,
+        "hit",
+      );
       if (particle) {
         this.activeParticles.push(particle);
         this.totalParticleCount++;
@@ -683,7 +693,10 @@ export class BulletVisualEffects {
       config.lightPillarWidth,
       config.lightPillarHeight,
     );
-    pillar.fill({ color: config.lightPillarColor, alpha: config.lightPillarAlpha });
+    pillar.fill({
+      color: config.lightPillarColor,
+      alpha: config.lightPillarAlpha,
+    });
     pillar.position.set(position.x, 540); // Center vertically
     pillar.visible = true;
     this.glowContainer.addChild(pillar);
@@ -741,9 +754,11 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3: Enemy flashes white/colored on hit
    * Returns ColorMatrixFilter configuration
    */
-  public createHitFlash(
-    bulletType: SpecialBulletType,
-  ): { brightness: number; duration: number; color?: number } {
+  public createHitFlash(bulletType: SpecialBulletType): {
+    brightness: number;
+    duration: number;
+    color?: number;
+  } {
     const flashConfig: Record<string, any> = {
       [SpecialBulletType.Normal]: { brightness: 1.8, duration: 0.1 },
       [SpecialBulletType.NightMarket]: {
@@ -773,9 +788,7 @@ export class BulletVisualEffects {
       },
     };
 
-    return (
-      flashConfig[bulletType] || { brightness: 1.8, duration: 0.1 }
-    );
+    return flashConfig[bulletType] || { brightness: 1.8, duration: 0.1 };
   }
 
   /**
@@ -864,7 +877,9 @@ export class BulletVisualEffects {
    * SPEC § 2.6.3: Visual size 1.5-4x larger than collision box
    */
   public static getBulletScale(bulletType: SpecialBulletType): number {
-    const config = VISUAL_EFFECTS_CONFIG[bulletType as keyof typeof VISUAL_EFFECTS_CONFIG] as any;
+    const config = VISUAL_EFFECTS_CONFIG[
+      bulletType as keyof typeof VISUAL_EFFECTS_CONFIG
+    ] as any;
     return config?.visualScale || 1.0;
   }
 
@@ -1017,7 +1032,9 @@ export class BulletVisualEffects {
   /**
    * Get particle gravity (for blood cake sticky drips)
    */
-  private getParticleGravity(bulletType: SpecialBulletType): number | undefined {
+  private getParticleGravity(
+    bulletType: SpecialBulletType,
+  ): number | undefined {
     if (bulletType === SpecialBulletType.BloodCake) {
       return 50; // 50 px/s² downward
     }

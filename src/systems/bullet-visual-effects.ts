@@ -7,7 +7,10 @@
  */
 
 import type { Container } from "pixi.js";
-import { BulletVisualEffects, type ScreenShakeData } from "../effects/bullet-visual-effects";
+import {
+  BulletVisualEffects,
+  type ScreenShakeData,
+} from "../effects/bullet-visual-effects";
 import type { ISystem } from "../core/systems/system.interface";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Bullet } from "../entities/bullet";
@@ -71,7 +74,12 @@ export class BulletVisualEffectsSystem implements ISystem {
       }
 
       // Create trail particle for this bullet (with velocity for physics)
-      this.effects.createTrail(bullet.id, bullet.position, bullet.velocity, bullet.type);
+      this.effects.createTrail(
+        bullet.id,
+        bullet.position,
+        bullet.velocity,
+        bullet.type,
+      );
       this.bulletTrailsThisFrame.add(bullet.id);
     }
   }
@@ -98,7 +106,11 @@ export class BulletVisualEffectsSystem implements ISystem {
    * Create chain lightning effect for Night Market
    * @param chainIndex - Chain number (0-4) for brightness decay
    */
-  public createChainEffect(from: Vector, to: Vector, chainIndex: number = 0): void {
+  public createChainEffect(
+    from: Vector,
+    to: Vector,
+    chainIndex: number = 0,
+  ): void {
     this.effects.createChainEffect(from, to, chainIndex);
   }
 
