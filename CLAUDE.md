@@ -173,7 +173,7 @@ interface ISystem {
    - 5 recipes: NightMarket, StinkyTofu, BubbleTea, BloodCake, OysterOmelette
    - Publishes `SynthesisTriggered` event
 
-7. **Kill Counter System**: 累積擊殺計數，10 隻解鎖蚵仔煎
+7. **Kill Counter System**: 累積擊殺計數，10隻解鎖蚵仔煎
 
 8. **Wave System**: 敵人生成與回合進程
    - Enemy count formula: `wave × 2`
