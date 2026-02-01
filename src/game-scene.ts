@@ -16,7 +16,7 @@ import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import { RECIPES } from "./values/recipes";
-import { RECIPE_CONFIG } from "./config";
+import { RECIPE_CONFIG, PLAYER_CONFIG } from "./config";
 import type { GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
 
@@ -107,6 +107,7 @@ export class GameScene {
       "KillCounterSystem",
       killCounterSystem,
     );
+    this.systemManager.provideDependency("UpgradeSystem", upgradeSystem);
 
     this.systemManager.initialize();
 
@@ -578,10 +579,24 @@ export class GameScene {
   /**
    * Handle UpgradeSelected event from UpgradeSystem (SPEC § 2.3.6)
    * This is published after upgrade is successfully applied
+   * Apply Player-related upgrades: 大胃王 (magazine), 好餓好餓 (reload time)
    */
-  private onUpgradeSelected(_data: { upgradeId: string }): void {
-    // Track special bullet usage for statistics
-    // (upgrade selection is already handled in onUpgradeSelect)
+  private onUpgradeSelected(data: { upgradeId: string }): void {
+    const upgradeSystem =
+      this.systemManager.get<UpgradeSystem>("UpgradeSystem");
+    const state = upgradeSystem.getState();
+
+    // Apply 大胃王 upgrade (magazine capacity)
+    if (data.upgradeId === "bigEater") {
+      const newCapacity =
+        PLAYER_CONFIG.magazineCapacity + (state.magazineMultiplier - 1);
+      this.player.updateMagazineCapacity(newCapacity);
+    }
+
+    // Apply 好餓好餓 upgrade (reload time reduction)
+    if (data.upgradeId === "veryHungry") {
+      this.player.setReloadTimeReduction(state.reloadTimeReduction);
+    }
   }
 
   /**

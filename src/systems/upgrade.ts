@@ -29,14 +29,19 @@ export interface UpgradeOption {
 export interface UpgradeState {
   // Normal upgrades (SPEC § 2.3.4)
   stinkyTofuDamageBonus: number; // 加辣: +0.5 per upgrade
-  bubbleTeaBulletBonus: number; // 加椰果: +5 per upgrade
+  bubbleTeaBulletBonus: number; // 加椰果: +1 per upgrade
   bloodCakeRangeBonus: number; // 加香菜: +0.5 per upgrade
 
   // Boss upgrades (SPEC § 2.3.4)
   recipeCostReduction: number; // 打折: -1 per upgrade (min 1)
-  magazineMultiplier: number; // 大胃王: ×2 per upgrade
-  killThresholdDivisor: number; // 快吃: ÷2 per upgrade
-  buffDurationMultiplier: number; // 飢餓三十: ×2 per upgrade
+  magazineMultiplier: number; // 大胃王: +6 per upgrade
+  killThresholdDivisor: number; // 快吃: +10% per upgrade
+  buffDurationMultiplier: number; // 飢餓三十: +2s per upgrade
+
+  // NEW: Missing Boss upgrades
+  reloadTimeReduction: number; // 好餓好餓: -0.5s per upgrade
+  nightMarketChainMultiplier: number; // 總匯吃到飽: ×2 per upgrade (初始 1)
+  nightMarketDecayReduction: number; // 總匯吃到飽: -0.1 per upgrade
 }
 
 /**
@@ -62,6 +67,9 @@ export class UpgradeSystem extends InjectableSystem {
     magazineMultiplier: 1,
     killThresholdDivisor: 1,
     buffDurationMultiplier: 1,
+    reloadTimeReduction: 0,
+    nightMarketChainMultiplier: 1,
+    nightMarketDecayReduction: 0,
   };
 
   // Current upgrade options (shown to player)
@@ -157,6 +165,28 @@ export class UpgradeSystem extends InjectableSystem {
       effect: (state) => {
         state.buffDurationMultiplier +=
           UPGRADE_CONFIG.boss.hunger30.durationBonus;
+      },
+    },
+    {
+      id: "veryHungry",
+      name: "好餓好餓",
+      description: `換彈時間 -${UPGRADE_CONFIG.boss.veryHungry.reloadReduction}s`,
+      cost: null,
+      effect: (state) => {
+        state.reloadTimeReduction +=
+          UPGRADE_CONFIG.boss.veryHungry.reloadReduction;
+      },
+    },
+    {
+      id: "buffet",
+      name: "總匯吃到飽",
+      description: `夜市總匯連鎖 ×${UPGRADE_CONFIG.boss.buffet.chainMultiplier}、衰減 -${UPGRADE_CONFIG.boss.buffet.decayReduction * 100}%`,
+      cost: null,
+      effect: (state) => {
+        state.nightMarketChainMultiplier *=
+          UPGRADE_CONFIG.boss.buffet.chainMultiplier;
+        state.nightMarketDecayReduction +=
+          UPGRADE_CONFIG.boss.buffet.decayReduction;
       },
     },
   ];
@@ -298,6 +328,9 @@ export class UpgradeSystem extends InjectableSystem {
       magazineMultiplier: 1,
       killThresholdDivisor: 1,
       buffDurationMultiplier: 1,
+      reloadTimeReduction: 0,
+      nightMarketChainMultiplier: 1,
+      nightMarketDecayReduction: 0,
     };
   }
 }

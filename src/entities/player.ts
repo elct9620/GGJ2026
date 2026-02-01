@@ -22,7 +22,8 @@ export class Player extends Entity {
 
   public isReloading: boolean = false;
   public reloadTimer: number = 0;
-  public readonly reloadTime: number = PLAYER_CONFIG.reloadTime;
+  private baseReloadTime: number = PLAYER_CONFIG.reloadTime;
+  private reloadTimeReduction: number = 0;
 
   // Backward compatible getters/setters
   public get health(): number {
@@ -43,6 +44,14 @@ export class Player extends Entity {
 
   public get maxAmmo(): number {
     return this._ammo.max;
+  }
+
+  /**
+   * Get effective reload time after upgrades
+   * SPEC § 2.3.4: 好餓好餓升級減少重裝時間
+   */
+  public get reloadTime(): number {
+    return Math.max(0.5, this.baseReloadTime - this.reloadTimeReduction);
   }
 
   // Value Object accessors
@@ -201,6 +210,24 @@ export class Player extends Entity {
   }
 
   /**
+   * Update magazine capacity (大胃王升級)
+   * SPEC § 2.3.4: 增加彈匣容量
+   * @param newMax New maximum ammo capacity
+   */
+  public updateMagazineCapacity(newMax: number): void {
+    this._ammo = this._ammo.setMax(newMax);
+  }
+
+  /**
+   * Set reload time reduction (好餓好餓升級)
+   * SPEC § 2.3.4: 減少重裝時間
+   * @param reduction Total reduction in seconds
+   */
+  public setReloadTimeReduction(reduction: number): void {
+    this.reloadTimeReduction = reduction;
+  }
+
+  /**
    * Reset player state for object pool reuse
    */
   public reset(position: Vector): void {
@@ -210,6 +237,7 @@ export class Player extends Entity {
     this._ammo = Ammo.default();
     this.isReloading = false;
     this.reloadTimer = 0;
+    this.reloadTimeReduction = 0;
     this.updateSpritePosition();
   }
 }

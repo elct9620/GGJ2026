@@ -57,7 +57,15 @@ describe("UpgradeSystem", () => {
       eventQueue.publish(EventType.WaveComplete, { waveNumber: 5 });
 
       const options = upgradeSystem.getCurrentOptions();
-      const bossUpgradeIds = ["discount", "bigEater", "fastEat", "hunger30"];
+      // 6 Boss upgrades: 打折, 大胃王, 快吃, 飢餓三十, 好餓好餓, 總匯吃到飽
+      const bossUpgradeIds = [
+        "discount",
+        "bigEater",
+        "fastEat",
+        "hunger30",
+        "veryHungry",
+        "buffet",
+      ];
 
       expect(options.length).toBe(2);
       options.forEach((opt) => {
@@ -215,7 +223,7 @@ describe("UpgradeSystem", () => {
       const afterState = { ...upgradeSystem.getState() };
 
       // Verify specific effect based on selected upgrade
-      // SPEC § 2.3.4: 打折 -1, 大胃王 +6, 快吃 +10%, 飢餓三十 +2s
+      // SPEC § 2.3.4: 打折 -1, 大胃王 +6, 快吃 +10%, 飢餓三十 +2s, 好餓好餓 -0.5s, 總匯吃到飽 ×2/-10%
       const selectedId = options[0].id;
       if (selectedId === "discount") {
         expect(afterState.recipeCostReduction).toBe(1);
@@ -228,6 +236,13 @@ describe("UpgradeSystem", () => {
       } else if (selectedId === "hunger30") {
         // 初始值 1 + 加成 2 = 3
         expect(afterState.buffDurationMultiplier).toBe(3);
+      } else if (selectedId === "veryHungry") {
+        // 初始值 0 + 加成 0.5 = 0.5
+        expect(afterState.reloadTimeReduction).toBe(0.5);
+      } else if (selectedId === "buffet") {
+        // 初始值 1 × 2 = 2, 初始值 0 + 0.1 = 0.1
+        expect(afterState.nightMarketChainMultiplier).toBe(2);
+        expect(afterState.nightMarketDecayReduction).toBe(0.1);
       }
 
       // At least one boss upgrade effect should apply
@@ -236,7 +251,12 @@ describe("UpgradeSystem", () => {
         afterState.magazineMultiplier !== beforeState.magazineMultiplier ||
         afterState.killThresholdDivisor !== beforeState.killThresholdDivisor ||
         afterState.buffDurationMultiplier !==
-          beforeState.buffDurationMultiplier;
+          beforeState.buffDurationMultiplier ||
+        afterState.reloadTimeReduction !== beforeState.reloadTimeReduction ||
+        afterState.nightMarketChainMultiplier !==
+          beforeState.nightMarketChainMultiplier ||
+        afterState.nightMarketDecayReduction !==
+          beforeState.nightMarketDecayReduction;
 
       expect(bossUpgradeApplied).toBe(true);
     });

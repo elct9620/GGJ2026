@@ -16,6 +16,7 @@ import { SpecialBulletType } from "../values/special-bullet";
 import { Damage } from "../values/damage";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
+import type { UpgradeSystem } from "./upgrade";
 
 // Re-export for backwards compatibility
 export { SpecialBulletType } from "../values/special-bullet";
@@ -64,6 +65,7 @@ export class CombatSystem extends InjectableSystem {
   constructor() {
     super();
     this.declareDependency(DependencyKeys.EventQueue, false); // Optional for testing
+    this.declareDependency(DependencyKeys.UpgradeSystem, false); // Optional for testing
   }
 
   /**
@@ -72,6 +74,16 @@ export class CombatSystem extends InjectableSystem {
   private get eventQueue(): EventQueue | null {
     if (this.hasDependency(DependencyKeys.EventQueue)) {
       return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
+    }
+    return null;
+  }
+
+  /**
+   * Get UpgradeSystem dependency (optional)
+   */
+  private get upgradeSystem(): UpgradeSystem | null {
+    if (this.hasDependency(DependencyKeys.UpgradeSystem)) {
+      return this.getDependency<UpgradeSystem>(DependencyKeys.UpgradeSystem);
     }
     return null;
   }
@@ -292,10 +304,14 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * StinkyTofu (臭豆腐) - 貫穿效果 (SPEC § 2.3.3)
-   * Damage: 2, pierces 1 enemy (hits up to pierceCount + 1 enemies)
+   * Damage: 2 + stinkyTofuDamageBonus (加辣升級)
+   * Pierces 1 enemy (hits up to pierceCount + 1 enemies)
    */
   private handleStinkyTofuCollision(): void {
-    const damage = RECIPE_CONFIG.stinkyTofu.baseDamage;
+    const baseDamage = RECIPE_CONFIG.stinkyTofu.baseDamage;
+    const damageBonus =
+      this.upgradeSystem?.getState().stinkyTofuDamageBonus ?? 0;
+    const damage = baseDamage + damageBonus;
     // pierceCount = 1 means hit first + pierce through 1 more = 2 total hits
     const totalHits = RECIPE_CONFIG.stinkyTofu.pierceCount + 1;
 
@@ -336,13 +352,23 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * NightMarket (夜市總匯) - 連鎖攻擊 (SPEC § 2.3.3)
-   * Damage: 2, chains 5 targets, -20% damage per hit
+   * Damage: 2, chains 5 targets × chainMultiplier, -20% + decayReduction per hit
+   * 總匯吃到飽升級增加連鎖數並減少衰減
    */
   private handleNightMarketCollision(): void {
     const baseDamage = RECIPE_CONFIG.nightMarket.baseDamage;
-    const chainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
-    const damageDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
+    const baseChainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
+    const baseDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
     const chainRange = 300; // Maximum chain distance in pixels
+
+    // 總匯吃到飽 upgrade effects
+    const chainMultiplier =
+      this.upgradeSystem?.getState().nightMarketChainMultiplier ?? 1;
+    const decayReduction =
+      this.upgradeSystem?.getState().nightMarketDecayReduction ?? 0;
+
+    const chainTargets = Math.floor(baseChainTargets * chainMultiplier);
+    const damageDecay = Math.max(0, baseDecay - decayReduction);
 
     this.processFirstHitCollision((_bullet, enemy) => {
       // Start chain attack from first hit
@@ -424,18 +450,24 @@ export class CombatSystem extends InjectableSystem {
 
   /**
    * Calculate percentage damage based on enemy type (SPEC § 2.3.3)
+   * 快吃升級增加百分比傷害
    */
   private calculatePercentDamage(enemy: Enemy): Damage {
     const { bossDamagePercent, eliteDamagePercent, ghostDamagePercent } =
       RECIPE_CONFIG.oysterOmelet;
 
+    // 快吃 upgrade bonus (killThresholdDivisor adds +10% per stack)
+    const damageBonus =
+      this.upgradeSystem?.getState().killThresholdDivisor ?? 1;
+    const bonusPercent = damageBonus - 1; // Convert multiplier to bonus (1 = no bonus)
+
     let percentage: number;
     if (enemy.type === EnemyType.Boss) {
-      percentage = bossDamagePercent;
+      percentage = bossDamagePercent + bonusPercent;
     } else if (isEliteType(enemy.type)) {
-      percentage = eliteDamagePercent;
+      percentage = eliteDamagePercent + bonusPercent;
     } else {
-      percentage = ghostDamagePercent;
+      percentage = ghostDamagePercent + bonusPercent;
     }
 
     return Damage.fromPercentage(enemy.maxHealth, percentage);
@@ -482,16 +514,21 @@ export class CombatSystem extends InjectableSystem {
       return;
     }
 
+    // Calculate buff duration with 飢餓三十 upgrade bonus
+    const durationBonus =
+      this.upgradeSystem?.getState().buffDurationMultiplier ?? 1;
+    const effectiveDuration = this.buffDuration + (durationBonus - 1);
+
     // Activate buff
     this.currentBuff = buffType;
-    this.buffTimer = this.buffDuration;
+    this.buffTimer = effectiveDuration;
 
     // Publish BuffExpired event with delay (SPEC § 2.3.6)
     if (this.eventQueue) {
       this.eventQueue.publish(
         EventType.BuffExpired,
         { buffType },
-        this.buffDuration * 1000,
+        effectiveDuration * 1000,
       );
     }
   }
