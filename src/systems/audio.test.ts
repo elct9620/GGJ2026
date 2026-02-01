@@ -34,42 +34,6 @@ describe("AudioSystem", () => {
     });
   });
 
-  describe("Background Music", () => {
-    it("[AU-01] should start playing background music on BackgroundMusicStart event", () => {
-      const playSpy = vi.spyOn(audioSystem, "playBackgroundMusic" as any);
-
-      eventQueue.publish(EventType.BackgroundMusicStart, {
-        musicId: "bgm",
-        loop: true,
-      });
-
-      expect(playSpy).toHaveBeenCalledWith("bgm", true);
-    });
-
-    it("[AU-02] should set loop=true for background music", () => {
-      const playSpy = vi.spyOn(audioSystem, "playBackgroundMusic" as any);
-
-      eventQueue.publish(EventType.BackgroundMusicStart, {
-        musicId: "bgm",
-        loop: true,
-      });
-
-      expect(playSpy).toHaveBeenCalledWith("bgm", true);
-    });
-
-    it("[AU-05] should not throw error when music file fails to load", () => {
-      // Mock file load failure
-      vi.spyOn(console, "error").mockImplementation(() => {});
-
-      expect(() => {
-        eventQueue.publish(EventType.BackgroundMusicStart, {
-          musicId: "invalid_file",
-          loop: true,
-        });
-      }).not.toThrow();
-    });
-  });
-
   describe("Sound Effects", () => {
     it("[AU-23] should play sound effect on SoundEffectTriggered event", () => {
       const playSpy = vi.spyOn(audioSystem, "playSoundEffect" as any);
@@ -168,11 +132,6 @@ describe("AudioSystem", () => {
   });
 
   describe("Audio file mapping", () => {
-    it("should have correct file path for bgm", () => {
-      const mapping = (audioSystem as any).soundMap;
-      expect(mapping["bgm"]).toContain("Leisure song.mp3");
-    });
-
     it("should have correct file path for button", () => {
       const mapping = (audioSystem as any).soundMap;
       expect(mapping["button"]).toContain("select03.mp3");
@@ -192,7 +151,6 @@ describe("AudioSystem", () => {
   describe("Mute functionality", () => {
     it("should not play sounds when muted", () => {
       audioSystem.setMuted(true);
-      const playSpy = vi.spyOn(audioSystem, "playSoundEffect" as any);
 
       eventQueue.publish(EventType.SoundEffectTriggered, {
         soundId: "button",
@@ -224,17 +182,6 @@ describe("AudioSystem", () => {
 
       expect(subscribeSpy).toHaveBeenCalledWith(
         EventType.SoundEffectTriggered,
-        expect.any(Function),
-      );
-    });
-
-    it("should subscribe to BackgroundMusicStart on initialize", () => {
-      const subscribeSpy = vi.spyOn(eventQueue, "subscribe");
-      audioSystem.setEventQueue(eventQueue);
-      audioSystem.initialize();
-
-      expect(subscribeSpy).toHaveBeenCalledWith(
-        EventType.BackgroundMusicStart,
         expect.any(Function),
       );
     });

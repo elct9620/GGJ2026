@@ -115,12 +115,6 @@ export class GameScene {
 
     this.systemManager.initialize();
 
-    // Start background music after initialization (SPEC § 2.3.9)
-    eventQueue.publish(EventType.BackgroundMusicStart, {
-      musicId: "bgm",
-      loop: true,
-    });
-
     // Subscribe to EnemyDeath event for food drops
     eventQueue.subscribe(EventType.EnemyDeath, this.onEnemyDeath.bind(this));
 

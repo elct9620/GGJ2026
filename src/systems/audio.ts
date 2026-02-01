@@ -25,7 +25,6 @@ export class AudioSystem implements ISystem {
   private eventQueue: EventQueue | null = null;
 
   // Audio elements
-  private backgroundMusic: HTMLAudioElement | null = null;
   private soundEffects: Map<string, HTMLAudioElement[]> = new Map();
 
   // Mute state
@@ -33,7 +32,6 @@ export class AudioSystem implements ISystem {
 
   // Sound file mapping (SPEC § 2.3.9: 音效檔案映射)
   private soundMap: Record<string, string> = {
-    bgm: "/src/assets/se/Leisure song.mp3",
     button: "/src/assets/se/select03.mp3",
     shoot: "/src/assets/se/shoot5.mp3",
     hit: "/src/assets/se/short_punch1.mp3",
@@ -61,11 +59,6 @@ export class AudioSystem implements ISystem {
       EventType.SoundEffectTriggered,
       this.onSoundEffectTriggered.bind(this),
     );
-
-    this.eventQueue.subscribe(
-      EventType.BackgroundMusicStart,
-      this.onBackgroundMusicStart.bind(this),
-    );
   }
 
   /**
@@ -80,27 +73,16 @@ export class AudioSystem implements ISystem {
    * SPEC § 2.3.9: Clean up audio resources
    */
   public destroy(): void {
-    // Stop and cleanup background music
-    if (this.backgroundMusic) {
-      this.backgroundMusic.pause();
-      this.backgroundMusic = null;
-    }
-
     // Cleanup sound effects
     this.soundEffects.clear();
   }
 
   /**
    * Set muted state
-   * SPEC § 2.3.9: 音量控制 - 所有音效和音樂可全域靜音
+   * SPEC § 2.3.9: 音量控制 - 所有音效可全域靜音
    */
   public setMuted(muted: boolean): void {
     this.muted = muted;
-
-    // Update background music mute state
-    if (this.backgroundMusic) {
-      this.backgroundMusic.muted = muted;
-    }
   }
 
   /**
@@ -116,60 +98,6 @@ export class AudioSystem implements ISystem {
    */
   private onSoundEffectTriggered(data: { soundId: string }): void {
     this.playSoundEffect(data.soundId);
-  }
-
-  /**
-   * Handle BackgroundMusicStart event
-   * SPEC § 2.3.9: Play Background Music
-   */
-  private onBackgroundMusicStart(data: {
-    musicId: string;
-    loop: boolean;
-  }): void {
-    this.playBackgroundMusic(data.musicId, data.loop);
-  }
-
-  /**
-   * Play background music
-   * SPEC § 2.3.9: Behaviors - Play Background Music
-   *
-   * - 遊戲場景進入時開始播放
-   * - 循環播放（loop = true）
-   * - 遊戲暫停時音樂繼續播放
-   * - 遊戲結束時音樂繼續播放（不停止）
-   */
-  private playBackgroundMusic(musicId: string, loop: boolean): void {
-    const filePath = this.soundMap[musicId];
-
-    if (!filePath) {
-      console.error(`AudioSystem: Invalid musicId '${musicId}'`);
-      return;
-    }
-
-    try {
-      // Create new audio element
-      const audio = new Audio(filePath);
-      audio.loop = loop;
-      audio.muted = this.muted;
-
-      // Play audio (handle autoplay restrictions)
-      const playPromise = audio.play();
-
-      if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-          // SPEC § 2.3.9: Error Scenarios - 瀏覽器限制自動播放
-          console.warn(
-            "AudioSystem: Autoplay blocked, will retry on user interaction",
-            error,
-          );
-        });
-      }
-
-      this.backgroundMusic = audio;
-    } catch (error) {
-      // SPEC § 2.3.9: Error Scenarios - 音檔載入失敗
-      console.error("AudioSystem: Failed to load background music", error);
-    }
   }
 
   /**
