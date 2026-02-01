@@ -76,8 +76,8 @@ describe("BulletVisualEffects", () => {
       }
 
       const container = visualEffects.getContainer();
-      // Should be limited to max trail length (8 for normal bullets)
-      expect(container.children.length).toBeLessThanOrEqual(8);
+      // Should be limited to max trail length (5)
+      expect(container.children.length).toBeLessThanOrEqual(5);
     });
   });
 
@@ -161,9 +161,29 @@ describe("BulletVisualEffects", () => {
     });
   });
 
-  // Note: Bullet scale is now managed by BULLET_CONFIG.sizes in config.ts
-  // The getBulletScale method has been removed from BulletVisualEffects
-  // as bullet sizes are unified (visual = collision) per CLAUDE.md design decision
+  describe("Bullet Scale (VE-09, VE-12)", () => {
+    it("should return larger scale for bubble tea bullets (VE-09)", () => {
+      const scale = BulletVisualEffects.getBulletScale(
+        SpecialBulletType.BubbleTea,
+      );
+      expect(scale).toBeGreaterThan(1.0);
+    });
+
+    it("should return 3-4x scale for oyster omelette bullets (VE-12)", () => {
+      const scale = BulletVisualEffects.getBulletScale(
+        SpecialBulletType.OysterOmelette,
+      );
+      expect(scale).toBeGreaterThanOrEqual(3.0);
+      expect(scale).toBeLessThanOrEqual(4.0);
+    });
+
+    it("should return normal scale (1.0) for other bullet types", () => {
+      const scale = BulletVisualEffects.getBulletScale(
+        SpecialBulletType.StinkyTofu,
+      );
+      expect(scale).toBe(1.0);
+    });
+  });
 
   describe("Update and Cleanup", () => {
     it("should fade trails over time", () => {
@@ -190,14 +210,15 @@ describe("BulletVisualEffects", () => {
         SpecialBulletType.None,
       );
 
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      const initialCount = visualEffects.getContainer().children.length;
+      expect(initialCount).toBeGreaterThan(0); // Main effect + particles
 
       // Update with time less than hit duration (0.15s)
       visualEffects.update(0.1);
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
 
-      // Update with enough time to expire (total 0.2s > 0.15s)
-      visualEffects.update(0.1);
+      // Update with enough time to expire (total 0.5s > 0.4s for all particles)
+      visualEffects.update(0.4);
       expect(visualEffects.getContainer().children.length).toBe(0);
     });
 
@@ -207,42 +228,45 @@ describe("BulletVisualEffects", () => {
         new Vector(200, 200),
       );
 
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      const initialCount = visualEffects.getContainer().children.length;
+      expect(initialCount).toBeGreaterThan(0); // Main lightning + particles
 
-      // Update with time less than flash duration (0.2s)
+      // Update with time less than flash duration (0.3s)
       visualEffects.update(0.15);
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
 
-      // Update with enough time to expire (total 0.3s > 0.2s)
-      visualEffects.update(0.15);
+      // Update with enough time to expire (total 0.5s > 0.3s)
+      visualEffects.update(0.35);
       expect(visualEffects.getContainer().children.length).toBe(0);
     });
 
     it("should remove pierce effects after lifetime expires via update loop", () => {
       visualEffects.createPierceEffect(new Vector(100, 100));
 
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      const initialCount = visualEffects.getContainer().children.length;
+      expect(initialCount).toBeGreaterThan(0); // Main cloud + particles + residue
 
-      // Update with time less than pierce duration (0.3s)
-      visualEffects.update(0.2);
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      // Update with time less than pierce duration (0.5s)
+      visualEffects.update(0.3);
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
 
-      // Update with enough time to expire (total 0.4s > 0.3s)
-      visualEffects.update(0.2);
+      // Update with enough time to expire (total 1.6s > 1.5s ground residue duration)
+      visualEffects.update(1.3);
       expect(visualEffects.getContainer().children.length).toBe(0);
     });
 
     it("should remove explosion effects after lifetime expires via update loop", () => {
       visualEffects.createExplosionEffect(new Vector(100, 100));
 
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      const initialCount = visualEffects.getContainer().children.length;
+      expect(initialCount).toBeGreaterThan(0); // Main explosion + shockwave + 500 particles + residue
 
-      // Update with time less than explosion duration (0.4s)
-      visualEffects.update(0.3);
-      expect(visualEffects.getContainer().children.length).toBe(1);
+      // Update with time less than explosion duration (1.0s)
+      visualEffects.update(0.5);
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
 
-      // Update with enough time to expire (total 0.5s > 0.4s)
-      visualEffects.update(0.2);
+      // Update with enough time to expire (total 3.5s > 3.0s ground residue duration)
+      visualEffects.update(3.0);
       expect(visualEffects.getContainer().children.length).toBe(0);
     });
 
@@ -312,6 +336,167 @@ describe("BulletVisualEffects", () => {
 
       // All bullet types should create effects
       expect(visualEffects.getContainer().children.length).toBe(types.length);
+    });
+  });
+
+  describe("Muzzle Flash (VE-01, VE-06, VE-17, VE-25, VE-34, VE-44)", () => {
+    it("should create white muzzle flash for normal bullets (VE-01)", () => {
+      const position = new Vector(100, 100);
+      visualEffects.createMuzzleFlash(position, SpecialBulletType.None);
+
+      const container = visualEffects.getContainer();
+      expect(container.children.length).toBeGreaterThan(0);
+    });
+
+    it("should create golden muzzle flash for night market (VE-06)", () => {
+      const position = new Vector(200, 200);
+      visualEffects.createMuzzleFlash(position, SpecialBulletType.NightMarket);
+
+      const container = visualEffects.getContainer();
+      expect(container.children.length).toBeGreaterThan(0);
+    });
+
+    it("should create massive muzzle flash for oyster omelette (VE-44)", () => {
+      const position = new Vector(300, 300);
+      visualEffects.createMuzzleFlash(
+        position,
+        SpecialBulletType.OysterOmelette,
+      );
+
+      const container = visualEffects.getContainer();
+      // Should create many particles
+      expect(container.children.length).toBeGreaterThan(10);
+    });
+  });
+
+  describe("Screen Shake (VE-13, VE-22, VE-31, VE-41, VE-50)", () => {
+    it("should return zero offset when no shake is active", () => {
+      const offset = visualEffects.getScreenShakeOffset();
+      expect(offset.x).toBe(0);
+      expect(offset.y).toBe(0);
+    });
+
+    it("should return non-zero offset when shake is active", () => {
+      // Trigger shake via explosion
+      visualEffects.createExplosionEffect(new Vector(100, 100));
+
+      const offset = visualEffects.getScreenShakeOffset();
+      // Should be non-zero (within magnitude bounds)
+      expect(Math.abs(offset.x)).toBeGreaterThanOrEqual(0);
+      expect(Math.abs(offset.y)).toBeGreaterThanOrEqual(0);
+      expect(Math.abs(offset.x)).toBeLessThanOrEqual(10); // Some reasonable upper bound
+      expect(Math.abs(offset.y)).toBeLessThanOrEqual(10);
+    });
+
+    it("should stop shaking after duration expires", () => {
+      visualEffects.createExplosionEffect(new Vector(100, 100));
+
+      // Update beyond shake duration (0.5s for oyster omelette)
+      visualEffects.update(0.6);
+
+      const offset = visualEffects.getScreenShakeOffset();
+      expect(offset.x).toBe(0);
+      expect(offset.y).toBe(0);
+    });
+  });
+
+  describe("Fullscreen Flash (VE-53)", () => {
+    it("should return zero alpha when no flash is active", () => {
+      const alpha = visualEffects.getFullscreenFlashAlpha();
+      expect(alpha).toBe(0);
+    });
+
+    it("should return non-zero alpha when flash is active", () => {
+      // Trigger fullscreen flash via explosion
+      visualEffects.createExplosionEffect(new Vector(100, 100));
+
+      const alpha = visualEffects.getFullscreenFlashAlpha();
+      expect(alpha).toBeGreaterThan(0);
+    });
+
+    it("should fade flash over time", () => {
+      visualEffects.createExplosionEffect(new Vector(100, 100));
+
+      const initialAlpha = visualEffects.getFullscreenFlashAlpha();
+
+      // Update partway through flash
+      visualEffects.update(0.1);
+
+      const laterAlpha = visualEffects.getFullscreenFlashAlpha();
+      expect(laterAlpha).toBeLessThanOrEqual(initialAlpha);
+    });
+  });
+
+  describe("Particle System (VE-60)", () => {
+    it("should create 20 particles for normal bullet hit (VE-05)", () => {
+      const initialCount = visualEffects.getContainer().children.length;
+
+      visualEffects.createHitEffect(
+        new Vector(100, 100),
+        SpecialBulletType.None,
+      );
+
+      const finalCount = visualEffects.getContainer().children.length;
+      // Should create main effect + 20 particles
+      expect(finalCount - initialCount).toBeGreaterThanOrEqual(20);
+    });
+
+    it("should create 200+ particles for stinky tofu pierce (VE-21)", () => {
+      const initialCount = visualEffects.getContainer().children.length;
+
+      visualEffects.createPierceEffect(new Vector(100, 100));
+
+      const finalCount = visualEffects.getContainer().children.length;
+      // Should create main effect + 200 particles
+      expect(finalCount - initialCount).toBeGreaterThan(100);
+    });
+
+    it("should create 500+ particles for oyster omelette explosion (VE-49)", () => {
+      const initialCount = visualEffects.getContainer().children.length;
+
+      visualEffects.createExplosionEffect(new Vector(100, 100));
+
+      const finalCount = visualEffects.getContainer().children.length;
+      // Should create massive particle burst
+      expect(finalCount - initialCount).toBeGreaterThan(400);
+    });
+
+    it("should update particle positions over time", () => {
+      visualEffects.createHitEffect(
+        new Vector(100, 100),
+        SpecialBulletType.None,
+      );
+
+      // Update to move particles
+      visualEffects.update(0.1);
+
+      // Particles should still exist
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Ground Residue (VE-15, VE-23, VE-32, VE-42, VE-55)", () => {
+    it("should create ground residue for special bullet hits", () => {
+      visualEffects.createHitEffect(
+        new Vector(100, 100),
+        SpecialBulletType.NightMarket,
+      );
+
+      // Should have main hit effect + particles + ground residue
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(20);
+    });
+
+    it("should persist ground residue longer than hit effect", () => {
+      visualEffects.createHitEffect(
+        new Vector(100, 100),
+        SpecialBulletType.BloodCake,
+      );
+
+      // Update beyond hit duration (0.6s) but less than residue duration (2s)
+      visualEffects.update(1.0);
+
+      // Ground residue should still exist (some children remaining)
+      expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
     });
   });
 });

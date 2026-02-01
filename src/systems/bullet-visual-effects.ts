@@ -58,7 +58,7 @@ export class BulletVisualEffectsSystem implements ISystem {
   public update(deltaTime: number): void {
     this.bulletTrailsThisFrame.clear();
 
-    // Update existing effects (fade trails, etc.)
+    // Update existing effects (fade trails, particles, shake, flashes)
     this.effects.update(deltaTime);
 
     // Create trails for all active bullets
@@ -73,6 +73,33 @@ export class BulletVisualEffectsSystem implements ISystem {
       this.effects.createTrail(bullet.id, bullet.position, bullet.type);
       this.bulletTrailsThisFrame.add(bullet.id);
     }
+  }
+
+  /**
+   * Create muzzle flash when bullet is fired
+   * SPEC § 2.6.3: All bullets have muzzle flash
+   */
+  public createMuzzleFlash(
+    position: Vector,
+    bulletType: SpecialBulletType,
+  ): void {
+    this.effects.createMuzzleFlash(position, bulletType);
+  }
+
+  /**
+   * Get screen shake offset (for game scene camera)
+   * SPEC § 2.6.3: Screen shake for special bullets
+   */
+  public getScreenShakeOffset(): Vector {
+    return this.effects.getScreenShakeOffset();
+  }
+
+  /**
+   * Get fullscreen flash alpha (for game scene overlay)
+   * SPEC § 2.6.3.6: Fullscreen flash for Oyster Omelette
+   */
+  public getFullscreenFlashAlpha(): number {
+    return this.effects.getFullscreenFlashAlpha();
   }
 
   /**
