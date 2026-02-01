@@ -210,19 +210,28 @@ export class HUDSystem extends InjectableSystem {
    */
   private setupSkillButtons(): void {
     const bottomY = CANVAS_HEIGHT - LAYOUT.BOTTOM_HUD_HEIGHT;
-    const baseX = 550; // Start of bulletClassBase
     const buttonCount = 5;
     const {
+      BASE_X,
       LEFT_MARGIN,
       BUTTON_GAP,
       BACKGROUND_SIZE,
       BUTTON_SIZE,
       INDICATOR_SIZE,
+      KEY_TIP_Y_OFFSET,
+      NUMBER_LABEL_X_OFFSET,
+      NUMBER_LABEL_Y_OFFSET,
+      NUMBER_LABEL_FONT_SIZE,
+      INDICATOR_Y_OFFSET,
+      INDICATOR_GAP,
+      LABEL_FONT_SIZE,
+      LABEL_X_OFFSET,
+      LABEL_Y_OFFSET,
     } = LAYOUT.SKILL_SECTION;
 
-    const skillIconSize = BACKGROUND_SIZE; // 116px
-    const keyTipSize = BUTTON_SIZE; // 46px
-    const costIndicatorSize = INDICATOR_SIZE; // 20px
+    const skillIconSize = BACKGROUND_SIZE;
+    const keyTipSize = BUTTON_SIZE;
+    const costIndicatorSize = INDICATOR_SIZE;
 
     // Get skill display configs from centralized recipes
     const recipeIds = ["1", "2", "3", "4", "5"];
@@ -235,7 +244,7 @@ export class HUDSystem extends InjectableSystem {
     for (let i = 0; i < buttonCount; i++) {
       // Calculate button center: left margin + half icon size + i * (icon size + gap)
       const buttonCenterX =
-        baseX +
+        BASE_X +
         LEFT_MARGIN +
         skillIconSize / 2 +
         i * (skillIconSize + BUTTON_GAP);
@@ -254,18 +263,18 @@ export class HUDSystem extends InjectableSystem {
       keyTip.width = keyTipSize;
       keyTip.height = keyTipSize;
       const keyTipX = buttonCenterX - keyTipSize / 2;
-      const keyTipY = skillBgY + 5;
+      const keyTipY = skillBgY + KEY_TIP_Y_OFFSET;
       keyTip.position.set(keyTipX, keyTipY);
 
       this.skillKeyTips.push(keyTip);
       this.bottomHUD.addChild(keyTip);
 
-      // Add number label on keyBindTip - 30px font (from ui_rough_pixelSpec.png)
-      const numberLabel = this.createSmallText(
+      // Add number label on keyBindTip
+      const numberLabel = this.createText(
         `${i + 1}`,
-        buttonCenterX - 8,
-        keyTipY + 8,
-        30,
+        buttonCenterX - NUMBER_LABEL_X_OFFSET,
+        keyTipY + NUMBER_LABEL_Y_OFFSET,
+        NUMBER_LABEL_FONT_SIZE,
       );
       this.bottomHUD.addChild(numberLabel);
 
@@ -273,9 +282,9 @@ export class HUDSystem extends InjectableSystem {
       const indicators: Sprite[] = [];
       const costCount = skillCosts[i];
       const costTypes = skillCostTypes[i];
-      const indicatorY = keyTipY + keyTipSize + 8;
+      const indicatorY = keyTipY + keyTipSize + INDICATOR_Y_OFFSET;
       const indicatorTotalWidth =
-        costCount * costIndicatorSize + (costCount - 1) * 4;
+        costCount * costIndicatorSize + (costCount - 1) * INDICATOR_GAP;
       const indicatorStartX = buttonCenterX - indicatorTotalWidth / 2;
 
       for (let j = 0; j < costCount; j++) {
@@ -285,7 +294,7 @@ export class HUDSystem extends InjectableSystem {
         indicator.width = costIndicatorSize;
         indicator.height = costIndicatorSize;
         indicator.position.set(
-          indicatorStartX + j * (costIndicatorSize + 4),
+          indicatorStartX + j * (costIndicatorSize + INDICATOR_GAP),
           indicatorY,
         );
 
@@ -294,24 +303,24 @@ export class HUDSystem extends InjectableSystem {
       }
       this.skillCostIndicators.push(indicators);
 
-      // For skill 5 (大招), add "×10" text next to indicator - 42px font
+      // For skill 5 (大招), add "×10" text next to indicator
       if (i === 4) {
-        const killCountLabel = this.createSmallText(
+        const killCountLabel = this.createText(
           "×10",
-          indicatorStartX + costIndicatorSize + 4,
-          indicatorY - 8,
-          42,
+          indicatorStartX + costIndicatorSize + INDICATOR_GAP,
+          indicatorY - NUMBER_LABEL_Y_OFFSET,
+          LABEL_FONT_SIZE,
         );
         this.bottomHUD.addChild(killCountLabel);
       }
 
-      // Add skill label below indicators - 42px font (from ui_rough_pixelSpec.png)
-      const labelY = indicatorY + costIndicatorSize + 4;
-      const label = this.createSmallText(
+      // Add skill label below indicators
+      const labelY = indicatorY + costIndicatorSize + LABEL_Y_OFFSET;
+      const label = this.createText(
         skillLabels[i],
-        buttonCenterX - 32,
+        buttonCenterX - LABEL_X_OFFSET,
         labelY,
-        42,
+        LABEL_FONT_SIZE,
       );
       this.bottomHUD.addChild(label);
     }
@@ -333,24 +342,6 @@ export class HUDSystem extends InjectableSystem {
       default:
         return AssetKeys.skillTip0;
     }
-  }
-
-  private createSmallText(
-    content: string,
-    x: number,
-    y: number,
-    fontSize: number = 42,
-  ): Text {
-    const text = new Text({
-      text: content,
-      style: {
-        fontFamily: GAME_FONT_FAMILY,
-        fontSize,
-        fill: 0xffffff,
-      },
-    });
-    text.position.set(x, y);
-    return text;
   }
 
   /**

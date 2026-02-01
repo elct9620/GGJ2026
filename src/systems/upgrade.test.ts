@@ -103,13 +103,13 @@ describe("UpgradeSystem", () => {
       const afterState = { ...upgradeSystem.getState() };
 
       // Verify at least one stat increased based on selected upgrade
-      // SPEC § 2.3.4: 加辣 +0.5, 加椰果 +1, 加香菜 +0.5
+      // SPEC § 2.3.4: 加辣 +0.5 damage, 加椰果 +1 bullet, 加香菜 +100px range
       if (selectedOption.id === "spicy") {
         expect(afterState.stinkyTofuDamageBonus).toBe(0.5);
       } else if (selectedOption.id === "coconut") {
         expect(afterState.bubbleTeaBulletBonus).toBe(1);
       } else if (selectedOption.id === "cilantro") {
-        expect(afterState.bloodCakeRangeBonus).toBe(0.5);
+        expect(afterState.bloodCakeRangeBonus).toBe(100);
       }
 
       const stateChanged =

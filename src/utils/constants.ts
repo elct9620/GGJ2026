@@ -51,11 +51,21 @@ export const LAYOUT = {
     ICON_GAP: 7,
   },
   SKILL_SECTION: {
+    BASE_X: 550, // Start position of bulletClassBase
     LEFT_MARGIN: 68, // Gap from left edge of skill section
     BUTTON_GAP: 30, // Gap between skill buttons
     BUTTON_SIZE: 46,
     BACKGROUND_SIZE: 116,
     INDICATOR_SIZE: 20,
+    KEY_TIP_Y_OFFSET: 5, // Key tip vertical offset from button top
+    NUMBER_LABEL_X_OFFSET: 8, // Number label horizontal offset
+    NUMBER_LABEL_Y_OFFSET: 8, // Number label vertical offset
+    NUMBER_LABEL_FONT_SIZE: 30,
+    INDICATOR_Y_OFFSET: 8, // Indicator vertical offset from key tip
+    INDICATOR_GAP: 4, // Gap between cost indicators
+    LABEL_FONT_SIZE: 42,
+    LABEL_X_OFFSET: 32, // Label horizontal offset from center
+    LABEL_Y_OFFSET: 4, // Label vertical offset from indicators
   },
 } as const;
 
