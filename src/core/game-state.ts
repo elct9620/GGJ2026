@@ -11,7 +11,7 @@ import { SpecialBulletType } from "./types";
 
 /**
  * Upgrade state tracking all permanent upgrades
- * Re-exported from upgrade.ts for centralized access
+ * Single source of truth for upgrade values (SPEC § 2.3.4)
  */
 export interface UpgradeState {
   // Normal upgrades (SPEC § 2.3.4)

@@ -42,7 +42,8 @@ export class Bullet extends SpriteEntity {
 
   /**
    * Get upgrade snapshot captured at bullet creation time
-   * Returns null if no snapshot was provided (for backwards compatibility)
+   * Returns null if no snapshot was provided (collision handlers will
+   * fallback to GameState for upgrade values in this case)
    */
   public get upgradeSnapshot(): BulletUpgradeSnapshot | null {
     return this._upgradeSnapshot;
