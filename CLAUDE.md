@@ -125,6 +125,15 @@ This project uses a **three-layer specification framework** (Intent → Design �
 
 **IMPORTANT**: Always consult SPEC.md before making design decisions. Use the `/align-design` skill to ensure code matches specifications.
 
+### Architecture Guide
+
+本專案採用 **ECS-like 事件驅動架構**，將 Input、Logic、Render 三層分離：
+
+- **docs/architecture.md**: 目標架構指引，描述理想的三層分離設計
+- **目前狀態**: 事件驅動已實作，渲染分離為未來重構方向
+
+詳細架構設計與重構計劃參見 [docs/architecture.md](docs/architecture.md)。
+
 ### Pixi.js Scene Structure
 
 **Container hierarchy** (managed by `GameScene`):

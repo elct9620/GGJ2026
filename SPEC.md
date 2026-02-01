@@ -1235,6 +1235,12 @@ abstract class Entity {
   - 所有數學運算保留浮點精度
   - 操作不修改原實例狀態
 
+## 3.4 Architecture Guide
+
+本專案採用 **ECS-like 事件驅動架構**，將輸入、邏輯、渲染三層分離。
+
+詳細架構設計參見 [docs/architecture.md](docs/architecture.md)。
+
 # 4. Technical Specifications
 
 ## 4.1 Technology Stack
