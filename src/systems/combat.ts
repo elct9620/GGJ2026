@@ -277,7 +277,7 @@ export class CombatSystem extends InjectableSystem {
     const upgradeBonus = upgradeState?.bubbleTeaBulletBonus ?? 0;
     const totalExtraBullets = baseExtra + upgradeBonus;
 
-    const spreadAngle = 15; // degrees
+    const spreadAngle = 20; // degrees (SPEC § 2.3.3: 珍珠奶茶三向散射，間隔 20 度)
     const bulletType = SpecialBulletType.BubbleTea;
 
     // Center bullet
