@@ -230,7 +230,10 @@ describe("BulletVisualEffects", () => {
         new Vector(100, 100),
         SpecialBulletType.None,
       );
-      visualEffects.createHitEffect(new Vector(200, 200), SpecialBulletType.None);
+      visualEffects.createHitEffect(
+        new Vector(200, 200),
+        SpecialBulletType.None,
+      );
       visualEffects.createChainEffect(
         new Vector(300, 300),
         new Vector(400, 400),

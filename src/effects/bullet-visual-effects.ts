@@ -170,14 +170,17 @@ export class BulletVisualEffects {
     this.hitEffects.push(hitEffect);
 
     // Auto-remove after duration
-    setTimeout(() => {
-      this.container.removeChild(hitEffect);
-      hitEffect.destroy();
-      const index = this.hitEffects.indexOf(hitEffect);
-      if (index > -1) {
-        this.hitEffects.splice(index, 1);
-      }
-    }, (config.hitDuration || 0.15) * 1000);
+    setTimeout(
+      () => {
+        this.container.removeChild(hitEffect);
+        hitEffect.destroy();
+        const index = this.hitEffects.indexOf(hitEffect);
+        if (index > -1) {
+          this.hitEffects.splice(index, 1);
+        }
+      },
+      (config.hitDuration || 0.15) * 1000,
+    );
   }
 
   /**
