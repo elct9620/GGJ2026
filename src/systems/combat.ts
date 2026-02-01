@@ -594,6 +594,7 @@ export class CombatSystem extends InjectableSystem {
         this.visualEffects.createChainEffect(
           previousTarget.position,
           currentTarget.position,
+          i, // Chain index for brightness decay
         );
       }
 

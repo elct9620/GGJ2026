@@ -1,12 +1,16 @@
 /**
- * Bullet Visual Effects System
+ * Bullet Visual Effects System - Roguelike Spectacle Edition
  * SPEC § 2.6.3: Manages visual effects for bullets (trails, hits, explosions)
+ * SPEC § 4.2.4: High-density particle system integration
  *
  * This system wraps BulletVisualEffects and integrates it into the game loop.
  */
 
 import type { Container } from "pixi.js";
-import { BulletVisualEffects } from "../effects/bullet-visual-effects";
+import {
+  BulletVisualEffects,
+  type ScreenShakeData,
+} from "../effects/bullet-visual-effects";
 import type { ISystem } from "../core/systems/system.interface";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Bullet } from "../entities/bullet";
@@ -69,8 +73,13 @@ export class BulletVisualEffectsSystem implements ISystem {
         continue;
       }
 
-      // Create trail particle for this bullet
-      this.effects.createTrail(bullet.id, bullet.position, bullet.type);
+      // Create trail particle for this bullet (with velocity for physics)
+      this.effects.createTrail(
+        bullet.id,
+        bullet.position,
+        bullet.velocity,
+        bullet.type,
+      );
       this.bulletTrailsThisFrame.add(bullet.id);
     }
   }
@@ -95,9 +104,14 @@ export class BulletVisualEffectsSystem implements ISystem {
 
   /**
    * Create chain lightning effect for Night Market
+   * @param chainIndex - Chain number (0-4) for brightness decay
    */
-  public createChainEffect(from: Vector, to: Vector): void {
-    this.effects.createChainEffect(from, to);
+  public createChainEffect(
+    from: Vector,
+    to: Vector,
+    chainIndex: number = 0,
+  ): void {
+    this.effects.createChainEffect(from, to, chainIndex);
   }
 
   /**
@@ -109,9 +123,22 @@ export class BulletVisualEffectsSystem implements ISystem {
 
   /**
    * Trigger screen shake (returns shake parameters for GameScene)
+   * SPEC § 2.6.3: All bullets trigger shake on hit
    */
-  public triggerScreenShake(): { magnitude: number; duration: number } {
-    return this.effects.triggerScreenShake();
+  public triggerScreenShake(bulletType: SpecialBulletType): ScreenShakeData {
+    return this.effects.triggerScreenShake(bulletType);
+  }
+
+  /**
+   * Get hit flash configuration for enemy sprite
+   * SPEC § 2.6.3: Enemy flashes on hit (brightness +60% to +150%)
+   */
+  public createHitFlash(bulletType: SpecialBulletType): {
+    brightness: number;
+    duration: number;
+    color?: number;
+  } {
+    return this.effects.createHitFlash(bulletType);
   }
 
   /**
