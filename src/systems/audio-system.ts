@@ -77,7 +77,7 @@ export class AudioSystem extends InjectableSystem {
   }
 
   /**
-   * ISystem lifecycle: initialize
+   * System lifecycle: initialize
    * 訂閱事件並開始預載入音效（非阻塞）
    */
   public initialize(): void {
@@ -89,7 +89,7 @@ export class AudioSystem extends InjectableSystem {
   }
 
   /**
-   * ISystem lifecycle: update
+   * System lifecycle: update
    * AudioSystem 為事件驅動，不需要每幀更新
    */
   public update(_deltaTime: number): void {
@@ -97,7 +97,7 @@ export class AudioSystem extends InjectableSystem {
   }
 
   /**
-   * ISystem lifecycle: destroy
+   * System lifecycle: destroy
    */
   public destroy(): void {
     // 停止所有播放中的音效

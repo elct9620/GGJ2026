@@ -4,7 +4,7 @@
  */
 
 import { SystemPriority } from "../core/systems/system.interface";
-import type { ISystem } from "../core/systems/system.interface";
+import type { System } from "../core/systems/system.interface";
 
 /**
  * Event types defined in SPEC § 2.3.6
@@ -77,7 +77,7 @@ interface DelayedEvent<T extends EventType> {
  * - 訂閱者必須提供處理函式（Handler）
  * - 支援延遲執行（Delayed Execution），單位為毫秒（ms）
  */
-export class EventQueue implements ISystem {
+export class EventQueue implements System {
   public readonly name = "EventQueue";
   public readonly priority = SystemPriority.EVENT_QUEUE;
 
@@ -95,7 +95,7 @@ export class EventQueue implements ISystem {
   }
 
   /**
-   * ISystem lifecycle: initialize
+   * System lifecycle: initialize
    */
   public initialize(): void {
     // Reset state on initialization
@@ -103,7 +103,7 @@ export class EventQueue implements ISystem {
   }
 
   /**
-   * ISystem lifecycle: update
+   * System lifecycle: update
    * Process delayed events queue each frame
    */
   public update(deltaTime: number): void {
@@ -112,7 +112,7 @@ export class EventQueue implements ISystem {
   }
 
   /**
-   * ISystem lifecycle: destroy
+   * System lifecycle: destroy
    */
   public destroy(): void {
     this.clear();

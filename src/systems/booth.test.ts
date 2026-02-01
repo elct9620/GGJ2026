@@ -10,7 +10,7 @@ describe("BoothSystem", () => {
     boothSystem = new BoothSystem();
   });
 
-  describe("ISystem Interface", () => {
+  describe("System Interface", () => {
     it("應有正確的 name", () => {
       expect(boothSystem.name).toBe("BoothSystem");
     });

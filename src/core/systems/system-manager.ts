@@ -1,4 +1,4 @@
-import type { ISystem } from "./system.interface";
+import type { System } from "./system.interface";
 import { isInjectableSystem } from "./injectable";
 
 export class SystemManagerError extends Error {
@@ -15,10 +15,10 @@ export class SystemManagerError extends Error {
  */
 export class SystemManager {
   // 快速查找：O(1) 查詢系統
-  private systems: Map<string, ISystem> = new Map();
+  private systems: Map<string, System> = new Map();
 
   // 優先級排序：註冊時排序一次，避免每幀排序
-  private sortedSystems: ISystem[] = [];
+  private sortedSystems: System[] = [];
 
   // 初始化狀態
   private initialized = false;
@@ -30,7 +30,7 @@ export class SystemManager {
    * 註冊系統
    * @throws SystemManagerError 若系統名稱重複
    */
-  public register(system: ISystem): void {
+  public register(system: System): void {
     if (this.systems.has(system.name)) {
       throw new SystemManagerError(
         `System "${system.name}" is already registered`,
@@ -71,7 +71,7 @@ export class SystemManager {
    * 取得系統實例
    * @throws SystemManagerError 若系統不存在
    */
-  public get<T extends ISystem>(systemName: string): T {
+  public get<T extends System>(systemName: string): T {
     const system = this.systems.get(systemName);
     if (!system) {
       throw new SystemManagerError(`System "${systemName}" is not registered`);

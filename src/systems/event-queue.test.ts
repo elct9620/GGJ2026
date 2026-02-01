@@ -19,7 +19,7 @@ describe("EventQueue System", () => {
     vi.restoreAllMocks();
   });
 
-  describe("ISystem Interface", () => {
+  describe("System Interface", () => {
     it("should have correct name", () => {
       expect(eventQueue.name).toBe("EventQueue");
     });

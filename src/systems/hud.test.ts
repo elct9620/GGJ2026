@@ -9,7 +9,7 @@ describe("HUDSystem", () => {
     hudSystem = new HUDSystem();
   });
 
-  describe("ISystem Interface", () => {
+  describe("System Interface", () => {
     it("應有正確的 name", () => {
       expect(hudSystem.name).toBe("HUDSystem");
     });

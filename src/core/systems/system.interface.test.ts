@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { SystemPriority } from "./system.interface";
-import type { ISystem } from "./system.interface";
+import type { System } from "./system.interface";
 
-describe("ISystem Interface", () => {
+describe("System Interface", () => {
   describe("SystemPriority", () => {
     it("應定義正確的優先級順序", () => {
       expect(SystemPriority.EVENT_QUEUE).toBe(0);
@@ -34,9 +34,9 @@ describe("ISystem Interface", () => {
     });
   });
 
-  describe("ISystem 介面實作範例", () => {
+  describe("System 介面實作範例", () => {
     it("應支援完整實作所有方法", () => {
-      class FullSystem implements ISystem {
+      class FullSystem implements System {
         readonly name = "Full";
         readonly priority = SystemPriority.DEFAULT;
         initialized = false;
@@ -69,7 +69,7 @@ describe("ISystem Interface", () => {
     });
 
     it("應支援最小化實作（僅 update）", () => {
-      class MinimalSystem implements ISystem {
+      class MinimalSystem implements System {
         readonly name = "Minimal";
         readonly priority = SystemPriority.DEFAULT;
 

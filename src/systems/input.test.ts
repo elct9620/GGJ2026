@@ -10,7 +10,7 @@ describe("InputSystem", () => {
     inputSystem.initialize();
   });
 
-  describe("ISystem Interface", () => {
+  describe("System Interface", () => {
     it("應有正確的 name", () => {
       expect(inputSystem.name).toBe("InputSystem");
     });

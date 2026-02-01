@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SystemManager, SystemManagerError } from "./system-manager";
 import { SystemPriority } from "./system.interface";
-import type { ISystem } from "./system.interface";
+import type { System } from "./system.interface";
 import { InjectableSystem, DependencyError } from "./injectable";
 
 // 測試輔助函式：建立 Mock 系統
 function createMockSystem(
   name: string,
   priority: SystemPriority = SystemPriority.DEFAULT,
-): ISystem {
+): System {
   return {
     name,
     priority,
@@ -161,7 +161,7 @@ describe("SystemManager", () => {
       const system = createMockSystem("TestSystem");
       manager.register(system);
 
-      const retrieved = manager.get<ISystem>("TestSystem");
+      const retrieved = manager.get<System>("TestSystem");
 
       expect(retrieved.name).toBe("TestSystem");
     });
@@ -243,7 +243,7 @@ describe("SystemManager", () => {
     });
 
     it("無 initialize 方法的系統應正常運作", () => {
-      const system: ISystem = {
+      const system: System = {
         name: "MinimalSystem",
         priority: SystemPriority.DEFAULT,
         update: vi.fn(),
@@ -404,7 +404,7 @@ describe("SystemManager", () => {
     });
 
     it("無 destroy 方法的系統應正常運作", () => {
-      const system: ISystem = {
+      const system: System = {
         name: "MinimalSystem",
         priority: SystemPriority.DEFAULT,
         update: vi.fn(),
@@ -519,7 +519,7 @@ describe("SystemManager", () => {
       expect(system.initializeCalled).toBe(true);
     });
 
-    it("混合 ISystem 和 InjectableSystem 應正常運作", () => {
+    it("混合 System 和 InjectableSystem 應正常運作", () => {
       const regularSystem = createMockSystem("RegularSystem");
       const injectableSystem = new TestInjectableSystem("InjectableSystem");
 

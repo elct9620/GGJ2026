@@ -20,7 +20,7 @@ export class InputSystem extends InjectableSystem {
   };
 
   /**
-   * Initialize event listeners (ISystem lifecycle)
+   * Initialize event listeners (System lifecycle)
    */
   public initialize(): void {
     window.addEventListener("keydown", this.handleKeyDown);
@@ -28,7 +28,7 @@ export class InputSystem extends InjectableSystem {
   }
 
   /**
-   * Update method (ISystem lifecycle)
+   * Update method (System lifecycle)
    * InputSystem is event-driven, no update needed
    */
   public update(_deltaTime: number): void {
@@ -36,7 +36,7 @@ export class InputSystem extends InjectableSystem {
   }
 
   /**
-   * Clean up event listeners (ISystem lifecycle)
+   * Clean up event listeners (System lifecycle)
    */
   public destroy(): void {
     window.removeEventListener("keydown", this.handleKeyDown);

@@ -62,14 +62,14 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Initialize booth system (ISystem lifecycle)
+   * Initialize booth system (System lifecycle)
    */
   public initialize(): void {
     // Booths are already initialized in constructor
   }
 
   /**
-   * Update method (ISystem lifecycle)
+   * Update method (System lifecycle)
    * Booth state updates are triggered by external events
    */
   public update(_deltaTime: number): void {
@@ -78,7 +78,7 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Clean up booth resources (ISystem lifecycle)
+   * Clean up booth resources (System lifecycle)
    */
   public destroy(): void {
     this.container.destroy({ children: true });

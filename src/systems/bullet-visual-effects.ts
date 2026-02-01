@@ -7,7 +7,7 @@
 
 import type { Container } from "pixi.js";
 import { BulletVisualEffects } from "../effects/bullet-visual-effects";
-import type { ISystem } from "../core/systems/system.interface";
+import type { System } from "../core/systems/system.interface";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Bullet } from "../entities/bullet";
 import type { Vector } from "../values/vector";
@@ -17,7 +17,7 @@ import type { SpecialBulletType } from "../values/special-bullet";
  * Bullet Visual Effects System
  * Manages visual feedback for bullets throughout their lifecycle
  */
-export class BulletVisualEffectsSystem implements ISystem {
+export class BulletVisualEffectsSystem implements System {
   public readonly name = "BulletVisualEffectsSystem";
   public readonly priority = SystemPriority.DEFAULT;
 

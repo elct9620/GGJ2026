@@ -139,21 +139,21 @@ export class HUDSystem extends InjectableSystem {
   }
 
   /**
-   * Initialize HUD system (ISystem lifecycle)
+   * Initialize HUD system (System lifecycle)
    */
   public initialize(): void {
     // HUD is already set up in constructor
   }
 
   /**
-   * Update method (ISystem lifecycle)
+   * Update method (System lifecycle)
    */
   public update(_deltaTime: number): void {
     // HUD updates are event-driven via update* methods
   }
 
   /**
-   * Clean up HUD resources (ISystem lifecycle)
+   * Clean up HUD resources (System lifecycle)
    */
   public destroy(): void {
     this.topHUD.destroy({ children: true });

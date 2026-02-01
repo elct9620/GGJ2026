@@ -3,7 +3,7 @@
  * Provides type-safe dependency management with validation
  */
 
-import type { ISystem } from "./system.interface";
+import type { System } from "./system.interface";
 import { SystemPriority } from "./system.interface";
 import type {
   EventQueue,
@@ -48,7 +48,7 @@ export class DependencyError extends Error {
  * }
  * ```
  */
-export abstract class InjectableSystem implements ISystem {
+export abstract class InjectableSystem implements System {
   public abstract readonly name: string;
   public abstract readonly priority: SystemPriority;
 
@@ -159,9 +159,7 @@ export abstract class InjectableSystem implements ISystem {
 /**
  * Type guard to check if a system is injectable
  */
-export function isInjectableSystem(
-  system: ISystem,
-): system is InjectableSystem {
+export function isInjectableSystem(system: System): system is InjectableSystem {
   return (
     typeof (system as InjectableSystem).inject === "function" &&
     typeof (system as InjectableSystem).validateDependencies === "function"

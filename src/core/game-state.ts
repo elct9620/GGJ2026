@@ -77,7 +77,7 @@ export interface ResourceState {
 /**
  * Centralized game state interface
  */
-export interface IGameState {
+export interface GameStateInterface {
   // Screen state
   screen: ScreenState;
 
@@ -93,6 +93,11 @@ export interface IGameState {
   // Statistics
   stats: GameStats;
 }
+
+/**
+ * @deprecated Use GameStateInterface instead
+ */
+export type IGameState = GameStateInterface;
 
 /**
  * Creates initial wave state
@@ -122,7 +127,7 @@ function createInitialCombatState(): CombatState {
  * Systems read from GameStateManager and update via specific methods.
  * This ensures consistent state across all systems.
  */
-export class GameStateManager implements IGameState {
+export class GameStateManager implements GameStateInterface {
   private _screen: ScreenState = ScreenState.START;
   private _wave: WaveState = createInitialWaveState();
   private _combat: CombatState = createInitialCombatState();

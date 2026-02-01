@@ -20,7 +20,7 @@ export type SystemPriority =
  * 系統生命週期介面
  * 所有遊戲系統應實作此介面
  */
-export interface ISystem {
+export interface System {
   /** 系統唯一識別名稱 */
   readonly name: string;
 
@@ -36,3 +36,8 @@ export interface ISystem {
   /** 清理系統資源（取消註冊時呼叫） */
   destroy?(): void;
 }
+
+/**
+ * @deprecated Use System instead
+ */
+export type ISystem = System;

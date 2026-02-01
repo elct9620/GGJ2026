@@ -179,7 +179,7 @@ describe("isInjectableSystem", () => {
     expect(isInjectableSystem(system)).toBe(true);
   });
 
-  it("should return false for regular ISystem objects", () => {
+  it("should return false for regular System objects", () => {
     const regularSystem = {
       name: "RegularSystem",
       priority: SystemPriority.DEFAULT,
