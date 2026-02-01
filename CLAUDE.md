@@ -74,7 +74,7 @@ This project prioritizes **unit tests** for rapid development and reliable cover
 
 - **Unit tests** - Test individual modules, functions, and classes in isolation
 - **Integration tests** - Only for critical system interactions (e.g., booth + synthesis)
-- **Visual/E2E tests** - Manual testing in browser (Game Jam time constraints)
+- **Visual/E2E tests** - Use `/agent-browser` skill for automated visual testing (screenshots, interactions)
 
 **WebGL Mocking Strategy:**
 
@@ -96,8 +96,22 @@ Consider using [vitest-webgl-canvas-mock](https://github.com/RSamaium/vitest-web
 
 - Focus on **what** the code does, not **how** it renders
 - Test state transitions, calculations, and business logic
-- Visual correctness verified through manual playtesting
+- Visual correctness verified via `/agent-browser` skill or manual playtesting
 - Prioritize test execution speed (< 500ms total runtime)
+
+**Visual Testing with agent-browser:**
+
+Use the `/agent-browser` skill for automated visual verification:
+- Take screenshots of game states (start screen, gameplay, game over)
+- Verify UI elements are positioned correctly (HUD, booths, player)
+- Check bullet visual effects and animations
+- Test keyboard interactions in browser environment
+
+```bash
+# Start dev server before visual testing
+pnpm dev
+# Then use /agent-browser to navigate to http://localhost:5173
+```
 
 ## Code Architecture
 
@@ -258,10 +272,9 @@ test: add booth system unit tests
 docs: update SPEC.md with upgrade system details
 ```
 
-**Claude Code hooks are configured** (see `.github/workflows/claude.yml` and `claude-code-review.yml`):
+**Claude Code hooks are configured** (see `.github/workflows/claude.yml`):
 - Pre-commit formatting with Prettier
 - Type checking before commits
-- Automated PR reviews
 
 ## Browser Compatibility
 
@@ -289,7 +302,7 @@ pnpm build
 # Deploy command (handled by Cloudflare Pages)
 # Build command: pnpm build
 # Output directory: dist
-# Node version: 18.x
+# Node version: 22.x
 ```
 
 ## System Integration Pattern
