@@ -112,9 +112,15 @@ export class AudioSystem extends InjectableSystem {
    * 訂閱遊戲事件
    */
   private subscribeToEvents(): void {
-    this.eventQueue.subscribe(EventType.BulletFired, this.onBulletFired.bind(this));
+    this.eventQueue.subscribe(
+      EventType.BulletFired,
+      this.onBulletFired.bind(this),
+    );
     this.eventQueue.subscribe(EventType.EnemyHit, this.onEnemyHit.bind(this));
-    this.eventQueue.subscribe(EventType.ButtonClicked, this.onButtonClicked.bind(this));
+    this.eventQueue.subscribe(
+      EventType.ButtonClicked,
+      this.onButtonClicked.bind(this),
+    );
   }
 
   /**
@@ -148,15 +154,23 @@ export class AudioSystem extends InjectableSystem {
       const audio = new Audio(path);
       audio.volume = this._volume;
 
-      audio.addEventListener("canplaythrough", () => {
-        this.sounds.set(soundId, audio);
-        resolve();
-      }, { once: true });
+      audio.addEventListener(
+        "canplaythrough",
+        () => {
+          this.sounds.set(soundId, audio);
+          resolve();
+        },
+        { once: true },
+      );
 
-      audio.addEventListener("error", (e) => {
-        console.warn(`Failed to load sound: ${soundId} (${path})`, e);
-        reject(e);
-      }, { once: true });
+      audio.addEventListener(
+        "error",
+        (e) => {
+          console.warn(`Failed to load sound: ${soundId} (${path})`, e);
+          reject(e);
+        },
+        { once: true },
+      );
 
       // 開始載入
       audio.load();
@@ -201,11 +215,15 @@ export class AudioSystem extends InjectableSystem {
     }
 
     // 播放結束後移除記錄
-    audio.addEventListener("ended", () => {
-      if (this.currentlyPlaying.get(soundId) === audio) {
-        this.currentlyPlaying.delete(soundId);
-      }
-    }, { once: true });
+    audio.addEventListener(
+      "ended",
+      () => {
+        if (this.currentlyPlaying.get(soundId) === audio) {
+          this.currentlyPlaying.delete(soundId);
+        }
+      },
+      { once: true },
+    );
   }
 
   /**

@@ -46,12 +46,15 @@ describe("AudioSystem", () => {
 
   beforeEach(() => {
     // Save original Audio
-    originalAudio = (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio;
+    originalAudio = (globalThis as typeof globalThis & { Audio: typeof Audio })
+      .Audio;
 
     // Mock Audio constructor - must be a proper constructor function
-    (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = vi.fn(function(this: HTMLAudioElement) {
-      return createMockAudio();
-    }) as unknown as typeof Audio;
+    (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = vi.fn(
+      function (this: HTMLAudioElement) {
+        return createMockAudio();
+      },
+    ) as unknown as typeof Audio;
 
     // Create systems with proper dependency injection
     systemManager = new SystemManager();
@@ -68,7 +71,8 @@ describe("AudioSystem", () => {
 
   afterEach(() => {
     // Restore original Audio
-    (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = originalAudio;
+    (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio =
+      originalAudio;
 
     systemManager.destroy();
   });
@@ -122,7 +126,10 @@ describe("AudioSystem", () => {
     });
 
     it("應該播放子彈發射音效當 BulletFired 事件發布時 (AS-09)", () => {
-      const playSpy = vi.spyOn(audioSystem["sounds"].get(SoundId.PlayerShoot)!, "play");
+      const playSpy = vi.spyOn(
+        audioSystem["sounds"].get(SoundId.PlayerShoot)!,
+        "play",
+      );
 
       eventQueue.publish(EventType.BulletFired, {});
 
@@ -130,7 +137,10 @@ describe("AudioSystem", () => {
     });
 
     it("應該播放敵人被擊中音效當 EnemyHit 事件發布時 (AS-10)", () => {
-      const playSpy = vi.spyOn(audioSystem["sounds"].get(SoundId.EnemyHit)!, "play");
+      const playSpy = vi.spyOn(
+        audioSystem["sounds"].get(SoundId.EnemyHit)!,
+        "play",
+      );
 
       eventQueue.publish(EventType.EnemyHit, {});
 
@@ -138,7 +148,10 @@ describe("AudioSystem", () => {
     });
 
     it("應該播放按鈕點擊音效當 ButtonClicked 事件發布時 (AS-11)", () => {
-      const playSpy = vi.spyOn(audioSystem["sounds"].get(SoundId.ButtonClick)!, "play");
+      const playSpy = vi.spyOn(
+        audioSystem["sounds"].get(SoundId.ButtonClick)!,
+        "play",
+      );
 
       eventQueue.publish(EventType.ButtonClicked, {});
 
@@ -191,17 +204,21 @@ describe("AudioSystem", () => {
       eventQueue = new EventQueue();
 
       // Mock Audio to fail loading
-      (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = vi.fn(function(this: HTMLAudioElement) {
-        const audio = createMockAudio();
-        audio.addEventListener = vi.fn((event, handler) => {
-          if (event === "error") {
-            setTimeout(() => handler(new Event("error")), 0);
-          }
-        });
-        return audio as unknown as HTMLAudioElement;
-      }) as unknown as typeof Audio;
+      (globalThis as typeof globalThis & { Audio: typeof Audio }).Audio = vi.fn(
+        function (this: HTMLAudioElement) {
+          const audio = createMockAudio();
+          audio.addEventListener = vi.fn((event, handler) => {
+            if (event === "error") {
+              setTimeout(() => handler(new Event("error")), 0);
+            }
+          });
+          return audio as unknown as HTMLAudioElement;
+        },
+      ) as unknown as typeof Audio;
 
-      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
 
       const newAudioSystem = new AudioSystem();
       systemManager.register(eventQueue);
@@ -224,7 +241,9 @@ describe("AudioSystem", () => {
       const audio = audioSystem["sounds"].get(SoundId.PlayerShoot)!;
       audio.play = vi.fn().mockRejectedValue(new Error("Autoplay blocked"));
 
-      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
 
       eventQueue.publish(EventType.BulletFired, {});
 

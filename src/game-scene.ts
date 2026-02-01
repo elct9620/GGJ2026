@@ -192,7 +192,10 @@ export class GameScene {
     this.uiLayer.addChild(hudSystem.getBottomHUD());
 
     // Setup Upgrade Screen (SPEC § 2.3.4)
-    this.upgradeScreen = new UpgradeScreen(this.onUpgradeSelect.bind(this), eventQueue);
+    this.upgradeScreen = new UpgradeScreen(
+      this.onUpgradeSelect.bind(this),
+      eventQueue,
+    );
     this.uiLayer.addChild(this.upgradeScreen.getContainer());
 
     // Connect Wave System spawn callback (SPEC § 2.3.5)
