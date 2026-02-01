@@ -169,6 +169,7 @@ export class HUDSystem extends InjectableSystem {
     x: number,
     y: number,
     fontSize: number = 50,
+    options?: { stroke?: boolean; strokeColor?: number; strokeWidth?: number },
   ): Text {
     const text = new Text({
       text: content,
@@ -176,6 +177,12 @@ export class HUDSystem extends InjectableSystem {
         fontFamily: GAME_FONT_FAMILY,
         fontSize,
         fill: 0xffffff,
+        ...(options?.stroke && {
+          stroke: {
+            color: options.strokeColor ?? 0x000000,
+            width: options.strokeWidth ?? 3,
+          },
+        }),
       },
     });
     text.position.set(x, y);
@@ -245,7 +252,6 @@ export class HUDSystem extends InjectableSystem {
       BUTTON_SIZE,
       INDICATOR_SIZE,
       KEY_TIP_ABOVE_OFFSET,
-      NUMBER_LABEL_X_OFFSET,
       NUMBER_LABEL_Y_OFFSET,
       NUMBER_LABEL_FONT_SIZE,
       INDICATOR_BOTTOM_OFFSET,
@@ -292,13 +298,15 @@ export class HUDSystem extends InjectableSystem {
       this.skillKeyTips.push(keyTip);
       this.bottomHUD.addChild(keyTip);
 
-      // Add number label centered on keyBindTip
+      // Add number label centered on keyBindTip with black stroke
       const numberLabel = this.createText(
         `${i + 1}`,
-        buttonCenterX - NUMBER_LABEL_X_OFFSET,
-        keyTipY + NUMBER_LABEL_Y_OFFSET,
+        keyTipX + keyTipSize / 2,
+        keyTipY + keyTipSize / 2,
         NUMBER_LABEL_FONT_SIZE,
+        { stroke: true, strokeColor: 0x000000, strokeWidth: 3 },
       );
+      numberLabel.anchor.set(0.5, 0.5);
       this.bottomHUD.addChild(numberLabel);
 
       // Add skill cost indicators at bottom of skill icon (inside, to stay within HUD)
