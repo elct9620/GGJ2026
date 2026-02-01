@@ -329,5 +329,61 @@ describe("SynthesisSystem", () => {
       expect(triggerCount).toBe(2);
       expect(killCounterSystem.getKillCount()).toBe(0);
     });
+
+    it("SY-13: 蚵仔煎消耗固定 20 擊殺數（41 → 21，仍可用）", () => {
+      // Issue #78: 確保每次只消耗 20 擊殺數，不會過度消耗
+      // 累積 41 擊殺數
+      for (let i = 0; i < 41; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(41);
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(true);
+
+      // 使用蚵仔煎一次
+      const event = new KeyboardEvent("keydown", { key: "5" });
+      window.dispatchEvent(event);
+      synthesisSystem.update();
+
+      // 驗證：應消耗 20，剩餘 21
+      expect(killCounterSystem.getKillCount()).toBe(21);
+
+      // 驗證：剩餘 21 ≥ 20，仍可使用
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(true);
+    });
+
+    it("SY-14: 蚵仔煎多次使用測試（60 → 40 → 20 → 0）", () => {
+      // Issue #78: 驗證多次使用時每次都固定消耗 20
+      // 累積 60 擊殺數
+      for (let i = 0; i < 60; i++) {
+        eventQueue.publish(EventType.EnemyDeath, {
+          enemyId: `enemy-${i}`,
+          position: { x: 500, y: 540 },
+        });
+      }
+
+      expect(killCounterSystem.getKillCount()).toBe(60);
+
+      // 第一次使用：60 → 40
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      expect(killCounterSystem.getKillCount()).toBe(40);
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(true);
+
+      // 第二次使用：40 → 20
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      expect(killCounterSystem.getKillCount()).toBe(20);
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(true);
+
+      // 第三次使用：20 → 0
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "5" }));
+      synthesisSystem.update();
+      expect(killCounterSystem.getKillCount()).toBe(0);
+      expect(synthesisSystem.canUseOysterOmelet()).toBe(false);
+    });
   });
 });
