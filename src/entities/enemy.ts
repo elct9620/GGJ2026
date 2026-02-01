@@ -4,7 +4,7 @@ import { Health } from "../values/health";
 import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
 import { Container, Graphics, Sprite } from "pixi.js";
-import { getTexture, AssetKeys } from "../core/assets";
+import { getTexture, AssetKeys, type AssetKey } from "../core/assets";
 import { LAYOUT } from "../utils/constants";
 import { FoodType } from "./booth";
 import { ENEMY_CONFIG } from "../config";
@@ -108,38 +108,41 @@ export class Enemy extends SpriteEntity {
   }
 
   private createSprite(): Sprite {
-    const sprite = new Sprite(getTexture(AssetKeys.monster));
+    const assetKey = this.getAssetKey();
+    const sprite = new Sprite(getTexture(assetKey));
 
-    // Asset size is 256×256, use full size per SPEC § 2.7.2
-    // Both Ghost and Boss use 256×256
-    sprite.width = LAYOUT.ENEMY_SIZE;
-    sprite.height = LAYOUT.ENEMY_SIZE;
+    // Boss 使用 512×512，其他使用 256×256
+    const size =
+      this.type === EnemyType.Boss ? LAYOUT.BOSS_SIZE : LAYOUT.ENEMY_SIZE;
+
+    sprite.width = size;
+    sprite.height = size;
 
     // Set anchor to center
     sprite.anchor.set(0.5, 0.5);
 
-    // Apply tint based on enemy type (SPEC § 2.6.2)
-    sprite.tint = this.getEnemyTint();
-
+    // 不再需要 tint（各敵人有專屬圖檔）
     return sprite;
   }
 
   /**
-   * Get tint color based on enemy type
-   * SPEC § 2.6.2: Visual differentiation for enemy types
+   * Get asset key based on enemy type
+   * SPEC § 2.6.2: Each enemy type has its own sprite
    */
-  private getEnemyTint(): number {
+  private getAssetKey(): AssetKey {
     switch (this.type) {
+      case EnemyType.Ghost:
+        return AssetKeys.ghost;
       case EnemyType.RedGhost:
-        return 0xe74c3c; // Red tint for Red Ghost (drops Tofu)
+        return AssetKeys.redGhost;
       case EnemyType.GreenGhost:
-        return 0x2ecc71; // Green tint for Green Ghost (drops Pearl)
+        return AssetKeys.greenGhost;
       case EnemyType.BlueGhost:
-        return 0x3498db; // Blue tint for Blue Ghost (drops BloodCake)
+        return AssetKeys.blueGhost;
       case EnemyType.Boss:
-        return 0x9b59b6; // Purple tint for Boss
+        return AssetKeys.boss;
       default:
-        return 0xffffff; // No tint for regular Ghost
+        return AssetKeys.ghost;
     }
   }
 
@@ -211,9 +214,12 @@ export class Enemy extends SpriteEntity {
   /**
    * 碰撞箱（與視覺大小同步）
    * SPEC § 4.2.5: AABB 碰撞檢測
+   * Boss 使用 512×512，其他使用 256×256
    */
   public get collisionBox(): CollisionBox {
-    return { width: LAYOUT.ENEMY_SIZE, height: LAYOUT.ENEMY_SIZE };
+    const size =
+      this.type === EnemyType.Boss ? LAYOUT.BOSS_SIZE : LAYOUT.ENEMY_SIZE;
+    return { width: size, height: size };
   }
 
   /**
@@ -257,7 +263,10 @@ export class Enemy extends SpriteEntity {
     const totalWidth =
       this.maxHealth * barWidth + (this.maxHealth - 1) * barSpacing;
     const startX = -totalWidth / 2;
-    const startY = -this.enemySprite.height / 2 - 15;
+    // Boss 健康條需要配合 512×512 大小調整位置
+    const spriteHeight =
+      this.type === EnemyType.Boss ? LAYOUT.BOSS_SIZE : LAYOUT.ENEMY_SIZE;
+    const startY = -spriteHeight / 2 - 15;
 
     // Draw health bars (green for remaining health, gray for lost health)
     for (let i = 0; i < this.maxHealth; i++) {

@@ -300,13 +300,31 @@ describe("Enemy", () => {
   });
 
   describe("Collision", () => {
-    it("碰撞箱大小 256×256 px (SPEC § 2.7.2)", () => {
+    it("餓鬼碰撞箱大小 256×256 px (SPEC § 2.7.2)", () => {
       const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
       const collisionBox = ghost.collisionBox;
 
       expect(collisionBox.width).toBe(LAYOUT.ENEMY_SIZE);
       expect(collisionBox.height).toBe(LAYOUT.ENEMY_SIZE);
       expect(collisionBox.width).toBe(256);
+    });
+
+    it("菁英碰撞箱大小 256×256 px", () => {
+      const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
+      const collisionBox = redGhost.collisionBox;
+
+      expect(collisionBox.width).toBe(LAYOUT.ENEMY_SIZE);
+      expect(collisionBox.height).toBe(LAYOUT.ENEMY_SIZE);
+      expect(collisionBox.width).toBe(256);
+    });
+
+    it("Boss 碰撞箱大小 512×512 px", () => {
+      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
+      const collisionBox = boss.collisionBox;
+
+      expect(collisionBox.width).toBe(LAYOUT.BOSS_SIZE);
+      expect(collisionBox.height).toBe(LAYOUT.BOSS_SIZE);
+      expect(collisionBox.width).toBe(512);
     });
   });
 

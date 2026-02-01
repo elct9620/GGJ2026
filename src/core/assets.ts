@@ -23,6 +23,12 @@ import playerStinkyTofu from "../assets/Player_StinkyTofu.png";
 import playerBloodCake from "../assets/Player_BloodCake.png";
 import playerNightMarket from "../assets/Player_NightMarket.png";
 import monster0 from "../assets/Monster_0.png";
+import mob01 from "../assets/mob01.png";
+import mob02 from "../assets/mob02.png";
+import mob03 from "../assets/mob03.png";
+import mob04 from "../assets/mob04.png";
+import mob05 from "../assets/mob05.png";
+import mob06 from "../assets/mob06.png";
 import upgradeBase from "../assets/image_UpgradeBase.png";
 import bulletClassBase from "../assets/image_BulletClassBase.png";
 import keyBind from "../assets/image_keyBind.png";
@@ -54,6 +60,12 @@ export const AssetKeys = {
   playerBloodCake: "playerBloodCake",
   playerNightMarket: "playerNightMarket",
   monster: "monster",
+  ghost: "ghost", // mob01 - 餓鬼
+  redGhost: "redGhost", // mob02 - 紅餓鬼
+  greenGhost: "greenGhost", // mob03 - 綠餓鬼
+  blueGhost: "blueGhost", // mob04 - 藍餓鬼
+  boss: "boss", // mob05 - 餓死鬼
+  boss2: "boss2", // mob06 - 預留
   upgradeBase: "upgradeBase",
   bulletClassBase: "bulletClassBase",
   keyBind: "keyBind",
@@ -88,6 +100,12 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.playerBloodCake]: playerBloodCake,
   [AssetKeys.playerNightMarket]: playerNightMarket,
   [AssetKeys.monster]: monster0,
+  [AssetKeys.ghost]: mob01,
+  [AssetKeys.redGhost]: mob02,
+  [AssetKeys.greenGhost]: mob03,
+  [AssetKeys.blueGhost]: mob04,
+  [AssetKeys.boss]: mob05,
+  [AssetKeys.boss2]: mob06,
   [AssetKeys.upgradeBase]: upgradeBase,
   [AssetKeys.bulletClassBase]: bulletClassBase,
   [AssetKeys.keyBind]: keyBind,

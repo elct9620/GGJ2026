@@ -37,6 +37,7 @@ export const LAYOUT = {
   // Entity sizes
   PLAYER_SIZE: 256,
   ENEMY_SIZE: 256,
+  BOSS_SIZE: 512,
   BOOTH_WIDTH: 128,
   BOOTH_HEIGHT: 256,
 
