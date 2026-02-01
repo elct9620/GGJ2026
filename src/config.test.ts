@@ -157,8 +157,8 @@ describe("Game Balance Config", () => {
       expect(RECIPE_CONFIG.bloodCake.bloodCake).toBe(3);
     });
 
-    it("豬血糕追蹤範圍應為 500px (Issue #59)", () => {
-      expect(RECIPE_CONFIG.bloodCake.trackingRange).toBe(500);
+    it("豬血糕追蹤範圍應為 600px (SPEC § 2.6.3.5)", () => {
+      expect(RECIPE_CONFIG.bloodCake.trackingRange).toBe(600);
     });
 
     it("蚵仔煎百分比傷害應正確 (SPEC § 2.3.3)", () => {

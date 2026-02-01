@@ -21,7 +21,8 @@ import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import { RECIPES, RECIPE_DISPLAY, FOOD_HUD_COLOR } from "./values/recipes";
-import { PLAYER_CONFIG } from "./config";
+import { PLAYER_CONFIG, RECIPE_CONFIG } from "./config";
+import { SpecialBulletType } from "./values/special-bullet";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
 
@@ -310,7 +311,40 @@ export class GameScene {
         continue;
       }
 
+      // Dynamic tracking: update target based on bullet position (SPEC § 2.6.3.5)
+      if (bullet.type === SpecialBulletType.BloodCake && bullet.isTracking) {
+        this.updateTrackingTarget(bullet);
+      }
+
       bullet.update(deltaTime);
+    }
+  }
+
+  /**
+   * Update tracking bullet target based on bullet position
+   * SPEC § 2.6.3.5: 追蹤最近敵人（距離限制 600px）
+   * Target is dynamically updated each frame based on bullet position
+   */
+  private updateTrackingTarget(bullet: Bullet): void {
+    const trackingRange: number = RECIPE_CONFIG.bloodCake.trackingRange;
+    let closest: Enemy | null = null;
+    let closestDistance: number = trackingRange;
+
+    for (const enemy of this.enemies) {
+      if (!enemy.active) continue;
+
+      const distance = enemy.position.distance(bullet.position);
+      if (distance < closestDistance) {
+        closest = enemy;
+        closestDistance = distance;
+      }
+    }
+
+    if (closest) {
+      bullet.setTracking(closest);
+    } else {
+      // No enemy in range, clear tracking target
+      bullet.trackingTarget = null;
     }
   }
 

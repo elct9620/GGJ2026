@@ -611,14 +611,14 @@ describe("CombatSystem", () => {
       expect(spawnedBullets[0].trackingTarget).toBe(enemy);
     });
 
-    it("should not track enemy beyond tracking range (Issue #59)", () => {
+    it("should not track enemy beyond tracking range (SPEC § 2.6.3.5)", () => {
       const spawnedBullets: Bullet[] = [];
       combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
 
-      // Player at default position (assume center: ~960, 540)
-      // Add an enemy far beyond tracking range (500px base range)
-      // Enemy at x=1500 is ~540px away, beyond 500px range
-      const farEnemy = new Enemy(EnemyType.Ghost, new Vector(1500, 540));
+      // Player at default position (center: 960, 540)
+      // Add an enemy far beyond tracking range (600px per SPEC § 2.6.3.5)
+      // Enemy at x=1600 is 640px away, beyond 600px range
+      const farEnemy = new Enemy(EnemyType.Ghost, new Vector(1600, 540));
       enemies.push(farEnemy);
 
       // Activate BloodCake buff
