@@ -181,14 +181,16 @@ export class GameScene {
    * Spawn enemy (callback from Wave System)
    * SPEC § 2.3.5: Wave System calls this to create enemies
    * SPEC § 2.6.2: Supports Ghost, RedGhost, GreenGhost, BlueGhost, Boss
+   *               HP scales with wave number
    */
   private spawnEnemy(
     type: "Ghost" | "RedGhost" | "GreenGhost" | "BlueGhost" | "Boss",
     x: number,
     y: number,
+    wave: number,
   ): void {
     const enemyType = EnemyType[type];
-    const enemy = new Enemy(enemyType, new Vector(x, y));
+    const enemy = new Enemy(enemyType, new Vector(x, y), wave);
     this.enemies.push(enemy);
     this.enemiesContainer.addChild(enemy.sprite);
   }

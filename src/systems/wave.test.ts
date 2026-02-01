@@ -37,7 +37,12 @@ describe("WaveSystem", () => {
   let waveSystem: WaveSystem;
   let eventQueue: EventQueue;
   let gameState: GameStateManager;
-  let spawnedEnemies: Array<{ type: string; x: number; y: number }>;
+  let spawnedEnemies: Array<{
+    type: string;
+    x: number;
+    y: number;
+    wave: number;
+  }>;
 
   beforeEach(() => {
     waveSystem = new WaveSystem();
@@ -49,8 +54,8 @@ describe("WaveSystem", () => {
     waveSystem.inject("EventQueue", eventQueue);
     waveSystem.inject("GameState", gameState);
     waveSystem.validateDependencies();
-    waveSystem.setSpawnCallback((type, x, y) => {
-      spawnedEnemies.push({ type, x, y });
+    waveSystem.setSpawnCallback((type, x, y, wave) => {
+      spawnedEnemies.push({ type, x, y, wave });
     });
 
     waveSystem.initialize();
@@ -351,6 +356,33 @@ describe("WaveSystem", () => {
       eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-2" });
 
       expect(waveSystem.getRemainingEnemies()).toBe(4);
+    });
+  });
+
+  describe("Wave Number Propagation (SPEC § 2.6.2)", () => {
+    it("WS-20: 傳遞正確的波次給 spawn callback", () => {
+      waveSystem.startWave(5);
+      waveSystem.update(0); // First enemy spawns immediately
+
+      expect(spawnedEnemies.length).toBeGreaterThan(0);
+      expect(spawnedEnemies[0].wave).toBe(5);
+    });
+
+    it("WS-21: 後續敵人也傳遞相同波次", () => {
+      waveSystem.startWave(10);
+      simulateFullWaveSpawn(waveSystem, 10);
+
+      // All enemies should have wave = 10
+      expect(spawnedEnemies.every((e) => e.wave === 10)).toBe(true);
+    });
+
+    it("WS-22: Boss 也傳遞正確波次", () => {
+      waveSystem.startWave(5); // Boss wave
+      simulateFullWaveSpawn(waveSystem, 5);
+
+      const boss = spawnedEnemies.find((e) => e.type === "Boss");
+      expect(boss).toBeDefined();
+      expect(boss!.wave).toBe(5);
     });
   });
 });

@@ -124,7 +124,8 @@ describe("Enemy", () => {
     let boss: Enemy;
 
     beforeEach(() => {
-      boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+      // SPEC § 2.3.5: Boss 首次出現在 Wave 5
+      boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
     });
 
     it("EN-11: 餓死鬼 (1000, 500) + 1 秒 → 餓死鬼 (970, 500)", () => {
@@ -135,7 +136,7 @@ describe("Enemy", () => {
     });
 
     it("EN-12: 餓死鬼 10 HP + 普通子彈 → 餓死鬼 9 HP", () => {
-      // SPEC § 2.6.2: Boss 基礎血量 = 10
+      // SPEC § 2.6.2: Boss Wave 5 基礎血量 = 10
       expect(boss.health).toBe(10);
 
       boss.takeDamage(1);
@@ -144,7 +145,7 @@ describe("Enemy", () => {
     });
 
     it("EN-13: 餓死鬼 10 HP + 10 發子彈 → 餓死鬼死亡", () => {
-      // SPEC § 2.6.2: Boss 基礎血量 = 10
+      // SPEC § 2.6.2: Boss Wave 5 基礎血量 = 10
       for (let i = 0; i < 9; i++) {
         boss.takeDamage(1);
         expect(boss.active).toBe(true);
@@ -163,9 +164,9 @@ describe("Enemy", () => {
       expect(boss.hasReachedBaseline()).toBe(true);
     });
 
-    it("EN-15: Boss 初始 HP 為 10", () => {
-      // SPEC § 2.6.2: Boss 基礎血量 = 10
-      const newBoss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+    it("EN-15: Boss Wave 5 初始 HP 為 10", () => {
+      // SPEC § 2.6.2: Boss Wave 5 血量 = round(10 + 0 × 1.5) = 10
+      const newBoss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
       expect(newBoss.health).toBe(10);
     });
 
@@ -180,26 +181,96 @@ describe("Enemy", () => {
   });
 
   describe("2.7.4 HP Growth (HP 成長公式)", () => {
-    // Note: Current implementation uses fixed HP values
-    // HP growth formulas would be applied during enemy spawn
-    // These tests document expected behavior
+    // SPEC § 2.6.2: HP scales with wave number
 
-    it("EN-16: 餓鬼 Wave 1 → HP = 1", () => {
-      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      // floor(1 + (1-1) × 0.03) = 1
-      expect(ghost.health).toBe(1);
+    describe("Ghost HP Scaling - floor(1 + (W-1) × 0.03)", () => {
+      it("EN-16: 餓鬼 Wave 1 → HP = 1", () => {
+        const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500), 1);
+        expect(ghost.health).toBe(1);
+      });
+
+      it("EN-17: 餓鬼 Wave 5 → HP = 1", () => {
+        // floor(1 + 4 × 0.03) = floor(1.12) = 1
+        const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500), 5);
+        expect(ghost.health).toBe(1);
+      });
+
+      it("EN-18: 餓鬼 Wave 10 → HP = 1", () => {
+        // floor(1 + 9 × 0.03) = floor(1.27) = 1
+        const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500), 10);
+        expect(ghost.health).toBe(1);
+      });
+
+      it("EN-19: 餓鬼 Wave 15 → HP = 1", () => {
+        // floor(1 + 14 × 0.03) = floor(1.42) = 1
+        const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500), 15);
+        expect(ghost.health).toBe(1);
+      });
+
+      it("無波次參數預設為 Wave 1", () => {
+        const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
+        expect(ghost.health).toBe(1);
+      });
     });
 
-    it("EN-17 ~ EN-19: 餓鬼 HP 始終為 1（無成長）", () => {
-      // Ghost HP doesn't scale with wave - always 1
-      const ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
-      expect(ghost.health).toBe(1);
+    describe("Elite HP Scaling - round(2 + (W-1) × 0.6)", () => {
+      it("EN-20: 菁英 Wave 1 → HP = 2", () => {
+        const elite = new Enemy(EnemyType.RedGhost, new Vector(1000, 500), 1);
+        expect(elite.health).toBe(2);
+      });
+
+      it("EN-21: 菁英 Wave 5 → HP = 4", () => {
+        // round(2 + 4 × 0.6) = round(4.4) = 4
+        const elite = new Enemy(EnemyType.RedGhost, new Vector(1000, 500), 5);
+        expect(elite.health).toBe(4);
+      });
+
+      it("EN-22: 菁英 Wave 10 → HP = 7", () => {
+        // round(2 + 9 × 0.6) = round(7.4) = 7
+        const elite = new Enemy(
+          EnemyType.GreenGhost,
+          new Vector(1000, 500),
+          10,
+        );
+        expect(elite.health).toBe(7);
+      });
+
+      it("EN-23: 菁英 Wave 15 → HP = 10", () => {
+        // round(2 + 14 × 0.6) = round(10.4) = 10
+        const elite = new Enemy(EnemyType.BlueGhost, new Vector(1000, 500), 15);
+        expect(elite.health).toBe(10);
+      });
+
+      it("無波次參數預設為 Wave 1", () => {
+        const elite = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
+        expect(elite.health).toBe(2);
+      });
     });
 
-    it("EN-24: Boss Wave 5 → HP = 10", () => {
-      // SPEC § 2.6.2: Boss 基礎血量 = 10
-      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
-      expect(boss.health).toBe(10);
+    describe("Boss HP Scaling - round(10 + (W-5) × 1.5)", () => {
+      it("EN-24: Boss Wave 5 → HP = 10", () => {
+        // round(10 + 0 × 1.5) = 10
+        const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
+        expect(boss.health).toBe(10);
+      });
+
+      it("EN-25: Boss Wave 10 → HP = 18", () => {
+        // round(10 + 5 × 1.5) = round(17.5) = 18
+        const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 10);
+        expect(boss.health).toBe(18);
+      });
+
+      it("EN-26: Boss Wave 15 → HP = 25", () => {
+        // round(10 + 10 × 1.5) = round(25) = 25
+        const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 15);
+        expect(boss.health).toBe(25);
+      });
+
+      it("無波次參數預設為 Wave 1（Boss HP = 4）", () => {
+        // round(10 + (1-5) × 1.5) = round(10 - 6) = 4
+        const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+        expect(boss.health).toBe(4);
+      });
     });
   });
 
@@ -285,26 +356,48 @@ describe("Enemy", () => {
       expect(ghost.position.y).toBe(300);
     });
 
-    it("reset Boss 恢復 10 HP", () => {
-      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+    it("reset Boss Wave 5 恢復 10 HP", () => {
+      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
       boss.takeDamage(2);
 
       expect(boss.health).toBe(8);
 
-      boss.reset(EnemyType.Boss, new Vector(1500, 300));
+      boss.reset(EnemyType.Boss, new Vector(1500, 300), 5);
 
       expect(boss.health).toBe(10);
     });
 
-    it("reset Elite 恢復 2 HP", () => {
+    it("reset Elite Wave 1 恢復 2 HP", () => {
       const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
       redGhost.takeDamage(1);
 
       expect(redGhost.health).toBe(1);
 
-      redGhost.reset(EnemyType.RedGhost, new Vector(1500, 300));
+      redGhost.reset(EnemyType.RedGhost, new Vector(1500, 300), 1);
 
       expect(redGhost.health).toBe(2);
+    });
+
+    it("reset Elite Wave 10 恢復 7 HP", () => {
+      const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500), 10);
+      redGhost.takeDamage(1);
+
+      expect(redGhost.health).toBe(6);
+
+      redGhost.reset(EnemyType.RedGhost, new Vector(1500, 300), 10);
+
+      expect(redGhost.health).toBe(7);
+    });
+
+    it("reset Boss Wave 10 恢復 18 HP", () => {
+      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 10);
+      boss.takeDamage(5);
+
+      expect(boss.health).toBe(13);
+
+      boss.reset(EnemyType.Boss, new Vector(1500, 300), 10);
+
+      expect(boss.health).toBe(18);
     });
   });
 

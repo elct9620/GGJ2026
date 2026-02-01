@@ -79,6 +79,118 @@ describe("Health", () => {
     });
   });
 
+  // =========================================================================
+  // EN-16 ~ EN-19: 餓鬼各波次 HP 成長測試
+  // SPEC § 2.6.2: HP = floor(1 + (W-1) × 0.03)
+  // =========================================================================
+  describe("static ghostForWave()", () => {
+    test("EN-16: wave 1 ghost HP = 1", () => {
+      const h = Health.ghostForWave(1);
+      expect(h.current).toBe(1);
+      expect(h.max).toBe(1);
+    });
+
+    test("EN-17: wave 5 ghost HP = 1", () => {
+      // floor(1 + 4 × 0.03) = floor(1.12) = 1
+      const h = Health.ghostForWave(5);
+      expect(h.current).toBe(1);
+      expect(h.max).toBe(1);
+    });
+
+    test("EN-18: wave 10 ghost HP = 1", () => {
+      // floor(1 + 9 × 0.03) = floor(1.27) = 1
+      const h = Health.ghostForWave(10);
+      expect(h.current).toBe(1);
+      expect(h.max).toBe(1);
+    });
+
+    test("EN-19: wave 15 ghost HP = 1", () => {
+      // floor(1 + 14 × 0.03) = floor(1.42) = 1
+      const h = Health.ghostForWave(15);
+      expect(h.current).toBe(1);
+      expect(h.max).toBe(1);
+    });
+
+    test("default wave is 1", () => {
+      const h = Health.ghostForWave();
+      expect(h.current).toBe(1);
+      expect(h.max).toBe(1);
+    });
+  });
+
+  // =========================================================================
+  // EN-20 ~ EN-23: 菁英各波次 HP 成長測試
+  // SPEC § 2.6.2: HP = round(2 + (W-1) × 0.6)
+  // =========================================================================
+  describe("static eliteForWave()", () => {
+    test("EN-20: wave 1 elite HP = 2", () => {
+      // round(2 + 0 × 0.6) = 2
+      const h = Health.eliteForWave(1);
+      expect(h.current).toBe(2);
+      expect(h.max).toBe(2);
+    });
+
+    test("EN-21: wave 5 elite HP = 4", () => {
+      // round(2 + 4 × 0.6) = round(4.4) = 4
+      const h = Health.eliteForWave(5);
+      expect(h.current).toBe(4);
+      expect(h.max).toBe(4);
+    });
+
+    test("EN-22: wave 10 elite HP = 7", () => {
+      // round(2 + 9 × 0.6) = round(7.4) = 7
+      const h = Health.eliteForWave(10);
+      expect(h.current).toBe(7);
+      expect(h.max).toBe(7);
+    });
+
+    test("EN-23: wave 15 elite HP = 10", () => {
+      // round(2 + 14 × 0.6) = round(10.4) = 10
+      const h = Health.eliteForWave(15);
+      expect(h.current).toBe(10);
+      expect(h.max).toBe(10);
+    });
+
+    test("default wave is 1", () => {
+      const h = Health.eliteForWave();
+      expect(h.current).toBe(2);
+      expect(h.max).toBe(2);
+    });
+  });
+
+  // =========================================================================
+  // EN-24 ~ EN-26: Boss 各波次 HP 成長測試
+  // SPEC § 2.6.2: HP = round(10 + (W-5) × 1.5)
+  // =========================================================================
+  describe("static bossForWave()", () => {
+    test("EN-24: wave 5 boss HP = 10", () => {
+      // round(10 + 0 × 1.5) = 10
+      const h = Health.bossForWave(5);
+      expect(h.current).toBe(10);
+      expect(h.max).toBe(10);
+    });
+
+    test("EN-25: wave 10 boss HP = 18", () => {
+      // round(10 + 5 × 1.5) = round(17.5) = 18
+      const h = Health.bossForWave(10);
+      expect(h.current).toBe(18);
+      expect(h.max).toBe(18);
+    });
+
+    test("EN-26: wave 15 boss HP = 25", () => {
+      // round(10 + 10 × 1.5) = round(25) = 25
+      const h = Health.bossForWave(15);
+      expect(h.current).toBe(25);
+      expect(h.max).toBe(25);
+    });
+
+    test("default wave is 5", () => {
+      const h = Health.bossForWave();
+      expect(h.current).toBe(10);
+      expect(h.max).toBe(10);
+    });
+  });
+
   describe("static full()", () => {
     test("creates full health with specified max", () => {
       const h = Health.full(10);

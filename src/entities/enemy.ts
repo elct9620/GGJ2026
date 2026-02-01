@@ -77,22 +77,23 @@ export class Enemy extends Entity {
     return this.baseSpeed * this.speedMultiplier;
   }
 
-  constructor(type: EnemyType, initialPosition: Vector) {
+  constructor(type: EnemyType, initialPosition: Vector, wave: number = 1) {
     super();
     this.type = type;
     this.position = initialPosition;
 
     // Set stats based on enemy type (SPEC § 2.6.2)
+    // HP scales with wave number
     if (type === EnemyType.Ghost) {
-      this._health = Health.ghost();
+      this._health = Health.ghostForWave(wave);
       this.baseSpeed = ENEMY_CONFIG.ghost.speed;
     } else if (isEliteType(type)) {
       // Elite enemies: Red/Green/Blue Ghost
-      this._health = Health.elite();
+      this._health = Health.eliteForWave(wave);
       this.baseSpeed = ENEMY_CONFIG.elite.speed;
     } else {
       // Boss
-      this._health = Health.boss();
+      this._health = Health.bossForWave(wave);
       this.baseSpeed = ENEMY_CONFIG.boss.speed;
     }
 
@@ -279,8 +280,9 @@ export class Enemy extends Entity {
 
   /**
    * Reset enemy state for object pool reuse
+   * SPEC § 2.6.2: HP scales with wave number
    */
-  public reset(type: EnemyType, position: Vector): void {
+  public reset(type: EnemyType, position: Vector, wave: number = 1): void {
     this.active = true;
     // Note: Cannot change readonly type after construction
     // This would need to be handled by creating separate pools per type
@@ -291,12 +293,12 @@ export class Enemy extends Entity {
     this.slowDuration = 0;
 
     if (type === EnemyType.Ghost) {
-      this._health = Health.ghost();
+      this._health = Health.ghostForWave(wave);
     } else if (isEliteType(type)) {
-      this._health = Health.elite();
+      this._health = Health.eliteForWave(wave);
       this.updateHealthBar();
     } else {
-      this._health = Health.boss();
+      this._health = Health.bossForWave(wave);
       this.updateHealthBar();
     }
 

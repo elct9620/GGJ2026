@@ -82,8 +82,8 @@ describe("CombatSystem", () => {
     });
 
     it("CS-04: 子彈擊中 Boss（10 HP）→ Boss 生命 9 HP", () => {
-      // SPEC § 2.6.2: Boss 基礎血量 = 10
-      const boss = new Enemy(EnemyType.Boss, new Vector(500, 540));
+      // SPEC § 2.6.2: Boss Wave 5 基礎血量 = 10
+      const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
       enemies.push(boss);
       expect(boss.health).toBe(10);
 
@@ -244,7 +244,8 @@ describe("CombatSystem", () => {
       expect(combatSystem.getCurrentBuff()).toBe(SpecialBulletType.BloodCake);
 
       // Create enemy with more HP to survive (Elite has 2 HP, BloodCake damage is 2)
-      const enemy = new Enemy(EnemyType.Boss, new Vector(500, 540));
+      // SPEC § 2.3.5: Boss 首次出現在 Wave 5
+      const enemy = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
       enemies.push(enemy);
       const initialSpeed = enemy.speed;
 
@@ -308,8 +309,8 @@ describe("CombatSystem", () => {
         SpecialBulletType.OysterOmelette,
       );
 
-      // Boss has 10 HP
-      const boss = new Enemy(EnemyType.Boss, new Vector(500, 540));
+      // SPEC § 2.6.2: Boss Wave 5 has 10 HP
+      const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
       enemies.push(boss);
 
       const bullet = new Bullet(new Vector(480, 540), new Vector(1, 0));

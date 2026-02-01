@@ -44,6 +44,19 @@ export class Health {
   }
 
   /**
+   * 建立餓鬼血量（波次感知）
+   * SPEC § 2.6.2: HP = floor(1 + (W-1) × 0.03)
+   * @param wave 當前波次（預設為 1）
+   */
+  static ghostForWave(wave: number = 1): Health {
+    const hp = Math.floor(
+      ENEMY_CONFIG.ghost.health +
+        (wave - 1) * ENEMY_CONFIG.hpScaling.ghostCoefficient,
+    );
+    return new Health(hp, hp);
+  }
+
+  /**
    * 建立餓死鬼（Boss）預設血量
    * SPEC § 2.6.2: 餓死鬼血量
    */
@@ -52,11 +65,37 @@ export class Health {
   }
 
   /**
+   * 建立 Boss 血量（波次感知）
+   * SPEC § 2.6.2: HP = round(10 + (W-5) × 1.5)
+   * @param wave 當前波次（預設為 5）
+   */
+  static bossForWave(wave: number = 5): Health {
+    const hp = Math.round(
+      ENEMY_CONFIG.boss.health +
+        (wave - 5) * ENEMY_CONFIG.hpScaling.bossCoefficient,
+    );
+    return new Health(hp, hp);
+  }
+
+  /**
    * 建立菁英敵人預設血量
    * SPEC § 2.6.2: 紅/綠/藍餓鬼血量 = 2
    */
   static elite(): Health {
     return new Health(ENEMY_CONFIG.elite.health, ENEMY_CONFIG.elite.health);
+  }
+
+  /**
+   * 建立菁英敵人血量（波次感知）
+   * SPEC § 2.6.2: HP = round(2 + (W-1) × 0.6)
+   * @param wave 當前波次（預設為 1）
+   */
+  static eliteForWave(wave: number = 1): Health {
+    const hp = Math.round(
+      ENEMY_CONFIG.elite.health +
+        (wave - 1) * ENEMY_CONFIG.hpScaling.eliteCoefficient,
+    );
+    return new Health(hp, hp);
   }
 
   /**

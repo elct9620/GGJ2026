@@ -27,6 +27,7 @@ export type EnemySpawnCallback = (
   enemyType: SpawnableEnemyType,
   x: number,
   y: number,
+  wave: number,
 ) => void;
 
 /**
@@ -236,6 +237,7 @@ export class WaveSystem extends InjectableSystem {
   /**
    * Spawn an enemy
    * SPEC § 2.3.5: Spawn position x=1950, y=random 0~1080
+   * SPEC § 2.6.2: Pass wave number for HP scaling
    */
   private spawnEnemy(type: SpawnableEnemyType): void {
     if (!this.onSpawnEnemy) return;
@@ -246,7 +248,10 @@ export class WaveSystem extends InjectableSystem {
     // SPEC § 2.3.5: Y = random 0~1080
     const yPosition = this.getRandomYPosition();
 
-    this.onSpawnEnemy(type, xPosition, yPosition);
+    // SPEC § 2.6.2: Pass current wave for HP scaling
+    const currentWave = this.gameState.wave.currentWave;
+
+    this.onSpawnEnemy(type, xPosition, yPosition, currentWave);
     this.enemiesSpawnedThisWave++;
   }
 
