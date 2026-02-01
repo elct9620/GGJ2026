@@ -15,6 +15,12 @@ import dropItemPool2 from "../assets/DropItemPool_2.png";
 import imageStalls from "../assets/image_Stalls.png";
 import playerSprite from "../assets/Player.png";
 import playerDirHint from "../assets/Player_DirHint.png";
+import playerBase from "../assets/Player_Base.png";
+import playerBubbleTea from "../assets/Player_BubbleTea.png";
+import playerOysterOmelette from "../assets/Player_OysterOmelette.png";
+import playerStinkyTofu from "../assets/Player_StinkyTofu.png";
+import playerBloodCake from "../assets/Player_BloodCake.png";
+import playerNightMarket from "../assets/Player_NightMarket.png";
 import monster0 from "../assets/Monster_0.png";
 import upgradeBase from "../assets/image_UpgradeBase.png";
 import bulletClassBase from "../assets/image_BulletClassBase.png";
@@ -38,6 +44,12 @@ export const AssetKeys = {
   stalls: "stalls",
   player: "player",
   playerDirHint: "playerDirHint",
+  playerBase: "playerBase",
+  playerBubbleTea: "playerBubbleTea",
+  playerOysterOmelette: "playerOysterOmelette",
+  playerStinkyTofu: "playerStinkyTofu",
+  playerBloodCake: "playerBloodCake",
+  playerNightMarket: "playerNightMarket",
   monster: "monster",
   upgradeBase: "upgradeBase",
   bulletClassBase: "bulletClassBase",
@@ -64,6 +76,12 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.stalls]: imageStalls,
   [AssetKeys.player]: playerSprite,
   [AssetKeys.playerDirHint]: playerDirHint,
+  [AssetKeys.playerBase]: playerBase,
+  [AssetKeys.playerBubbleTea]: playerBubbleTea,
+  [AssetKeys.playerOysterOmelette]: playerOysterOmelette,
+  [AssetKeys.playerStinkyTofu]: playerStinkyTofu,
+  [AssetKeys.playerBloodCake]: playerBloodCake,
+  [AssetKeys.playerNightMarket]: playerNightMarket,
   [AssetKeys.monster]: monster0,
   [AssetKeys.upgradeBase]: upgradeBase,
   [AssetKeys.bulletClassBase]: bulletClassBase,
