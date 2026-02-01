@@ -5,9 +5,9 @@ import { Damage } from "../values/damage";
 import type { CollisionBox } from "../values/collision";
 import { Container, Graphics, Sprite } from "pixi.js";
 import { getTexture } from "../core/assets";
-import type { FoodType } from "./booth";
+import type { FoodType } from "../core/types";
 import { LAYOUT } from "../utils/constants";
-import { EnemyType, isEliteType } from "../values/enemy-type";
+import { EnemyType, isEliteType } from "../core/types";
 import {
   getEnemyProperties,
   getEnemyFoodDrop,
@@ -15,7 +15,7 @@ import {
 } from "../values/enemy-type-registry";
 
 // Re-export for backwards compatibility
-export { EnemyType, isEliteType } from "../values/enemy-type";
+export { EnemyType, isEliteType } from "../core/types";
 
 /**
  * Enemy entity (Ghost or Boss)

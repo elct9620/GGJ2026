@@ -7,7 +7,7 @@ import { Container, Sprite } from "pixi.js";
 import { getTexture, AssetKeys } from "../core/assets";
 import { LAYOUT, getEntityBounds } from "../utils/constants";
 import { PLAYER_CONFIG } from "../config";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 import {
   getPlayerAssetForBuff,
   getDirHintAssetForBuff,

@@ -22,9 +22,22 @@ export {
 } from "./recipes";
 export type { Recipe, RecipeDisplayConfig, HUDColorType } from "./recipes";
 
-// 特殊子彈
-export { SpecialBulletType } from "./special-bullet";
-export type { SpecialBulletType as SpecialBulletTypeValue } from "./special-bullet";
+// 核心型別 (re-export from core/types)
+export {
+  EnemyType,
+  isEliteType,
+  SpecialBulletType,
+  FoodType,
+  BoothId,
+  getBoothIdForFood,
+} from "../core/types";
+export type {
+  TypeRegistry,
+  EnemyType as EnemyTypeValue,
+  SpecialBulletType as SpecialBulletTypeValue,
+  FoodType as FoodTypeValue,
+  BoothId as BoothIdValue,
+} from "../core/types";
 
 // 子彈類型註冊表
 export {

@@ -3,7 +3,7 @@
  * Spec: § 2.4.2 User Journey, § 2.8.2 Defeat Condition
  */
 
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "./types";
 
 // Screen state enum (renamed to avoid conflict with class)
 export const ScreenState = {

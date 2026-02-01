@@ -10,7 +10,7 @@ import type { InputSystem } from "./input";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { KillCounterSystem } from "./kill-counter";
-import { type FoodType, getBoothIdForFood } from "../entities/booth";
+import { type FoodType, getBoothIdForFood } from "../core/types";
 import { type Recipe, RECIPES } from "../values/recipes";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";

@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { GameStateManager, ScreenState, createGameStats } from "./game-state";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "./types";
 
 describe("ScreenState", () => {
   it("should have correct state values", () => {

@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import { Bullet } from "./bullet";
 import { Vector } from "../values/vector";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 import { resetEntityIdCounter } from "./entity";
 

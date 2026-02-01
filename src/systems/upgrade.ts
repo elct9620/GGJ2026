@@ -8,7 +8,7 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
-import { type FoodType, getBoothIdForFood } from "../entities/booth";
+import { type FoodType, getBoothIdForFood } from "../core/types";
 import { UPGRADE_CONFIG, WAVE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 

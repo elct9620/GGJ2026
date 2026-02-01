@@ -2,42 +2,10 @@ import { Entity } from "./entity";
 import { Vector } from "../values/vector";
 import type { CollisionBox } from "../values/collision";
 import { Graphics } from "pixi.js";
+import { FoodType } from "../core/types";
 
-/**
- * Food Type definitions (SPEC § 2.3.1 Booth System)
- * Using const object pattern due to erasableSyntaxOnly restriction
- */
-export const FoodType = {
-  Pearl: "Pearl", // 珍珠
-  Tofu: "Tofu", // 豆腐
-  BloodCake: "BloodCake", // 米血
-} as const;
-
-export type FoodType = (typeof FoodType)[keyof typeof FoodType];
-
-/**
- * Booth ID constants (1-indexed per SPEC § 2.3.1)
- * Use these instead of magic numbers for type safety
- */
-export const BoothId = {
-  Pearl: 1,
-  Tofu: 2,
-  BloodCake: 3,
-} as const;
-
-export type BoothId = (typeof BoothId)[keyof typeof BoothId];
-
-/**
- * Map FoodType to Booth ID (1-indexed per SPEC § 2.3.1)
- */
-export function getBoothIdForFood(foodType: FoodType): BoothId {
-  const mapping: Record<FoodType, BoothId> = {
-    Pearl: BoothId.Pearl,
-    Tofu: BoothId.Tofu,
-    BloodCake: BoothId.BloodCake,
-  };
-  return mapping[foodType];
-}
+// Re-export for backwards compatibility
+export { FoodType, BoothId, getBoothIdForFood } from "../core/types";
 
 /**
  * Food item dropped by enemies

@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Player } from "./player";
 import { Vector } from "../values/vector";
 import { LAYOUT, CANVAS_WIDTH } from "../utils/constants";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 
 describe("Player", () => {
   let player: Player;

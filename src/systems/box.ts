@@ -12,7 +12,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
 import type { Enemy } from "../entities/enemy";
-import { BoothId } from "../entities/booth";
+import { BoothId } from "../core/types";
 import { Container } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";

@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { Enemy, EnemyType, isEliteType } from "./enemy";
 import { Vector } from "../values/vector";
 import { LAYOUT } from "../utils/constants";
-import { FoodType } from "./booth";
+import { FoodType } from "../core/types";
 
 describe("Enemy", () => {
   describe("2.7.1 Ghost (餓鬼) - 小怪", () => {

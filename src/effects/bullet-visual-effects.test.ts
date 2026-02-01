@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { BulletVisualEffects } from "./bullet-visual-effects";
 import { Vector } from "../values/vector";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 
 describe("BulletVisualEffects", () => {
   let visualEffects: BulletVisualEffects;

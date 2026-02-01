@@ -9,7 +9,7 @@
 
 import { Graphics, Container } from "pixi.js";
 import { Vector } from "../values/vector";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 import {
   getBulletSize,
   getVisualEffectConfig,

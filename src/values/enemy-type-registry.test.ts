@@ -9,8 +9,7 @@ import {
   shouldShowHealthBar,
   getEnemyHealthForWave,
 } from "./enemy-type-registry";
-import { EnemyType } from "./enemy-type";
-import { FoodType } from "../entities/booth";
+import { EnemyType, FoodType } from "../core/types";
 import { AssetKeys } from "../core/assets";
 import { ENEMY_CONFIG } from "../config";
 import { LAYOUT } from "../utils/constants";

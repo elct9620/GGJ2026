@@ -6,7 +6,7 @@
 
 import type { CollisionContext } from "../collision-handler";
 import { BaseCollisionHandler } from "./base-collision-handler";
-import { SpecialBulletType } from "../../values/special-bullet";
+import { SpecialBulletType } from "../../core/types";
 import { RECIPE_CONFIG } from "../../config";
 import { EnemyType, isEliteType } from "../../entities/enemy";
 import { Damage } from "../../values/damage";

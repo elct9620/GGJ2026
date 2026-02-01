@@ -12,7 +12,7 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { checkAABBCollision } from "../values/collision";
 import { RECIPE_BUFF_MAPPING } from "../values/recipes";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 import { COMBAT_CONFIG, RECIPE_CONFIG } from "../config";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 import type { UpgradeSystem } from "./upgrade";
@@ -29,7 +29,7 @@ import {
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 
 // Re-export for backwards compatibility
-export { SpecialBulletType } from "../values/special-bullet";
+export { SpecialBulletType } from "../core/types";
 
 /**
  * Bullet spawn request data

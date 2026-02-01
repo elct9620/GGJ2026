@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { BoothSystem } from "./booth";
-import { FoodType, BoothId } from "../entities/booth";
+import { FoodType, BoothId } from "../core/types";
 import { SystemPriority } from "../core/systems/system.interface";
 
 describe("BoothSystem", () => {

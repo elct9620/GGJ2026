@@ -12,7 +12,7 @@ import type { UpgradeSystem } from "../systems/upgrade";
 import type { EventQueue } from "../systems/event-queue";
 import type { GameStateManager } from "../core/game-state";
 import type { Vector } from "../values/vector";
-import type { SpecialBulletType } from "../values/special-bullet";
+import type { SpecialBulletType } from "../core/types";
 
 /**
  * Context provided to collision handlers

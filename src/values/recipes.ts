@@ -3,8 +3,8 @@
  * SPEC § 2.3.3: 特殊子彈配方
  */
 
-import { FoodType, type FoodType as FoodTypeType } from "../entities/booth";
-import { SpecialBulletType } from "./special-bullet";
+import { FoodType, SpecialBulletType } from "../core/types";
+type FoodTypeType = FoodType;
 import { RECIPE_CONFIG } from "../config";
 
 /**

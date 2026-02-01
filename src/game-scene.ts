@@ -2,7 +2,8 @@ import { Container } from "pixi.js";
 import { Player } from "./entities/player";
 import { Enemy, EnemyType } from "./entities/enemy";
 import { Bullet } from "./entities/bullet";
-import { Food, FoodType, getBoothIdForFood } from "./entities/booth";
+import { Food } from "./entities/booth";
+import { FoodType, getBoothIdForFood } from "./core/types";
 import { InputSystem } from "./systems/input";
 import {
   HUDSystem,
@@ -23,7 +24,7 @@ import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import { RECIPES, RECIPE_DISPLAY, FOOD_HUD_COLOR } from "./values/recipes";
 import { PLAYER_CONFIG, RECIPE_CONFIG } from "./config";
-import { SpecialBulletType } from "./values/special-bullet";
+import { SpecialBulletType } from "./core/types";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
 

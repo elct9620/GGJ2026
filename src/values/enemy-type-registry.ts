@@ -7,8 +7,7 @@
  * and accessed through a single source of truth.
  */
 
-import { EnemyType, isEliteType } from "./enemy-type";
-import { FoodType } from "../entities/booth";
+import { EnemyType, isEliteType, FoodType } from "../core/types";
 import { AssetKeys, type AssetKey } from "../core/assets";
 import { ENEMY_CONFIG } from "../config";
 import { LAYOUT } from "../utils/constants";

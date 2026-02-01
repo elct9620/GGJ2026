@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { SpecialBulletType } from "./special-bullet";
+import { SpecialBulletType } from "../core/types";
 import { BULLET_CONFIG } from "../config";
 import { AssetKeys } from "../core/assets";
 import {

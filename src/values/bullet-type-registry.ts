@@ -7,7 +7,7 @@
  * and accessed through a single source of truth.
  */
 
-import { SpecialBulletType } from "./special-bullet";
+import { SpecialBulletType } from "../core/types";
 import { BULLET_CONFIG, HIT_EFFECTS_CONFIG } from "../config";
 import { AssetKeys, type AssetKey } from "../core/assets";
 

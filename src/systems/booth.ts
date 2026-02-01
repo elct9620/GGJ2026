@@ -1,5 +1,5 @@
 import { Container, Sprite, Text } from "pixi.js";
-import { FoodType, BoothId } from "../entities/booth";
+import { FoodType, BoothId } from "../core/types";
 import { SystemPriority } from "../core/systems/system.interface";
 import { InjectableSystem } from "../core/systems/injectable";
 import { EventType } from "./event-queue";

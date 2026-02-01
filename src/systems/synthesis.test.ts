@@ -9,7 +9,7 @@ import { InputSystem } from "./input";
 import { BoothSystem } from "./booth";
 import { KillCounterSystem } from "./kill-counter";
 import { EventQueue, EventType } from "./event-queue";
-import type { FoodType } from "../entities/booth";
+import type { FoodType } from "../core/types";
 import { GameStateManager } from "../core/game-state";
 
 describe("SynthesisSystem", () => {

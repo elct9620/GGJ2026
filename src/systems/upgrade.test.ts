@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { UpgradeSystem } from "./upgrade";
 import { EventQueue, EventType } from "./event-queue";
 import { BoothSystem } from "./booth";
-import { FoodType } from "../entities/booth";
+import { FoodType } from "../core/types";
 
 describe("UpgradeSystem", () => {
   let upgradeSystem: UpgradeSystem;

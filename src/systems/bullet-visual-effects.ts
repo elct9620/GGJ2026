@@ -11,7 +11,7 @@ import type { System } from "../core/systems/system.interface";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { Bullet } from "../entities/bullet";
 import type { Vector } from "../values/vector";
-import type { SpecialBulletType } from "../values/special-bullet";
+import type { SpecialBulletType } from "../core/types";
 
 /**
  * Bullet Visual Effects System

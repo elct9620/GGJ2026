@@ -6,7 +6,7 @@ import { Graphics } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { BULLET_CONFIG } from "../config";
 import type { Enemy } from "./enemy";
-import { SpecialBulletType } from "../values/special-bullet";
+import { SpecialBulletType } from "../core/types";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 import { getBulletSize, getBulletColor } from "../values/bullet-type-registry";
 

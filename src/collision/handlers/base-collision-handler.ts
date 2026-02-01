@@ -5,7 +5,7 @@
  */
 
 import type { CollisionHandler, CollisionContext } from "../collision-handler";
-import type { SpecialBulletType } from "../../values/special-bullet";
+import type { SpecialBulletType } from "../../core/types";
 import { HIT_EFFECTS_CONFIG } from "../../config";
 import {
   getHitEffectConfigKey,

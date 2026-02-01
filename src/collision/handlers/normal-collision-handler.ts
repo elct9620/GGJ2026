@@ -5,7 +5,7 @@
 
 import type { CollisionContext } from "../collision-handler";
 import { BaseCollisionHandler } from "./base-collision-handler";
-import { SpecialBulletType } from "../../values/special-bullet";
+import { SpecialBulletType } from "../../core/types";
 
 export class NormalCollisionHandler extends BaseCollisionHandler {
   readonly bulletType = SpecialBulletType.None;
