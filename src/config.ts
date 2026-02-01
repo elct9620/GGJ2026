@@ -63,10 +63,6 @@ export const BULLET_CONFIG = {
   speed: 400,
   /** 普通子彈傷害 */
   normalDamage: 1,
-  /** 子彈碰撞箱大小 (px) */
-  collisionSize: 8,
-  /** 子彈視覺大小 (px) - 較大的視覺效果便於玩家辨識 */
-  visualSize: 16,
   /** 子彈顏色 (各種類型) */
   colors: {
     /** 普通子彈 - 黃色 */
@@ -81,6 +77,25 @@ export const BULLET_CONFIG = {
     bloodCake: 0xe74c3c,
     /** 蚵仔煎 - 橙色（百分比傷害） */
     oysterOmelette: 0xe67e22,
+  },
+  /**
+   * 各子彈類型尺寸配置 (SPEC § 2.6.3)
+   * 碰撞箱與視覺大小統一（符合 CLAUDE.md § 設計決策）
+   * 基礎比例：玩家/怪物 256px，子彈大小需明顯可見
+   */
+  sizes: {
+    /** Normal: 16×16 px */
+    normal: 16,
+    /** Night Market: 32×32 px */
+    nightMarket: 32,
+    /** Stinky Tofu: 24×24 px */
+    stinkyTofu: 24,
+    /** Bubble Tea: 32×32 px（巨大黑珍珠） */
+    bubbleTea: 32,
+    /** Blood Cake: 28×28 px */
+    bloodCake: 28,
+    /** Oyster Omelette: 128×128 px（巨大投擲物） */
+    oysterOmelette: 128,
   },
 } as const;
 

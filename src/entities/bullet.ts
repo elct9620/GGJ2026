@@ -49,11 +49,6 @@ export class Bullet extends SpriteEntity {
     return this._damage;
   }
 
-  // 子彈視覺半徑（使用較大的視覺大小便於辨識）
-  private readonly visualRadius = BULLET_CONFIG.visualSize / 2;
-  // 子彈碰撞半徑（維持 8×8 碰撞箱）
-  private readonly collisionRadius = BULLET_CONFIG.collisionSize / 2;
-
   constructor(
     initialPosition: Vector,
     direction: Vector,
@@ -66,12 +61,33 @@ export class Bullet extends SpriteEntity {
     this.sprite = this.createSprite();
   }
 
+  /**
+   * Get bullet size based on type (視覺與碰撞統一)
+   */
+  private getBulletSize(): number {
+    const sizes = BULLET_CONFIG.sizes;
+    switch (this.bulletType) {
+      case SpecialBulletType.NightMarket:
+        return sizes.nightMarket;
+      case SpecialBulletType.StinkyTofu:
+        return sizes.stinkyTofu;
+      case SpecialBulletType.BubbleTea:
+        return sizes.bubbleTea;
+      case SpecialBulletType.BloodCake:
+        return sizes.bloodCake;
+      case SpecialBulletType.OysterOmelette:
+        return sizes.oysterOmelette;
+      default:
+        return sizes.normal;
+    }
+  }
+
   private createSprite(): Graphics {
     const sprite = new Graphics();
     const color = this.getBulletColor();
+    const radius = this.getBulletSize() / 2;
 
-    // Draw bullet with visual size for better visibility
-    sprite.circle(0, 0, this.visualRadius);
+    sprite.circle(0, 0, radius);
     sprite.fill(color);
 
     return sprite;
@@ -99,13 +115,14 @@ export class Bullet extends SpriteEntity {
   }
 
   /**
-   * 碰撞箱（8×8 px，視覺大小與碰撞分離）
+   * 碰撞箱（視覺與碰撞統一）
    * SPEC § 4.2.5: AABB 碰撞檢測
    */
   public get collisionBox(): CollisionBox {
+    const size = this.getBulletSize();
     return {
-      width: this.collisionRadius * 2,
-      height: this.collisionRadius * 2,
+      width: size,
+      height: size,
     };
   }
 
@@ -179,7 +196,8 @@ export class Bullet extends SpriteEntity {
   private updateSprite(): void {
     this.sprite.clear();
     const color = this.getBulletColor();
-    this.sprite.circle(0, 0, this.visualRadius);
+    const radius = this.getBulletSize() / 2;
+    this.sprite.circle(0, 0, radius);
     this.sprite.fill(color);
   }
 

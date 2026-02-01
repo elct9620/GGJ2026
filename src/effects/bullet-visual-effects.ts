@@ -34,61 +34,66 @@ interface TemporaryEffect {
 
 /**
  * Visual Effects configuration based on SPEC § 2.6.3
+ *
+ * 尾跡長度規範 (SPEC § 2.6.3 通用視覺效果規則)：
+ * - 普通: 32px
+ * - 特殊: 48~96px
+ * - 終極: 160px
+ *
+ * 粒子寬度與子彈大小成比例（子彈大小約為 256px 怪物的 1/16 ~ 1/2）
  */
 const VISUAL_EFFECTS_CONFIG = {
   normal: {
     trailColor: 0xffffff, // White trail
-    trailWidth: 2,
-    trailLength: 5,
+    trailWidth: 8, // 子彈 16px 的一半
+    trailLength: 4, // ~32px 長度（間距 8px × 4 粒子）
     trailLifetime: 0.2, // seconds
     hitColor: 0xffffff, // White pop
-    hitRadius: 8,
+    hitRadius: 16, // 與子彈視覺大小對齊
     hitDuration: 0.15, // seconds
   },
   nightMarket: {
     trailColor: 0xffd700, // Golden electric
-    trailWidth: 3,
-    trailLength: 8,
+    trailWidth: 16, // 子彈 32px 的一半
+    trailLength: 4, // ~64px 長度
     trailLifetime: 0.3,
     hitColor: 0xffd700, // Golden lightning
     chainColor: 0xffd700,
-    chainWidth: 2,
+    chainWidth: 4, // 更粗的閃電鏈
     flashDuration: 0.2,
   },
   stinkyTofu: {
     trailColor: 0x27ae60, // Green gas
-    trailWidth: 4,
-    trailLength: 12,
+    trailWidth: 12, // 子彈 24px 的一半
+    trailLength: 7, // ~80px 長度
     trailLifetime: 0.4,
     pierceColor: 0x27ae60, // Green stink cloud
-    pierceRadius: 20,
+    pierceRadius: 48, // 貫穿臭氣雲 (子彈 2 倍)
     pierceDuration: 0.3,
   },
   bubbleTea: {
-    bulletScale: 1.5, // Larger bullets (SPEC: 巨大)
-    trailColor: 0x8b4513, // Brown
-    trailWidth: 3,
-    trailLength: 6,
+    trailColor: 0xffffff, // White milk tea mist
+    trailWidth: 16, // 子彈 32px 的一半
+    trailLength: 3, // ~48px 長度
     trailLifetime: 0.25,
   },
   bloodCake: {
     trailColor: 0x1a1a1a, // Black sticky residue
-    trailWidth: 4,
-    trailLength: 10,
+    trailWidth: 14, // 子彈 28px 的一半
+    trailLength: 7, // ~96px 長度
     trailLifetime: 0.5, // Longer lasting sticky trail
     residueAlpha: 0.6,
   },
   oysterOmelette: {
-    bulletScale: 3.5, // 3-4x larger (SPEC: 體積比普通子彈大 3-4 倍)
     trailColor: 0xe67e22, // Orange
-    trailWidth: 6,
-    trailLength: 15,
+    trailWidth: 32, // 子彈 128px 的 1/4（火焰尾跡）
+    trailLength: 5, // ~160px 長度
     trailLifetime: 0.3,
     explosionColor: 0xff4444, // Red explosion
-    explosionRadius: 40,
+    explosionRadius: 128, // 爆炸半徑與子彈大小對齊
     explosionDuration: 0.4,
     screenShakeMagnitude: 8,
-    screenShakeDuration: 0.3,
+    screenShakeDuration: 0.5, // 更長的震動
   },
 } as const;
 
@@ -350,21 +355,6 @@ export class BulletVisualEffects {
         return VISUAL_EFFECTS_CONFIG.oysterOmelette;
       default:
         return VISUAL_EFFECTS_CONFIG.normal;
-    }
-  }
-
-  /**
-   * Get bullet scale for visual size
-   * SPEC § 2.6.3: Some bullets appear larger (Bubble Tea, Oyster Omelette)
-   */
-  public static getBulletScale(bulletType: SpecialBulletType): number {
-    switch (bulletType) {
-      case SpecialBulletType.BubbleTea:
-        return VISUAL_EFFECTS_CONFIG.bubbleTea.bulletScale;
-      case SpecialBulletType.OysterOmelette:
-        return VISUAL_EFFECTS_CONFIG.oysterOmelette.bulletScale;
-      default:
-        return 1.0;
     }
   }
 }

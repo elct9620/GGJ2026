@@ -161,29 +161,9 @@ describe("BulletVisualEffects", () => {
     });
   });
 
-  describe("Bullet Scale (VE-09, VE-12)", () => {
-    it("should return larger scale for bubble tea bullets (VE-09)", () => {
-      const scale = BulletVisualEffects.getBulletScale(
-        SpecialBulletType.BubbleTea,
-      );
-      expect(scale).toBeGreaterThan(1.0);
-    });
-
-    it("should return 3-4x scale for oyster omelette bullets (VE-12)", () => {
-      const scale = BulletVisualEffects.getBulletScale(
-        SpecialBulletType.OysterOmelette,
-      );
-      expect(scale).toBeGreaterThanOrEqual(3.0);
-      expect(scale).toBeLessThanOrEqual(4.0);
-    });
-
-    it("should return normal scale (1.0) for other bullet types", () => {
-      const scale = BulletVisualEffects.getBulletScale(
-        SpecialBulletType.StinkyTofu,
-      );
-      expect(scale).toBe(1.0);
-    });
-  });
+  // Note: Bullet scale is now managed by BULLET_CONFIG.sizes in config.ts
+  // The getBulletScale method has been removed from BulletVisualEffects
+  // as bullet sizes are unified (visual = collision) per CLAUDE.md design decision
 
   describe("Update and Cleanup", () => {
     it("should fade trails over time", () => {
