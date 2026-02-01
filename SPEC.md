@@ -595,11 +595,13 @@
 
 **Sound ID Mapping**:
 
-| 音效 ID      | 檔案路徑                    | 觸發事件      |
-| ------------ | --------------------------- | ------------- |
-| button_click | /assets/se/select03.mp3     | ButtonClicked |
-| enemy_hit    | /assets/se/short_punch1.mp3 | EnemyHit      |
-| player_shoot | /assets/se/shoot5.mp3       | BulletFired   |
+| 音效 ID      | 原始檔案路徑                   | Vite 匯入路徑                      | 觸發事件      |
+| ------------ | ------------------------------ | ---------------------------------- | ------------- |
+| button_click | src/assets/se/select03.mp3     | `import buttonClickSound from ...` | ButtonClicked |
+| enemy_hit    | src/assets/se/short_punch1.mp3 | `import enemyHitSound from ...`    | EnemyHit      |
+| player_shoot | src/assets/se/shoot5.mp3       | `import playerShootSound from ...` | BulletFired   |
+
+Note: 音效檔案使用 Vite 靜態匯入（與 `src/core/assets.ts` 相同模式），確保正確的資源路徑解析。
 
 **Error Scenarios**:
 

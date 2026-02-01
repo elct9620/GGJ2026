@@ -16,6 +16,11 @@ import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 
+// Import audio files using Vite's static import
+import buttonClickSound from "../assets/se/select03.mp3";
+import enemyHitSound from "../assets/se/short_punch1.mp3";
+import playerShootSound from "../assets/se/shoot5.mp3";
+
 /**
  * 音效 ID 定義
  */
@@ -28,12 +33,12 @@ export const SoundId = {
 export type SoundId = (typeof SoundId)[keyof typeof SoundId];
 
 /**
- * 音效檔案路徑映射
+ * 音效檔案路徑映射（使用 Vite 靜態匯入）
  */
 const SOUND_PATHS: Record<SoundId, string> = {
-  [SoundId.ButtonClick]: "/assets/se/select03.mp3",
-  [SoundId.EnemyHit]: "/assets/se/short_punch1.mp3",
-  [SoundId.PlayerShoot]: "/assets/se/shoot5.mp3",
+  [SoundId.ButtonClick]: buttonClickSound,
+  [SoundId.EnemyHit]: enemyHitSound,
+  [SoundId.PlayerShoot]: playerShootSound,
 };
 
 /**
