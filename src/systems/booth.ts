@@ -81,15 +81,12 @@ export class BoothSystem extends InjectableSystem {
     // Booth 3: Blood Cake (米血)
 
     // Layout based on ui_rough_pixelSpec.png (SPEC § 2.7.2)
-    // DropItemPool position: x=340 (baseline), right side of booth area
-    // Y position: vertically centered within 868px game area
+    // DropPool sprites are positioned right of baseline with 11px gap
     const boothHeight = LAYOUT.BOOTH_HEIGHT;
-    const boothGap = LAYOUT.BOOTH_GAP; // 11px vertical spacing between booths
-    const startX = LAYOUT.BASELINE_X; // 340 - DropItemPool position
-    // Total height: 3 booths + 2 gaps = 3*256 + 2*11 = 790px
-    const totalHeight = boothHeight * 3 + boothGap * 2;
-    const startY =
-      LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - totalHeight) / 2;
+    const boothGap = LAYOUT.BOOTH_GAP; // 11px spacing (vertical between booths, horizontal from baseline)
+    const startX = LAYOUT.BASELINE_X + boothGap; // 340 + 11 = 351
+    // Y position: 129px from top of game area (from design spec)
+    const startY = LAYOUT.GAME_AREA_Y + LAYOUT.BOOTH_TOP_MARGIN; // 86 + 129 = 215
 
     this.booths.set(
       BoothId.Pearl,

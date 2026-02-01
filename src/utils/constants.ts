@@ -41,7 +41,8 @@ export const LAYOUT = {
   BOOTH_HEIGHT: 256,
 
   // Booth spacing (from ui_rough_pixelSpec.png)
-  BOOTH_GAP: 11,
+  BOOTH_GAP: 23, // Vertical gap between booths, also horizontal gap from baseline
+  BOOTH_TOP_MARGIN: 23, // Distance from game area top to first booth
 
   // Bottom HUD layout (from ui_rough_pixelSpec.png)
   UPGRADE_SECTION: {
@@ -50,8 +51,8 @@ export const LAYOUT = {
     ICON_GAP: 7,
   },
   SKILL_SECTION: {
-    LEFT_MARGIN: 30,
-    BUTTON_GAP: 68,
+    LEFT_MARGIN: 68, // Gap from left edge of skill section
+    BUTTON_GAP: 30, // Gap between skill buttons
     BUTTON_SIZE: 46,
     BACKGROUND_SIZE: 116,
     INDICATOR_SIZE: 20,
