@@ -124,7 +124,7 @@ describe("Enemy", () => {
     let boss: Enemy;
 
     beforeEach(() => {
-      boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+      boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
     });
 
     it("EN-11: 餓死鬼 (1000, 500) + 1 秒 → 餓死鬼 (970, 500)", () => {
@@ -165,7 +165,7 @@ describe("Enemy", () => {
 
     it("EN-15: Boss 初始 HP 為 10", () => {
       // SPEC § 2.6.2: Boss 基礎血量 = 10
-      const newBoss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+      const newBoss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
       expect(newBoss.health).toBe(10);
     });
 
@@ -347,12 +347,12 @@ describe("Enemy", () => {
     });
 
     it("reset Boss 恢復 10 HP", () => {
-      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
+      const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
       boss.takeDamage(2);
 
       expect(boss.health).toBe(8);
 
-      boss.reset(EnemyType.Boss, new Vector(1500, 300));
+      boss.reset(EnemyType.Boss, new Vector(1500, 300), 5);
 
       expect(boss.health).toBe(10);
     });
