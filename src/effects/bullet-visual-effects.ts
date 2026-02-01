@@ -7,7 +7,7 @@
  * Designed for 60 FPS performance with 50-500 particles per bullet.
  */
 
-import { Graphics, Container, BlurFilter, ColorMatrixFilter } from "pixi.js";
+import { Graphics, Container, BlurFilter } from "pixi.js";
 import { Vector } from "../values/vector";
 import { SpecialBulletType } from "../values/special-bullet";
 
@@ -440,7 +440,7 @@ export class BulletVisualEffects {
   public createHitEffect(
     position: Vector,
     bulletType: SpecialBulletType,
-    targetVelocity?: Vector,
+    _targetVelocity?: Vector,
   ): void {
     const config = this.getConfigForType(bulletType);
     if (!config) return;
@@ -760,7 +760,7 @@ export class BulletVisualEffects {
     color?: number;
   } {
     const flashConfig: Record<string, any> = {
-      [SpecialBulletType.Normal]: { brightness: 1.8, duration: 0.1 },
+      [SpecialBulletType.None]: { brightness: 1.8, duration: 0.1 },
       [SpecialBulletType.NightMarket]: {
         brightness: 2.0,
         duration: 0.12,
@@ -937,7 +937,7 @@ export class BulletVisualEffects {
    */
   private getTrailParticleCount(bulletType: SpecialBulletType): number {
     const counts: Record<string, number> = {
-      [SpecialBulletType.Normal]: 3,
+      [SpecialBulletType.None]: 3,
       [SpecialBulletType.NightMarket]: 5, // High-density for electric arc
       [SpecialBulletType.StinkyTofu]: 4, // Wavy gas
       [SpecialBulletType.BubbleTea]: 3, // Per bullet (×3 total)
@@ -952,7 +952,7 @@ export class BulletVisualEffects {
    */
   private getHitParticleCount(bulletType: SpecialBulletType): number {
     const counts: Record<string, number> = {
-      [SpecialBulletType.Normal]: 40,
+      [SpecialBulletType.None]: 40,
       [SpecialBulletType.NightMarket]: 100,
       [SpecialBulletType.StinkyTofu]: 125,
       [SpecialBulletType.BubbleTea]: 60, // Per bullet
@@ -967,7 +967,7 @@ export class BulletVisualEffects {
    */
   private getHitParticleSpeed(bulletType: SpecialBulletType): number {
     const speeds: Record<string, number> = {
-      [SpecialBulletType.Normal]: 150, // 100-200 px/s average
+      [SpecialBulletType.None]: 150, // 100-200 px/s average
       [SpecialBulletType.NightMarket]: 300, // 200-400 px/s
       [SpecialBulletType.StinkyTofu]: 115, // 80-150 px/s
       [SpecialBulletType.BubbleTea]: 100, // 80-120 px/s
@@ -981,7 +981,7 @@ export class BulletVisualEffects {
    * Get particle size based on bullet type and effect
    */
   private getParticleSize(
-    bulletType: SpecialBulletType,
+    _bulletType: SpecialBulletType,
     effectType: string,
   ): number {
     if (effectType === "trail") {
@@ -995,10 +995,10 @@ export class BulletVisualEffects {
    */
   private getParticleColor(
     bulletType: SpecialBulletType,
-    effectType: string,
+    _effectType: string,
   ): number {
     const colors: Record<string, number> = {
-      [SpecialBulletType.Normal]: 0xffffff,
+      [SpecialBulletType.None]: 0xffffff,
       [SpecialBulletType.NightMarket]: 0xffd700,
       [SpecialBulletType.StinkyTofu]: 0x7fff00,
       [SpecialBulletType.BubbleTea]: 0xd2691e,
@@ -1017,7 +1017,7 @@ export class BulletVisualEffects {
   ): number {
     if (effectType === "trail") {
       const lifetimes: Record<string, number> = {
-        [SpecialBulletType.Normal]: 0.2,
+        [SpecialBulletType.None]: 0.2,
         [SpecialBulletType.NightMarket]: 0.3,
         [SpecialBulletType.StinkyTofu]: 0.6,
         [SpecialBulletType.BubbleTea]: 0.4,

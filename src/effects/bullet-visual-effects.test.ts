@@ -27,8 +27,14 @@ describe("BulletVisualEffects", () => {
     it("should create white trail for normal bullets (VE-01)", () => {
       const bulletId = "bullet1";
       const position = new Vector(100, 100);
+      const velocity = new Vector(200, 0);
 
-      visualEffects.createTrail(bulletId, position, SpecialBulletType.None);
+      visualEffects.createTrail(
+        bulletId,
+        position,
+        velocity,
+        SpecialBulletType.None,
+      );
 
       const container = visualEffects.getContainer();
       expect(container.children.length).toBeGreaterThan(0);
@@ -37,10 +43,12 @@ describe("BulletVisualEffects", () => {
     it("should create green gas trail for stinky tofu (VE-06)", () => {
       const bulletId = "bullet2";
       const position = new Vector(200, 200);
+      const velocity = new Vector(200, 0);
 
       visualEffects.createTrail(
         bulletId,
         position,
+        velocity,
         SpecialBulletType.StinkyTofu,
       );
 
@@ -51,10 +59,12 @@ describe("BulletVisualEffects", () => {
     it("should create black sticky residue for blood cake (VE-11)", () => {
       const bulletId = "bullet3";
       const position = new Vector(300, 300);
+      const velocity = new Vector(200, 0);
 
       visualEffects.createTrail(
         bulletId,
         position,
+        velocity,
         SpecialBulletType.BloodCake,
       );
 
@@ -65,12 +75,14 @@ describe("BulletVisualEffects", () => {
     it("should limit trail length per bullet", () => {
       const bulletId = "bullet4";
       const bulletType = SpecialBulletType.None;
+      const velocity = new Vector(200, 0);
 
       // Create more trails than max length (normal trail length = 5)
       for (let i = 0; i < 10; i++) {
         visualEffects.createTrail(
           bulletId,
           new Vector(100 + i * 10, 100),
+          velocity,
           bulletType,
         );
       }
@@ -117,7 +129,7 @@ describe("BulletVisualEffects", () => {
       const from = new Vector(100, 100);
       const to = new Vector(200, 200);
 
-      visualEffects.createChainEffect(from, to);
+      visualEffects.createChainEffect(from, to, 0);
 
       const container = visualEffects.getContainer();
       expect(container.children.length).toBeGreaterThan(0);
@@ -131,9 +143,9 @@ describe("BulletVisualEffects", () => {
       ];
 
       // Create chain from first to second
-      visualEffects.createChainEffect(positions[0], positions[1]);
+      visualEffects.createChainEffect(positions[0], positions[1], 0);
       // Create chain from second to third
-      visualEffects.createChainEffect(positions[1], positions[2]);
+      visualEffects.createChainEffect(positions[1], positions[2], 1);
 
       const container = visualEffects.getContainer();
       expect(container.children.length).toBeGreaterThanOrEqual(2);
@@ -153,7 +165,9 @@ describe("BulletVisualEffects", () => {
 
   describe("Screen Shake (VE-13)", () => {
     it("should return screen shake parameters for oyster omelette (VE-13)", () => {
-      const shakeData = visualEffects.triggerScreenShake();
+      const shakeData = visualEffects.triggerScreenShake(
+        SpecialBulletType.OysterOmelette,
+      );
 
       expect(shakeData).toBeDefined();
       expect(shakeData.magnitude).toBeGreaterThan(0);
@@ -188,9 +202,11 @@ describe("BulletVisualEffects", () => {
   describe("Update and Cleanup", () => {
     it("should fade trails over time", () => {
       const bulletId = "bullet5";
+      const velocity = new Vector(200, 0);
       visualEffects.createTrail(
         bulletId,
         new Vector(100, 100),
+        velocity,
         SpecialBulletType.None,
       );
 
@@ -206,12 +222,14 @@ describe("BulletVisualEffects", () => {
 
     it("should clear all trails for a specific bullet", () => {
       const bulletId = "bullet6";
+      const velocity = new Vector(200, 0);
 
       // Create multiple trail particles
       for (let i = 0; i < 3; i++) {
         visualEffects.createTrail(
           bulletId,
           new Vector(100 + i * 10, 100),
+          velocity,
           SpecialBulletType.None,
         );
       }
@@ -224,10 +242,12 @@ describe("BulletVisualEffects", () => {
     });
 
     it("should clean up all effects on destroy", () => {
+      const velocity = new Vector(200, 0);
       // Create various effects
       visualEffects.createTrail(
         "bullet1",
         new Vector(100, 100),
+        velocity,
         SpecialBulletType.None,
       );
       visualEffects.createHitEffect(
@@ -237,6 +257,7 @@ describe("BulletVisualEffects", () => {
       visualEffects.createChainEffect(
         new Vector(300, 300),
         new Vector(400, 400),
+        0,
       );
 
       expect(visualEffects.getContainer().children.length).toBeGreaterThan(0);
@@ -258,12 +279,14 @@ describe("BulletVisualEffects", () => {
         SpecialBulletType.BloodCake,
         SpecialBulletType.OysterOmelette,
       ];
+      const velocity = new Vector(200, 0);
 
       types.forEach((type, index) => {
         const bulletId = `bullet_${index}`;
         visualEffects.createTrail(
           bulletId,
           new Vector(100 + index * 50, 100),
+          velocity,
           type,
         );
       });
