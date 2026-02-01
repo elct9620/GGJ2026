@@ -150,8 +150,11 @@ export class GameScene {
 
     // Setup bullet spawner callback (follows same pattern as WaveSystem.setSpawnCallback)
     combatSystem.setBulletSpawner((request: BulletSpawnRequest) => {
+      // CRITICAL: Clone position to prevent shared reference (SPEC § 3.2.1)
+      // Without cloning, all bullets share the same Vector instance and move together
+      const spawnPosition = new Vector(request.position.x, request.position.y);
       const bullet = new Bullet(
-        request.position,
+        spawnPosition,
         request.direction,
         request.bulletType,
       );
