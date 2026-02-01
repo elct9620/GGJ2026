@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { System, SystemPriority } from "./system.interface";
+import { SystemPriority } from "./system.interface";
 import type { ISystem } from "./system.interface";
 
 describe("ISystem Interface", () => {
@@ -31,87 +31,6 @@ describe("ISystem Interface", () => {
       expect(SystemPriority.HUD).toBeGreaterThan(SystemPriority.INPUT);
       expect(SystemPriority.HUD).toBeGreaterThan(SystemPriority.BOOTH);
       expect(SystemPriority.HUD).toBeGreaterThan(SystemPriority.DEFAULT);
-    });
-  });
-
-  describe("System 基底類別", () => {
-    it("應提供預設優先級", () => {
-      class TestSystem extends System {
-        name = "Test";
-        update(): void {}
-      }
-
-      const system = new TestSystem();
-      expect(system.priority).toBe(SystemPriority.DEFAULT);
-    });
-
-    it("應允許覆寫優先級", () => {
-      class HighPrioritySystem extends System {
-        name = "HighPriority";
-        readonly priority = SystemPriority.INPUT;
-        update(): void {}
-      }
-
-      const system = new HighPrioritySystem();
-      expect(system.priority).toBe(SystemPriority.INPUT);
-    });
-
-    it("應提供預設 initialize 方法", () => {
-      class MinimalSystem extends System {
-        name = "Minimal";
-        update(): void {}
-      }
-
-      const system = new MinimalSystem();
-      expect(system.initialize).toBeDefined();
-      expect(() => system.initialize?.()).not.toThrow();
-    });
-
-    it("應提供預設 destroy 方法", () => {
-      class MinimalSystem extends System {
-        name = "Minimal";
-        update(): void {}
-      }
-
-      const system = new MinimalSystem();
-      expect(system.destroy).toBeDefined();
-      expect(() => system.destroy?.()).not.toThrow();
-    });
-
-    it("應允許實作 initialize 方法", () => {
-      class InitializableSystem extends System {
-        name = "Initializable";
-        initialized = false;
-
-        initialize(): void {
-          this.initialized = true;
-        }
-
-        update(): void {}
-      }
-
-      const system = new InitializableSystem();
-      expect(system.initialized).toBe(false);
-      system.initialize?.();
-      expect(system.initialized).toBe(true);
-    });
-
-    it("應允許實作 destroy 方法", () => {
-      class DestroyableSystem extends System {
-        name = "Destroyable";
-        destroyed = false;
-
-        destroy(): void {
-          this.destroyed = true;
-        }
-
-        update(): void {}
-      }
-
-      const system = new DestroyableSystem();
-      expect(system.destroyed).toBe(false);
-      system.destroy?.();
-      expect(system.destroyed).toBe(true);
     });
   });
 

@@ -36,22 +36,3 @@ export interface ISystem {
   /** 清理系統資源（取消註冊時呼叫） */
   destroy?(): void;
 }
-
-/**
- * 系統基底類別（可選）
- * 提供預設實作，簡化系統開發
- */
-export abstract class System implements ISystem {
-  public abstract readonly name: string;
-  public readonly priority: SystemPriority = SystemPriority.DEFAULT;
-
-  public initialize?(): void {
-    // 預設：無初始化
-  }
-
-  public abstract update(deltaTime: number): void;
-
-  public destroy?(): void {
-    // 預設：無清理
-  }
-}
