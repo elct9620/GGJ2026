@@ -17,11 +17,9 @@ import { LAYOUT } from "../utils/constants";
 const POOL_X = LAYOUT.BASELINE_X; // 340
 const POOL_START_Y =
   LAYOUT.GAME_AREA_Y + (LAYOUT.GAME_AREA_HEIGHT - 256 * 3) / 2; // 136
-const POOL_CENTER_Y = POOL_START_Y + (256 * 3) / 2; // 520 (center of pool area)
 
 // Test constants for enemy positioning within booth pool area
 const BOX_X = POOL_X;
-const BOX_Y = POOL_CENTER_Y;
 
 describe("BoxSystem", () => {
   let boxSystem: BoxSystem;
@@ -123,58 +121,73 @@ describe("BoxSystem", () => {
   });
 
   describe("Enemy Collision", () => {
-    it("BX-08: 敵人碰撞寶箱消耗食材並消失", () => {
-      // Spawn box with 3 food
+    it("BX-08: 敵人碰撞珍珠寶箱消耗珍珠食材", () => {
+      // Spawn Pearl box with 3 food
       for (let i = 0; i < 3; i++) {
         boothSystem.storeFood(FoodType.Pearl);
       }
 
-      // Spawn enemy near box
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
+      // Calculate Pearl booth Y position (top booth)
+      const pearlBoothY = POOL_START_Y + 256 / 2; // Center of first booth
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // Note: Enemy collision doesn't consume food from BoothSystem
-      // Food is only consumed via synthesis/retrieval
-      expect(boxSystem.getTotalFoodCount()).toBe(3);
+      // SPEC § 2.3.7: Enemy collision consumes 1 food from Pearl booth only
+      expect(boothSystem.getFoodCount(1)).toBe(2); // Pearl booth
       expect(enemy.active).toBe(false);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
-    it("BX-09: 最後一次碰撞消耗寶箱", () => {
-      // Spawn box with 1 food
+    it("BX-09: 最後一次碰撞消耗該攤位寶箱", () => {
+      // Spawn Pearl box with 1 food
       boothSystem.storeFood(FoodType.Pearl);
 
-      // Spawn enemy near box
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
+      // Spawn enemy at Pearl booth position
+      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      // Box still has 1 food (enemy collision doesn't consume booth food)
-      expect(boxSystem.getTotalFoodCount()).toBe(1);
+      // SPEC § 2.3.7: Last food consumed, Pearl box despawns
+      expect(boothSystem.getFoodCount(1)).toBe(0);
       expect(enemy.active).toBe(false);
-      expect(boxSystem.isBoxActive()).toBe(true);
+      expect(boxSystem.isBoxActive()).toBe(false); // No boxes active
     });
 
     it("BX-10: 遠距離敵人不觸發碰撞", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
       // Spawn enemy far from box
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 200, BOX_Y));
+      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 200, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
 
-      expect(boxSystem.getTotalFoodCount()).toBe(1);
+      expect(boothSystem.getFoodCount(1)).toBe(1);
       expect(enemy.active).toBe(true);
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
     it("BX-11: 無寶箱時敵人不受影響", () => {
       // No box spawned
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
+      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
@@ -184,18 +197,21 @@ describe("BoxSystem", () => {
     });
 
     it("BX-12: 每幀最多處理一次碰撞", () => {
-      // Spawn box with 5 food
+      // Spawn Pearl box with 5 food
       for (let i = 0; i < 5; i++) {
         boothSystem.storeFood(FoodType.Pearl);
       }
 
-      // Spawn 3 enemies near box
-      enemies.push(new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y)));
+      // Spawn 3 enemies at Pearl booth position
+      const pearlBoothY = POOL_START_Y + 256 / 2;
       enemies.push(
-        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y + 5)),
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY)),
       );
       enemies.push(
-        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y - 5)),
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY + 5)),
+      );
+      enemies.push(
+        new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY - 5)),
       );
 
       boxSystem.update();
@@ -203,25 +219,97 @@ describe("BoxSystem", () => {
       // Only 1 enemy should be deactivated per frame
       const activeEnemies = enemies.filter((e) => e.active);
       expect(activeEnemies.length).toBe(2);
-      expect(boxSystem.getTotalFoodCount()).toBe(5); // Unchanged (collision doesn't consume booth food)
+      // SPEC § 2.3.7: 1 food consumed per collision from Pearl booth
+      expect(boothSystem.getFoodCount(1)).toBe(4);
     });
 
     it("BX-13: 非活躍敵人不觸發碰撞", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
+      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemy.active = false;
       enemies.push(enemy);
 
       boxSystem.update();
 
-      expect(boxSystem.getTotalFoodCount()).toBe(1);
+      expect(boothSystem.getFoodCount(1)).toBe(1);
       expect(boxSystem.isBoxActive()).toBe(true);
+    });
+
+    it("BX-14: 敵人碰撞豆腐箱子只消耗豆腐", () => {
+      // Setup multiple booths with food
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.Tofu);
+      boothSystem.storeFood(FoodType.Tofu);
+
+      // Enemy hits Tofu booth (middle)
+      const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, tofuBoothY),
+      );
+      enemies.push(enemy);
+
+      boxSystem.update();
+
+      // Only Tofu booth should lose food
+      expect(boothSystem.getFoodCount(1)).toBe(2); // Pearl unchanged
+      expect(boothSystem.getFoodCount(2)).toBe(1); // Tofu -1
+      expect(enemy.active).toBe(false);
+    });
+
+    it("BX-15: 敵人碰撞米血箱子只消耗米血", () => {
+      // Setup multiple booths with food
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.BloodCake);
+      boothSystem.storeFood(FoodType.BloodCake);
+
+      // Enemy hits BloodCake booth (bottom)
+      const bloodCakeBoothY = POOL_START_Y + 256 * 2 + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, bloodCakeBoothY),
+      );
+      enemies.push(enemy);
+
+      boxSystem.update();
+
+      // Only BloodCake booth should lose food
+      expect(boothSystem.getFoodCount(1)).toBe(1); // Pearl unchanged
+      expect(boothSystem.getFoodCount(3)).toBe(1); // BloodCake -1
+      expect(enemy.active).toBe(false);
+    });
+
+    it("BX-16: 某攤位食材歸零後該箱子消失，敵人可通過", () => {
+      // Setup: Pearl has food, Tofu empty, BloodCake has food
+      boothSystem.storeFood(FoodType.Pearl);
+      boothSystem.storeFood(FoodType.BloodCake);
+
+      // Enemy passes through Tofu booth position (no box)
+      const tofuBoothY = POOL_START_Y + 256 + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, tofuBoothY),
+      );
+      enemies.push(enemy);
+
+      boxSystem.update();
+
+      // Enemy should pass through (not deactivated)
+      expect(enemy.active).toBe(true);
+      expect(boothSystem.getFoodCount(1)).toBe(1); // Pearl unchanged
+      expect(boothSystem.getFoodCount(2)).toBe(0); // Tofu still 0
+      expect(boothSystem.getFoodCount(3)).toBe(1); // BloodCake unchanged
     });
   });
 
   describe("Food Synchronization", () => {
-    it("BX-14: 合成消耗食材同步減少耐久度", () => {
+    it("BX-17: 合成消耗食材同步減少耐久度", () => {
       // Add 6 food (2 of each type)
       boothSystem.storeFood(FoodType.Pearl);
       boothSystem.storeFood(FoodType.Pearl);
@@ -240,7 +328,7 @@ describe("BoxSystem", () => {
       expect(boxSystem.isBoxActive()).toBe(true);
     });
 
-    it("BX-15: 食材入庫和消耗混合操作", () => {
+    it("BX-18: 食材入庫和消耗混合操作", () => {
       boothSystem.storeFood(FoodType.Pearl); // 1
       boothSystem.storeFood(FoodType.Tofu); // 2
       boothSystem.retrieveFood(1); // 1
@@ -253,7 +341,7 @@ describe("BoxSystem", () => {
   });
 
   describe("Reset", () => {
-    it("BX-16: Reset 後狀態歸零", () => {
+    it("BX-19: Reset 後狀態歸零", () => {
       // Setup state
       for (let i = 0; i < 3; i++) {
         boothSystem.storeFood(FoodType.Pearl);
@@ -269,7 +357,7 @@ describe("BoxSystem", () => {
   });
 
   describe("Event Publishing", () => {
-    it("BX-17: 敵人碰撞寶箱發佈 EnemyReachedEnd 事件", () => {
+    it("BX-20: 敵人碰撞寶箱發佈 EnemyReachedEnd 事件", () => {
       let eventFired = false;
       let enemyId = "";
 
@@ -280,7 +368,11 @@ describe("BoxSystem", () => {
 
       boothSystem.storeFood(FoodType.Pearl);
 
-      const enemy = new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, BOX_Y));
+      const pearlBoothY = POOL_START_Y + 256 / 2;
+      const enemy = new Enemy(
+        EnemyType.Ghost,
+        new Vector(BOX_X + 6, pearlBoothY),
+      );
       enemies.push(enemy);
 
       boxSystem.update();
