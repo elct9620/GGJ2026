@@ -11,6 +11,7 @@ export class InputSystem extends InjectableSystem {
   public readonly priority = SystemPriority.INPUT;
 
   private keysPressed: Set<string> = new Set();
+  private prevKeysPressed: Set<string> = new Set();
   private handleKeyDown = (event: KeyboardEvent): void => {
     this.keysPressed.add(event.key.toLowerCase());
   };
@@ -29,10 +30,11 @@ export class InputSystem extends InjectableSystem {
 
   /**
    * Update method (ISystem lifecycle)
-   * InputSystem is event-driven, no update needed
+   * Updates previous key states for edge detection
    */
   public update(_deltaTime: number): void {
-    // Input is event-driven, no per-frame update needed
+    // Update previous key states for edge detection
+    this.prevKeysPressed = new Set(this.keysPressed);
   }
 
   /**
@@ -71,13 +73,15 @@ export class InputSystem extends InjectableSystem {
   /**
    * Check if synthesis key is pressed (1-5)
    * SPEC § 2.3.3: 數字鍵 1-5 直接觸發合成
+   * Uses edge detection to prevent repeated triggering when holding key
    */
   public getSynthesisKeyPressed(): number | null {
-    if (this.keysPressed.has("1")) return 1;
-    if (this.keysPressed.has("2")) return 2;
-    if (this.keysPressed.has("3")) return 3;
-    if (this.keysPressed.has("4")) return 4;
-    if (this.keysPressed.has("5")) return 5;
+    // Edge detection: key was just pressed this frame (not pressed last frame)
+    if (this.keysPressed.has("1") && !this.prevKeysPressed.has("1")) return 1;
+    if (this.keysPressed.has("2") && !this.prevKeysPressed.has("2")) return 2;
+    if (this.keysPressed.has("3") && !this.prevKeysPressed.has("3")) return 3;
+    if (this.keysPressed.has("4") && !this.prevKeysPressed.has("4")) return 4;
+    if (this.keysPressed.has("5") && !this.prevKeysPressed.has("5")) return 5;
     return null;
   }
 
@@ -93,6 +97,7 @@ export class InputSystem extends InjectableSystem {
    */
   public clear(): void {
     this.keysPressed.clear();
+    this.prevKeysPressed.clear();
   }
 
   /**
