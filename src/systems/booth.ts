@@ -292,16 +292,20 @@ export class Booth {
 
   private createSprite(): Sprite {
     // Map booth id to DropItemPool asset
+    // SPEC § 2.3.1: Booth color matches Elite enemy color
+    // - Tofu (Booth 1) = Red (RedGhost drops Tofu) → DropItemPool_0.png
+    // - Pearl (Booth 2) = Green (GreenGhost drops Pearl) → DropItemPool_2.png
+    // - BloodCake (Booth 3) = Blue (BlueGhost drops BloodCake) → DropItemPool_1.png
     let assetKey: keyof typeof AssetKeys;
     switch (this.id) {
-      case BoothId.Pearl:
-        assetKey = "boothPool0";
-        break;
       case BoothId.Tofu:
-        assetKey = "boothPool1";
+        assetKey = "boothPool0"; // Red
+        break;
+      case BoothId.Pearl:
+        assetKey = "boothPool2"; // Green
         break;
       case BoothId.BloodCake:
-        assetKey = "boothPool2";
+        assetKey = "boothPool1"; // Blue
         break;
       default:
         assetKey = "boothPool0";
