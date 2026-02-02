@@ -25,12 +25,12 @@ describe("Game Balance Config", () => {
       expect(PLAYER_CONFIG.speed).toBe(200);
     });
 
-    it("彈夾容量應為 6 (SPEC § 2.3.2)", () => {
-      expect(PLAYER_CONFIG.magazineCapacity).toBe(6);
+    it("彈夾容量應為 8 (SPEC § 2.3.2)", () => {
+      expect(PLAYER_CONFIG.magazineCapacity).toBe(8);
     });
 
-    it("重裝時間應為 3 秒 (SPEC § 2.3.2)", () => {
-      expect(PLAYER_CONFIG.reloadTime).toBe(3);
+    it("重裝時間應為 2.5 秒 (SPEC § 2.3.2)", () => {
+      expect(PLAYER_CONFIG.reloadTime).toBe(2.5);
     });
   });
 
@@ -39,16 +39,16 @@ describe("Game Balance Config", () => {
       expect(ENEMY_CONFIG.ghost.health).toBe(1);
     });
 
-    it("餓鬼速度應為 50 px/s (SPEC § 2.6.2)", () => {
-      expect(ENEMY_CONFIG.ghost.speed).toBe(50);
+    it("餓鬼速度應為 160 px/s (SPEC § 2.6.2)", () => {
+      expect(ENEMY_CONFIG.ghost.speed).toBe(160);
     });
 
     it("Boss 血量應為 10 (SPEC § 2.6.2)", () => {
       expect(ENEMY_CONFIG.boss.health).toBe(10);
     });
 
-    it("Boss 速度應為 30 px/s (SPEC § 2.6.2)", () => {
-      expect(ENEMY_CONFIG.boss.speed).toBe(30);
+    it("Boss 速度應為 100 px/s (SPEC § 2.6.2)", () => {
+      expect(ENEMY_CONFIG.boss.speed).toBe(100);
     });
 
     it("敵人生成位置應為 x=1950 (SPEC § 2.3.5)", () => {
@@ -86,16 +86,16 @@ describe("Game Balance Config", () => {
   });
 
   describe("COMBAT_CONFIG", () => {
-    it("射擊冷卻應為 0.2 秒 (SPEC § 2.3.2)", () => {
-      expect(COMBAT_CONFIG.shootCooldown).toBe(0.2);
+    it("射擊冷卻應為 0.15 秒 (SPEC § 2.3.2)", () => {
+      expect(COMBAT_CONFIG.shootCooldown).toBe(0.15);
     });
 
     it("Buff 持續時間應為 2 秒 (SPEC § 2.3.2)", () => {
       expect(COMBAT_CONFIG.buffDuration).toBe(2);
     });
 
-    it("重裝延遲應為 3000 毫秒 (SPEC § 2.3.2)", () => {
-      expect(COMBAT_CONFIG.reloadDelayMs).toBe(3000);
+    it("重裝延遲應為 2500 毫秒 (SPEC § 2.3.2)", () => {
+      expect(COMBAT_CONFIG.reloadDelayMs).toBe(2500);
     });
   });
 
@@ -104,8 +104,8 @@ describe("Game Balance Config", () => {
       expect(waveData.bossWaveInterval).toBe(5);
     });
 
-    it("敵人數量倍率應為 2 (SPEC § 2.3.5)", () => {
-      expect(waveData.enemyMultiplier).toBe(2);
+    it("敵人數量倍率應為 3 (SPEC § 2.3.5)", () => {
+      expect(waveData.enemyMultiplier).toBe(3);
     });
 
     it("生成機率總和應為 100%", () => {

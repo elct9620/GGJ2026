@@ -67,57 +67,58 @@ describe("WaveSystem", () => {
     const isRegularEnemy = (type: string) =>
       ["Ghost", "RedGhost", "GreenGhost", "BlueGhost"].includes(type);
 
-    it("WS-01: Wave 1 生成 2 隻敵人", () => {
+    it("WS-01: Wave 1 生成 3 隻敵人", () => {
       waveSystem.startWave(1);
       simulateFullWaveSpawn(waveSystem, 1);
 
-      expect(spawnedEnemies.length).toBe(2);
+      expect(spawnedEnemies.length).toBe(3);
       // SPEC § 2.3.5: Regular enemies can be Ghost or Elite types
       expect(spawnedEnemies.every((e) => isRegularEnemy(e.type))).toBe(true);
     });
 
-    it("WS-02: Wave 2 生成 4 隻敵人", () => {
+    it("WS-02: Wave 2 生成 6 隻敵人", () => {
       waveSystem.startWave(2);
       simulateFullWaveSpawn(waveSystem, 2);
 
-      expect(spawnedEnemies.length).toBe(4);
+      expect(spawnedEnemies.length).toBe(6);
     });
 
-    it("WS-03: Wave 5 生成 10 隻敵人 + 1 Boss", () => {
+    it("WS-03: Wave 5 生成 15 隻敵人 + 1 Boss", () => {
       waveSystem.startWave(5);
       simulateFullWaveSpawn(waveSystem, 5);
 
-      // SPEC § 2.3.5: 10 regular enemies (Ghost/Elite) + 1 Boss
+      // SPEC § 2.3.5: 15 regular enemies (Ghost/Elite) + 1 Boss
       const regularEnemies = spawnedEnemies.filter((e) =>
         isRegularEnemy(e.type),
       );
       const bosses = spawnedEnemies.filter((e) => e.type === "Boss");
 
-      expect(regularEnemies.length).toBe(10);
+      expect(regularEnemies.length).toBe(15);
       expect(bosses.length).toBe(1);
-      expect(spawnedEnemies.length).toBe(11);
+      expect(spawnedEnemies.length).toBe(16);
     });
 
-    it("WS-04: Wave 10 生成 20 隻敵人 + 1 Boss", () => {
+    it("WS-04: Wave 10 生成 30 隻敵人 + 1 Boss", () => {
       waveSystem.startWave(10);
       simulateFullWaveSpawn(waveSystem, 10);
 
-      // SPEC § 2.3.5: 20 regular enemies (Ghost/Elite) + 1 Boss
+      // SPEC § 2.3.5: 30 regular enemies (Ghost/Elite) + 1 Boss
       const regularEnemies = spawnedEnemies.filter((e) =>
         isRegularEnemy(e.type),
       );
       const bosses = spawnedEnemies.filter((e) => e.type === "Boss");
 
-      expect(regularEnemies.length).toBe(20);
+      expect(regularEnemies.length).toBe(30);
       expect(bosses.length).toBe(1);
     });
 
-    it("WS-05: Wave 4 不生成 Boss", () => {
+    it("WS-05: Wave 4 不生成 Boss (12 隻敵人)", () => {
       waveSystem.startWave(4);
       simulateFullWaveSpawn(waveSystem, 4);
 
       const bosses = spawnedEnemies.filter((e) => e.type === "Boss");
       expect(bosses.length).toBe(0);
+      expect(spawnedEnemies.length).toBe(12);
     });
 
     it("WS-06: 敵人生成位置在畫面右側外", () => {
@@ -142,18 +143,18 @@ describe("WaveSystem", () => {
       expect(isRegularEnemy(spawnedEnemies[0].type)).toBe(true);
     });
 
-    it("WS-17: 後續敵人需等待 2-3 秒", () => {
+    it("WS-17: 後續敵人需等待 0.8-1.5 秒", () => {
       waveSystem.startWave(2);
       waveSystem.update(0); // First enemy spawns immediately
 
       expect(spawnedEnemies.length).toBe(1);
 
-      // After 1 second, no new enemy yet
-      waveSystem.update(1);
+      // After 0.5 second, no new enemy yet (min interval is 0.8s)
+      waveSystem.update(0.5);
       expect(spawnedEnemies.length).toBe(1);
 
-      // After 3 more seconds, should have spawned
-      waveSystem.update(3);
+      // After 1.5 more seconds (total 2s), should have spawned
+      waveSystem.update(1.5);
       expect(spawnedEnemies.length).toBeGreaterThan(1);
     });
 
@@ -164,22 +165,22 @@ describe("WaveSystem", () => {
       waveSystem.update(0);
       expect(spawnedEnemies.length).toBe(1);
 
-      // Spawn enemies 2-9 (8 more, need 9 more for total 10)
-      for (let i = 1; i < 9; i++) {
+      // Spawn enemies 2-14 (13 more, need 14 more for total 15)
+      for (let i = 1; i < 14; i++) {
         waveSystem.update(waveData.spawnIntervalMax);
       }
 
-      // At this point we should have 9 regular enemies, and still 1 to spawn
-      expect(spawnedEnemies.length).toBe(9);
+      // At this point we should have 14 regular enemies, and still 1 to spawn
+      expect(spawnedEnemies.length).toBe(14);
       expect(gameState.waveSpawn.enemiesToSpawn).toBe(1);
       expect(gameState.waveSpawn.shouldSpawnBoss).toBe(true);
 
-      // Spawn the 10th regular enemy
+      // Spawn the 15th regular enemy
       waveSystem.update(waveData.spawnIntervalMax);
       const regularEnemies = spawnedEnemies.filter((e) =>
         isRegularEnemy(e.type),
       );
-      expect(regularEnemies.length).toBe(10);
+      expect(regularEnemies.length).toBe(15);
       expect(gameState.waveSpawn.enemiesToSpawn).toBe(0);
 
       // Boss should spawn now (in the same update where enemiesToSpawn becomes 0)
@@ -233,16 +234,20 @@ describe("WaveSystem", () => {
         waveCompleteFired = true;
       });
 
-      waveSystem.startWave(1); // 2 enemies
+      waveSystem.startWave(1); // 3 enemies (波次 × 3)
       simulateFullWaveSpawn(waveSystem, 1);
 
-      // Simulate 2 enemy deaths
+      // Simulate 3 enemy deaths
       eventQueue.publish(EventType.EnemyDeath, {
         enemyId: "enemy-1",
         position: { x: 500, y: 540 },
       });
       eventQueue.publish(EventType.EnemyDeath, {
         enemyId: "enemy-2",
+        position: { x: 500, y: 540 },
+      });
+      eventQueue.publish(EventType.EnemyDeath, {
+        enemyId: "enemy-3",
         position: { x: 500, y: 540 },
       });
 
@@ -263,12 +268,13 @@ describe("WaveSystem", () => {
         waveCompleteFired = true;
       });
 
-      waveSystem.startWave(1); // 2 enemies
+      waveSystem.startWave(1); // 3 enemies (波次 × 3)
       simulateFullWaveSpawn(waveSystem, 1);
 
       // Simulate enemies reaching end
       eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-1" });
       eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-2" });
+      eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-3" });
 
       waveSystem.update(0);
       eventQueue.update(2);
@@ -277,7 +283,7 @@ describe("WaveSystem", () => {
     });
 
     it("WS-10: 混合死亡和到達底線", () => {
-      waveSystem.startWave(2); // 4 enemies
+      waveSystem.startWave(2); // 6 enemies (波次 × 3)
       simulateFullWaveSpawn(waveSystem, 2);
 
       eventQueue.publish(EventType.EnemyDeath, {
@@ -288,8 +294,13 @@ describe("WaveSystem", () => {
         enemyId: "enemy-2",
         position: { x: 500, y: 540 },
       });
-      eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-3" });
+      eventQueue.publish(EventType.EnemyDeath, {
+        enemyId: "enemy-3",
+        position: { x: 500, y: 540 },
+      });
       eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-4" });
+      eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-5" });
+      eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-6" });
 
       waveSystem.update(0);
 
@@ -311,7 +322,7 @@ describe("WaveSystem", () => {
     });
 
     it("WS-13: WaveComplete 後 isActive = false", () => {
-      waveSystem.startWave(1); // 2 enemies
+      waveSystem.startWave(1); // 3 enemies (波次 × 3)
       simulateFullWaveSpawn(waveSystem, 1);
 
       eventQueue.publish(EventType.EnemyDeath, {
@@ -320,6 +331,10 @@ describe("WaveSystem", () => {
       });
       eventQueue.publish(EventType.EnemyDeath, {
         enemyId: "enemy-2",
+        position: { x: 500, y: 540 },
+      });
+      eventQueue.publish(EventType.EnemyDeath, {
+        enemyId: "enemy-3",
         position: { x: 500, y: 540 },
       });
 
@@ -342,20 +357,20 @@ describe("WaveSystem", () => {
 
   describe("Enemy Tracking", () => {
     it("WS-15: 正確追蹤剩餘敵人數量", () => {
-      waveSystem.startWave(3); // 6 enemies
+      waveSystem.startWave(3); // 9 enemies (波次 × 3)
 
-      expect(waveSystem.getRemainingEnemies()).toBe(6);
+      expect(waveSystem.getRemainingEnemies()).toBe(9);
 
       eventQueue.publish(EventType.EnemyDeath, {
         enemyId: "enemy-1",
         position: { x: 500, y: 540 },
       });
 
-      expect(waveSystem.getRemainingEnemies()).toBe(5);
+      expect(waveSystem.getRemainingEnemies()).toBe(8);
 
       eventQueue.publish(EventType.EnemyReachedEnd, { enemyId: "enemy-2" });
 
-      expect(waveSystem.getRemainingEnemies()).toBe(4);
+      expect(waveSystem.getRemainingEnemies()).toBe(7);
     });
   });
 

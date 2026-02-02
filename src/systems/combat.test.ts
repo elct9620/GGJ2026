@@ -34,18 +34,18 @@ describe("CombatSystem", () => {
   });
 
   describe("Normal Attack", () => {
-    it("CS-01: 彈夾 6/6 + 按 Space → 彈夾 5/6，子彈生成", () => {
-      expect(player.ammo.current).toBe(6);
+    it("CS-01: 彈夾 8/8 + 按 Space → 彈夾 7/8，子彈生成", () => {
+      expect(player.ammo.current).toBe(8);
 
       const result = combatSystem.shoot();
 
       expect(result).toBe(true);
-      expect(player.ammo.current).toBe(5);
+      expect(player.ammo.current).toBe(7);
     });
 
-    it("CS-02: 彈夾 0/6 + 按 Space → 無效果", () => {
+    it("CS-02: 彈夾 0/8 + 按 Space → 無效果", () => {
       // Deplete ammo
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
       expect(player.ammo.current).toBe(0);
@@ -92,14 +92,14 @@ describe("CombatSystem", () => {
       expect(bullet.active).toBe(false); // Bullet consumed
     });
 
-    it("CS-05: 連續按 Space 6 次 → 彈夾 0/6，6 發子彈生成", () => {
-      expect(player.ammo.current).toBe(6);
+    it("CS-05: 連續按 Space 8 次 → 彈夾 0/8，8 發子彈生成", () => {
+      expect(player.ammo.current).toBe(8);
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         const result = combatSystem.shoot();
         expect(result).toBe(true);
         // Update cooldown to allow next shot
-        combatSystem.update(0.2); // Cooldown is 0.2s
+        combatSystem.update(0.15); // Cooldown is 0.15s
       }
 
       expect(player.ammo.current).toBe(0);
@@ -125,23 +125,23 @@ describe("CombatSystem", () => {
   });
 
   describe("Reload", () => {
-    it("CS-08: 彈夾 0/6 + 等待 3 秒 → 彈夾 6/6", () => {
+    it("CS-08: 彈夾 0/8 + 等待 2.5 秒 → 彈夾 8/8", () => {
       // Deplete ammo (triggers reload)
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
       expect(player.isReloading).toBe(true);
 
-      // Simulate 3 seconds
-      player.update(3);
+      // Simulate 2.5 seconds
+      player.update(2.5);
 
       expect(player.isReloading).toBe(false);
-      expect(player.ammo.current).toBe(6);
+      expect(player.ammo.current).toBe(8);
     });
 
     it("CS-09: 重裝中（1.5 秒）+ 按 Space → 無效果", () => {
       // Trigger reload
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
       expect(player.isReloading).toBe(true);
@@ -157,7 +157,7 @@ describe("CombatSystem", () => {
 
     it("CS-10: 重裝中 + 按 WASD → 玩家移動", () => {
       // Trigger reload
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
       expect(player.isReloading).toBe(true);
@@ -169,7 +169,7 @@ describe("CombatSystem", () => {
     });
 
     it("CS-11: 彈夾 0/6 + 等待 1.5 秒 → 彈夾 0/6", () => {
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
 
@@ -179,18 +179,18 @@ describe("CombatSystem", () => {
       expect(player.ammo.current).toBe(0);
     });
 
-    it("CS-12: 重裝完成瞬間 + 按 Space → 彈夾 5/6，子彈生成", () => {
-      for (let i = 0; i < 6; i++) {
+    it("CS-12: 重裝完成瞬間 + 按 Space → 彈夾 7/8，子彈生成", () => {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
 
-      player.update(3); // Complete reload
-      expect(player.ammo.current).toBe(6);
+      player.update(2.5); // Complete reload
+      expect(player.ammo.current).toBe(8);
 
       const result = combatSystem.shoot();
 
       expect(result).toBe(true);
-      expect(player.ammo.current).toBe(5);
+      expect(player.ammo.current).toBe(7);
     });
   });
 
@@ -483,7 +483,7 @@ describe("CombatSystem", () => {
       });
 
       // Deplete ammo to trigger reload
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         combatSystem.shoot();
         combatSystem.update(0.2); // Clear cooldown
       }
@@ -552,7 +552,7 @@ describe("CombatSystem", () => {
       combatSystem.setBulletSpawner(createSpawner(spawnedBullets));
 
       // Deplete ammo
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         player.shoot();
       }
       expect(player.ammo.current).toBe(0);

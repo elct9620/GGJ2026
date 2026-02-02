@@ -18,9 +18,9 @@ export const PLAYER_CONFIG = {
   /** 玩家移動速度 (px/s) */
   speed: 200,
   /** 彈夾容量（基礎值，可被升級增加） */
-  magazineCapacity: 6,
+  magazineCapacity: 8,
   /** 重裝時間 (秒) */
-  reloadTime: 3,
+  reloadTime: 2.5,
 } as const;
 
 // =============================================================================
@@ -31,20 +31,20 @@ export const ENEMY_CONFIG = {
   ghost: {
     /** 餓鬼基礎血量 */
     health: 1,
-    /** 餓鬼移動速度 (px/s) - SPEC: 0.5 units ≈ 50 px */
-    speed: 50,
+    /** 餓鬼移動速度 (px/s) - 10秒到達攤位 */
+    speed: 160,
   },
   elite: {
     /** 菁英敵人基礎血量（紅/綠/藍餓鬼） */
     health: 2,
-    /** 菁英敵人移動速度 (px/s) - SPEC: 0.4 units ≈ 40 px */
-    speed: 40,
+    /** 菁英敵人移動速度 (px/s) - 12秒到達攤位 */
+    speed: 130,
   },
   boss: {
     /** Boss 基礎血量 */
     health: 10,
-    /** Boss 移動速度 (px/s) - SPEC: 0.3 units ≈ 30 px */
-    speed: 30,
+    /** Boss 移動速度 (px/s) - 16秒到達攤位 */
+    speed: 100,
   },
   /** 敵人生成 X 座標（畫面右側外） */
   spawnX: 1950,
@@ -93,11 +93,11 @@ export const BULLET_CONFIG = {
 // =============================================================================
 export const COMBAT_CONFIG = {
   /** 射擊冷卻時間 (秒) */
-  shootCooldown: 0.2,
+  shootCooldown: 0.15,
   /** 特殊子彈 Buff 持續時間 (秒) */
   buffDuration: 2,
   /** 重裝完成延遲 (毫秒) - 用於 EventQueue */
-  reloadDelayMs: 3000,
+  reloadDelayMs: 2500,
 } as const;
 
 // =============================================================================

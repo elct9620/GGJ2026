@@ -1,9 +1,9 @@
 {
   "bossWaveInterval": 5,
-  "enemyMultiplier": 2,
+  "enemyMultiplier": 3,
   "waveCompleteDelayMs": 2000,
-  "spawnIntervalMin": 2,
-  "spawnIntervalMax": 3,
+  "spawnIntervalMin": 0.8,
+  "spawnIntervalMax": 1.5,
   "spawnProbability": {
     "ghost": 0.4,
     "redGhost": 0.2,

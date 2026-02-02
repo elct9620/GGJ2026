@@ -34,7 +34,7 @@ describe("EnemyData", () => {
     it("should return Ghost properties", () => {
       const props = enemyData.get(EnemyType.Ghost);
       expect(props.baseHealth).toBe(1);
-      expect(props.speed).toBe(50);
+      expect(props.speed).toBe(160);
       expect(props.size).toBe(LAYOUT.ENEMY_SIZE);
       expect(props.foodDrop).toBeNull();
       expect(props.showHealthBar).toBe(false);
@@ -43,7 +43,7 @@ describe("EnemyData", () => {
     it("should return Boss properties", () => {
       const props = enemyData.get(EnemyType.Boss);
       expect(props.baseHealth).toBe(10);
-      expect(props.speed).toBe(30);
+      expect(props.speed).toBe(100);
       expect(props.size).toBe(LAYOUT.BOSS_SIZE);
       expect(props.foodDrop).toBeNull();
       expect(props.showHealthBar).toBe(true);
@@ -58,7 +58,7 @@ describe("EnemyData", () => {
       eliteTypes.forEach((type) => {
         const props = enemyData.get(type);
         expect(props.baseHealth).toBe(2);
-        expect(props.speed).toBe(40);
+        expect(props.speed).toBe(130);
         expect(props.size).toBe(LAYOUT.ENEMY_SIZE);
         expect(props.showHealthBar).toBe(true);
       });
@@ -83,9 +83,9 @@ describe("EnemyData", () => {
 
   describe("getSpeed", () => {
     it("should return correct speeds", () => {
-      expect(enemyData.getSpeed(EnemyType.Ghost)).toBe(50);
-      expect(enemyData.getSpeed(EnemyType.Boss)).toBe(30);
-      expect(enemyData.getSpeed(EnemyType.RedGhost)).toBe(40);
+      expect(enemyData.getSpeed(EnemyType.Ghost)).toBe(160);
+      expect(enemyData.getSpeed(EnemyType.Boss)).toBe(100);
+      expect(enemyData.getSpeed(EnemyType.RedGhost)).toBe(130);
     });
   });
 

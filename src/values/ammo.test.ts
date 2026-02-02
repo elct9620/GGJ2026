@@ -54,10 +54,10 @@ describe("Ammo", () => {
   });
 
   describe("static default()", () => {
-    test("creates default ammo with 6/6", () => {
+    test("creates default ammo with 8/8", () => {
       const a = Ammo.default();
-      expect(a.current).toBe(6);
-      expect(a.max).toBe(6);
+      expect(a.current).toBe(8);
+      expect(a.max).toBe(8);
     });
   });
 
@@ -92,7 +92,7 @@ describe("Ammo", () => {
 
     test("can consume all ammo", () => {
       let a = Ammo.default();
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         a = a.consume();
       }
       expect(a.current).toBe(0);
@@ -260,8 +260,8 @@ describe("Ammo", () => {
       let ammo = Ammo.default();
       expect(ammo.canShoot()).toBe(true);
 
-      // Shoot 6 times
-      for (let i = 0; i < 6; i++) {
+      // Shoot 8 times
+      for (let i = 0; i < 8; i++) {
         ammo = ammo.consume();
       }
       expect(ammo.isEmpty()).toBe(true);
@@ -275,16 +275,16 @@ describe("Ammo", () => {
 
     test("大胃王升級 scenario", () => {
       let ammo = Ammo.default();
-      expect(ammo.max).toBe(6);
+      expect(ammo.max).toBe(8);
 
       // Apply upgrade
       ammo = ammo.addMaxBonus(2);
-      expect(ammo.max).toBe(8);
-      expect(ammo.current).toBe(6); // Current not affected
+      expect(ammo.max).toBe(10);
+      expect(ammo.current).toBe(8); // Current not affected
 
       // Reload to get full bonus
       ammo = ammo.reload();
-      expect(ammo.current).toBe(8);
+      expect(ammo.current).toBe(10);
     });
 
     test("multiple upgrades stack", () => {
@@ -294,7 +294,7 @@ describe("Ammo", () => {
       ammo = ammo.addMaxBonus(2);
       ammo = ammo.addMaxBonus(2);
 
-      expect(ammo.max).toBe(12);
+      expect(ammo.max).toBe(14);
     });
   });
 });

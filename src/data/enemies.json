@@ -1,7 +1,7 @@
 {
   "Ghost": {
     "baseHealth": 1,
-    "speed": 50,
+    "speed": 160,
     "assetKey": "ghost",
     "size": 256,
     "foodDrop": null,
@@ -9,7 +9,7 @@
   },
   "RedGhost": {
     "baseHealth": 2,
-    "speed": 40,
+    "speed": 130,
     "assetKey": "redGhost",
     "size": 256,
     "foodDrop": "Tofu",
@@ -17,7 +17,7 @@
   },
   "GreenGhost": {
     "baseHealth": 2,
-    "speed": 40,
+    "speed": 130,
     "assetKey": "greenGhost",
     "size": 256,
     "foodDrop": "Pearl",
@@ -25,7 +25,7 @@
   },
   "BlueGhost": {
     "baseHealth": 2,
-    "speed": 40,
+    "speed": 130,
     "assetKey": "blueGhost",
     "size": 256,
     "foodDrop": "BloodCake",
@@ -33,7 +33,7 @@
   },
   "Boss": {
     "baseHealth": 10,
-    "speed": 30,
+    "speed": 100,
     "assetKey": "boss",
     "size": 512,
     "foodDrop": null,

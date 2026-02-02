@@ -193,19 +193,19 @@ describe("Player", () => {
   });
 
   describe("Shooting", () => {
-    it("初始彈夾為 6/6", () => {
-      expect(player.ammo.current).toBe(6);
-      expect(player.ammo.max).toBe(6);
+    it("初始彈夾為 8/8", () => {
+      expect(player.ammo.current).toBe(8);
+      expect(player.ammo.max).toBe(8);
     });
 
     it("射擊消耗 1 發子彈", () => {
       expect(player.shoot()).toBe(true);
-      expect(player.ammo.current).toBe(5);
+      expect(player.ammo.current).toBe(7);
     });
 
     it("彈夾空時無法射擊", () => {
-      // Shoot all 6 bullets, last one triggers auto-reload
-      for (let i = 0; i < 6; i++) player.shoot();
+      // Shoot all 8 bullets, last one triggers auto-reload
+      for (let i = 0; i < 8; i++) player.shoot();
       player.isReloading = false; // Cancel auto-reload for this test
 
       expect(player.shoot()).toBe(false);
@@ -213,8 +213,8 @@ describe("Player", () => {
     });
 
     it("彈夾歸零時自動開始重裝", () => {
-      // Shoot 5 bullets to have 1 remaining
-      for (let i = 0; i < 5; i++) player.shoot();
+      // Shoot 7 bullets to have 1 remaining
+      for (let i = 0; i < 7; i++) player.shoot();
       expect(player.ammo.current).toBe(1);
 
       player.shoot();
@@ -228,22 +228,22 @@ describe("Player", () => {
       expect(player.shoot()).toBe(false);
     });
 
-    it("重裝時間為 3 秒", () => {
-      expect(player.reloadTime).toBe(3);
+    it("重裝時間為 2.5 秒", () => {
+      expect(player.reloadTime).toBe(2.5);
     });
 
     it("重裝完成後彈夾恢復", () => {
       // Shoot all bullets and start reload
-      for (let i = 0; i < 6; i++) player.shoot();
+      for (let i = 0; i < 8; i++) player.shoot();
       // Auto-reload already started from last shot
 
       expect(player.isReloading).toBe(true);
 
-      // Update for 3 seconds
-      player.update(3);
+      // Update for 2.5 seconds
+      player.update(2.5);
 
       expect(player.isReloading).toBe(false);
-      expect(player.ammo.current).toBe(6);
+      expect(player.ammo.current).toBe(8);
     });
 
     it("inactive 玩家無法射擊", () => {
@@ -256,7 +256,7 @@ describe("Player", () => {
     it("reset 恢復所有狀態", () => {
       // Modify player state
       player.takeDamage(3);
-      // Shoot 4 bullets to have 2 remaining
+      // Shoot 4 bullets to have 4 remaining
       for (let i = 0; i < 4; i++) player.shoot();
       player.isReloading = true;
       player.position = new Vector(1000, 600);
@@ -267,7 +267,7 @@ describe("Player", () => {
 
       expect(player.active).toBe(true);
       expect(player.health.current).toBe(5);
-      expect(player.ammo.current).toBe(6);
+      expect(player.ammo.current).toBe(8);
       expect(player.isReloading).toBe(false);
       expect(player.position.x).toBe(500);
       expect(player.position.y).toBe(500);

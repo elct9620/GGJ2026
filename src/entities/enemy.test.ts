@@ -17,10 +17,10 @@ describe("Enemy", () => {
       ghost = new Enemy(EnemyType.Ghost, new Vector(1000, 500));
     });
 
-    it("EN-01: 餓鬼 (1000, 500) + 1 秒 → 餓鬼 (950, 500) 向左移動 50 px", () => {
+    it("EN-01: 餓鬼 (1000, 500) + 1 秒 → 餓鬼 (840, 500) 向左移動 160 px", () => {
       ghost.update(1); // 1 second
 
-      expect(ghost.position.x).toBe(950);
+      expect(ghost.position.x).toBe(840);
       expect(ghost.position.y).toBe(500);
     });
 
@@ -55,8 +55,8 @@ describe("Enemy", () => {
       expect(ghost.hasReachedBaseline()).toBe(true);
     });
 
-    it("餓鬼速度為 50 px/s", () => {
-      expect(ghost.speed).toBe(50);
+    it("餓鬼速度為 160 px/s", () => {
+      expect(ghost.speed).toBe(160);
     });
 
     it("餓鬼初始 HP 為 1", () => {
@@ -100,12 +100,12 @@ describe("Enemy", () => {
       expect(blueGhost.foodDrop).toBe(FoodType.BloodCake);
     });
 
-    it("EN-10: 菁英敵人速度為 40 px/s", () => {
+    it("EN-10: 菁英敵人速度為 130 px/s", () => {
       const redGhost = new Enemy(EnemyType.RedGhost, new Vector(1000, 500));
-      expect(redGhost.speed).toBe(40);
+      expect(redGhost.speed).toBe(130);
 
       redGhost.update(1);
-      expect(redGhost.position.x).toBe(960); // 1000 - 40 = 960
+      expect(redGhost.position.x).toBe(870); // 1000 - 130 = 870
     });
 
     it("菁英敵人 2 HP + 2 發子彈 → 死亡", () => {
@@ -127,10 +127,10 @@ describe("Enemy", () => {
       boss = new Enemy(EnemyType.Boss, new Vector(1000, 500), 5);
     });
 
-    it("EN-11: 餓死鬼 (1000, 500) + 1 秒 → 餓死鬼 (970, 500)", () => {
+    it("EN-11: 餓死鬼 (1000, 500) + 1 秒 → 餓死鬼 (900, 500)", () => {
       boss.update(1);
 
-      expect(boss.position.x).toBe(970);
+      expect(boss.position.x).toBe(900);
       expect(boss.position.y).toBe(500);
     });
 
@@ -169,8 +169,8 @@ describe("Enemy", () => {
       expect(newBoss.health.current).toBe(10);
     });
 
-    it("Boss 速度為 30 px/s", () => {
-      expect(boss.speed).toBe(30);
+    it("Boss 速度為 100 px/s", () => {
+      expect(boss.speed).toBe(100);
     });
 
     it("Boss foodDrop 回傳 null（不掉落食材）", () => {
@@ -265,15 +265,15 @@ describe("Enemy", () => {
   });
 
   describe("2.7.5 Boss Types", () => {
-    it("EN-31: 餓死鬼 → 直走，速度 0.3", () => {
+    it("EN-31: 餓死鬼 → 直走，速度 100 px/s", () => {
       const boss = new Enemy(EnemyType.Boss, new Vector(1000, 500));
 
-      expect(boss.speed).toBe(30); // 0.3 × 100 = 30 px/s
+      expect(boss.speed).toBe(100);
 
       // Update and verify movement is only horizontal
       boss.update(1);
 
-      expect(boss.position.x).toBe(970);
+      expect(boss.position.x).toBe(900);
       expect(boss.position.y).toBe(500); // Y unchanged - straight line
     });
 
@@ -292,9 +292,11 @@ describe("Enemy", () => {
       const ghost = new Enemy(EnemyType.Ghost, new Vector(500, 500));
 
       // Enemy continues moving regardless of booth position
+      // At 160 px/s for 1 second = 160px movement
+      // 500 - 160 = 340 (reaches baseline)
       ghost.update(1);
 
-      expect(ghost.position.x).toBe(450);
+      expect(ghost.position.x).toBe(340);
       expect(ghost.active).toBe(true);
     });
   });
@@ -418,10 +420,10 @@ describe("Enemy", () => {
       ghost.update(0.08);
 
       // Ghost should have moved right by ~15px (minus normal movement)
-      // Normal movement: -50 * 0.08 = -4px
+      // Normal movement: -160 * 0.08 = -12.8px
       // Knockback: +15px
-      // Net: +11px
-      expect(ghost.position.x).toBeCloseTo(1011, 0);
+      // Net: +2.2px
+      expect(ghost.position.x).toBeCloseTo(1002.2, 0);
     });
 
     it("applyKnockback 持續時間後停止擊退", () => {
@@ -437,8 +439,8 @@ describe("Enemy", () => {
       // Update more time - no more knockback, just normal movement
       ghost.update(0.04);
 
-      // Should only have normal left movement now (-50 * 0.04 = -2px)
-      expect(ghost.position.x).toBeCloseTo(positionAfterKnockback - 2, 0);
+      // Should only have normal left movement now (-160 * 0.04 = -6.4px)
+      expect(ghost.position.x).toBeCloseTo(positionAfterKnockback - 6.4, 0);
     });
 
     it("applyKnockback 不影響 Y 軸位置", () => {
@@ -461,8 +463,8 @@ describe("Enemy", () => {
       // After reset, only normal movement should apply
       ghost.update(0.1);
 
-      // Normal movement: -50 * 0.1 = -5px
-      expect(ghost.position.x).toBeCloseTo(1495, 0);
+      // Normal movement: -160 * 0.1 = -16px
+      expect(ghost.position.x).toBeCloseTo(1484, 0);
     });
 
     it("applyKnockback 距離為 0 時不產生效果", () => {
@@ -472,7 +474,7 @@ describe("Enemy", () => {
       ghost.update(0.08);
 
       // Only normal movement
-      expect(ghost.position.x).toBeCloseTo(996, 0); // 1000 - 50 * 0.08
+      expect(ghost.position.x).toBeCloseTo(987.2, 0); // 1000 - 160 * 0.08
     });
 
     it("applyKnockback 持續時間為 0 時不產生效果", () => {
@@ -482,7 +484,7 @@ describe("Enemy", () => {
       ghost.update(0.08);
 
       // Only normal movement
-      expect(ghost.position.x).toBeCloseTo(996, 0); // 1000 - 50 * 0.08
+      expect(ghost.position.x).toBeCloseTo(987.2, 0); // 1000 - 160 * 0.08
     });
   });
 });

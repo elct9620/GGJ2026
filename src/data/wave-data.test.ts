@@ -12,8 +12,8 @@ describe("WaveData", () => {
       expect(waveData.bossWaveInterval).toBe(5);
     });
 
-    it("should have enemyMultiplier of 2", () => {
-      expect(waveData.enemyMultiplier).toBe(2);
+    it("should have enemyMultiplier of 3", () => {
+      expect(waveData.enemyMultiplier).toBe(3);
     });
 
     it("should have waveCompleteDelayMs of 2000", () => {
@@ -21,8 +21,8 @@ describe("WaveData", () => {
     });
 
     it("should have spawn intervals", () => {
-      expect(waveData.spawnIntervalMin).toBe(2);
-      expect(waveData.spawnIntervalMax).toBe(3);
+      expect(waveData.spawnIntervalMin).toBe(0.8);
+      expect(waveData.spawnIntervalMax).toBe(1.5);
     });
 
     it("should have spawn probability", () => {
@@ -59,10 +59,10 @@ describe("WaveData", () => {
   });
 
   describe("getEnemyCount", () => {
-    it("should return wave * 2", () => {
-      expect(waveData.getEnemyCount(1)).toBe(2);
-      expect(waveData.getEnemyCount(5)).toBe(10);
-      expect(waveData.getEnemyCount(10)).toBe(20);
+    it("should return wave * 3", () => {
+      expect(waveData.getEnemyCount(1)).toBe(3);
+      expect(waveData.getEnemyCount(5)).toBe(15);
+      expect(waveData.getEnemyCount(10)).toBe(30);
     });
   });
 
@@ -70,13 +70,13 @@ describe("WaveData", () => {
     it("should return value between min and max", () => {
       // Mock Math.random for predictable testing
       vi.spyOn(Math, "random").mockReturnValue(0);
-      expect(waveData.getRandomSpawnInterval()).toBe(2);
+      expect(waveData.getRandomSpawnInterval()).toBe(0.8);
 
       vi.spyOn(Math, "random").mockReturnValue(1);
-      expect(waveData.getRandomSpawnInterval()).toBe(3);
+      expect(waveData.getRandomSpawnInterval()).toBe(1.5);
 
       vi.spyOn(Math, "random").mockReturnValue(0.5);
-      expect(waveData.getRandomSpawnInterval()).toBe(2.5);
+      expect(waveData.getRandomSpawnInterval()).toBe(1.15);
 
       vi.restoreAllMocks();
     });
