@@ -8,7 +8,6 @@
 
 import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
-import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
 import { BoothId } from "../core/types";
@@ -60,13 +59,6 @@ export class BoxSystem extends InjectableSystem {
    */
   private get gameState(): GameStateManager {
     return this.getDependency<GameStateManager>(DependencyKeys.GameState);
-  }
-
-  /**
-   * Get EventQueue dependency
-   */
-  private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
   }
 
   /**
@@ -134,7 +126,7 @@ export class BoxSystem extends InjectableSystem {
           enemy.active = false;
 
           // Publish EnemyReachedEnd event (for statistics tracking)
-          this.eventQueue.publish(EventType.EnemyReachedEnd, {
+          this.publishEvent(EventType.EnemyReachedEnd, {
             enemyId: enemy.id,
           });
 

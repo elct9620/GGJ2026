@@ -7,7 +7,6 @@ import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
 import type { BoothSystem } from "./booth";
 import type { InputSystem } from "./input";
-import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { KillCounterSystem } from "./kill-counter";
 import { type FoodType, getBoothIdForFood } from "../core/types";
@@ -54,13 +53,6 @@ export class SynthesisSystem extends InjectableSystem {
   }
 
   /**
-   * Get EventQueue dependency
-   */
-  private get eventQueue(): EventQueue {
-    return this.getDependency<EventQueue>(DependencyKeys.EventQueue);
-  }
-
-  /**
    * Get KillCounterSystem dependency (optional)
    */
   private get killCounterSystem(): KillCounterSystem | null {
@@ -103,7 +95,7 @@ export class SynthesisSystem extends InjectableSystem {
     const synthesisKey = this.inputSystem.getSynthesisKeyPressed();
     if (synthesisKey !== null) {
       // Publish ButtonClicked event for audio system
-      this.eventQueue.publish(EventType.ButtonClicked, {});
+      this.publishEvent(EventType.ButtonClicked, {});
       this.trySynthesize(synthesisKey.toString());
     }
   }
@@ -152,7 +144,7 @@ export class SynthesisSystem extends InjectableSystem {
     this.consumeFood(recipe);
 
     // Publish SynthesisTriggered event (SPEC § 2.3.6)
-    this.eventQueue.publish(EventType.SynthesisTriggered, {
+    this.publishEvent(EventType.SynthesisTriggered, {
       recipeId: recipe.id,
     });
   }

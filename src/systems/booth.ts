@@ -30,26 +30,6 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Publish FoodStored event (SPEC § 2.3.7)
-   */
-  private publishFoodStored(boothId: BoothId, foodType: FoodType): void {
-    this.publishEvent(EventType.FoodStored, {
-      boothId: String(boothId),
-      foodType,
-    });
-  }
-
-  /**
-   * Publish FoodConsumed event (SPEC § 2.3.7)
-   */
-  private publishFoodConsumed(boothId: BoothId, amount: number): void {
-    this.publishEvent(EventType.FoodConsumed, {
-      boothId: String(boothId),
-      amount,
-    });
-  }
-
-  /**
    * Initialize booth system (System lifecycle)
    */
   public initialize(): void {
@@ -78,7 +58,10 @@ export class BoothSystem extends InjectableSystem {
     const success = this.gameState.storeFood(foodType);
     if (success) {
       const boothId = getBoothIdForFood(foodType);
-      this.publishFoodStored(boothId, foodType);
+      this.publishEvent(EventType.FoodStored, {
+        boothId: String(boothId),
+        foodType,
+      });
     }
     return success;
   }
@@ -93,7 +76,10 @@ export class BoothSystem extends InjectableSystem {
 
     const success = this.gameState.consumeFood(boothId, 1);
     if (success) {
-      this.publishFoodConsumed(boothId, 1);
+      this.publishEvent(EventType.FoodConsumed, {
+        boothId: String(boothId),
+        amount: 1,
+      });
       return booth.foodType;
     }
     return null;
@@ -107,7 +93,10 @@ export class BoothSystem extends InjectableSystem {
   public consumeFood(boothId: BoothId, amount: number): boolean {
     const success = this.gameState.consumeFood(boothId, amount);
     if (success) {
-      this.publishFoodConsumed(boothId, amount);
+      this.publishEvent(EventType.FoodConsumed, {
+        boothId: String(boothId),
+        amount,
+      });
     }
     return success;
   }
@@ -118,7 +107,10 @@ export class BoothSystem extends InjectableSystem {
   public stealFood(boothId: BoothId): boolean {
     const success = this.gameState.stealFood(boothId);
     if (success) {
-      this.publishFoodConsumed(boothId, 1);
+      this.publishEvent(EventType.FoodConsumed, {
+        boothId: String(boothId),
+        amount: 1,
+      });
     }
     return success;
   }
