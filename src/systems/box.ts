@@ -13,7 +13,6 @@ import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
 import type { Enemy } from "../entities/enemy";
 import { BoothId } from "../core/types";
-import { Container } from "pixi.js";
 import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";
 
@@ -51,9 +50,6 @@ export class BoxSystem extends InjectableSystem {
   // Booth ID to Y position mapping (for collision detection)
   private readonly boothYPositions: Map<BoothId, { min: number; max: number }> =
     new Map();
-
-  // Empty container (no visual elements - handled by BoothSystem)
-  private container: Container = new Container();
 
   constructor() {
     super();
@@ -158,13 +154,6 @@ export class BoxSystem extends InjectableSystem {
    */
   public setEnemies(enemies: Enemy[]): void {
     this.enemies = enemies;
-  }
-
-  /**
-   * Get box container for rendering
-   */
-  public getContainer(): Container {
-    return this.container;
   }
 
   /**

@@ -205,9 +205,6 @@ export class GameScene {
     // Setup booth visualization (using BoothRenderer)
     this.boothContainer.addChild(this.boothRenderer.getContainer());
 
-    // Setup box visualization (SPEC § 2.3.7)
-    this.boothContainer.addChild(boxSystem.getContainer());
-
     // Setup enemy renderer container
     this.enemiesContainer.addChild(this.enemyRenderer.getContainer());
 
