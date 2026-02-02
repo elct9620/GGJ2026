@@ -102,7 +102,8 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
-   * Enemy steals food from booth
+   * Consume food when enemy collides with box
+   * Called by BoxSystem when blocking enemies (SPEC § 2.3.7)
    */
   public stealFood(boothId: BoothId): boolean {
     const success = this.gameState.stealFood(boothId);

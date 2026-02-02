@@ -85,8 +85,8 @@ describe("BoothSystem", () => {
     });
   });
 
-  describe("Steal Food", () => {
-    it("應成功偷取食材", () => {
+  describe("Steal Food (Box Collision)", () => {
+    it("應成功消耗食材（Box 阻擋敵人時）", () => {
       boothSystem.storeFood(FoodType.Pearl);
 
       const result = boothSystem.stealFood(BoothId.Pearl);
