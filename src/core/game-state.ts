@@ -4,6 +4,9 @@
  */
 
 import { SpecialBulletType, FoodType, BoothId } from "./types";
+import type { Enemy } from "../entities/enemy";
+import type { Bullet } from "../entities/bullet";
+import type { Food } from "../entities/booth";
 
 // ============================================
 // Upgrade State (SPEC § 2.3.4)
@@ -233,6 +236,13 @@ export class GameStateManager implements GameStateSnapshot {
   private _upgrades: UpgradeState = createDefaultUpgradeState();
   private _booths: Map<BoothId, BoothState> = new Map();
   private _enemyFlashEffects: Map<string, FlashEffect> = new Map();
+
+  // ============================================
+  // Entity Collections (Phase 4B)
+  // ============================================
+  private _enemies: Map<string, Enemy> = new Map();
+  private _bullets: Map<string, Bullet> = new Map();
+  private _foods: Map<string, Food> = new Map();
 
   // ============================================
   // Read-only getters
@@ -686,6 +696,130 @@ export class GameStateManager implements GameStateSnapshot {
   }
 
   // ============================================
+  // Entity Management (Phase 4B)
+  // ============================================
+
+  /**
+   * Get all active enemies
+   */
+  get enemies(): ReadonlyMap<string, Enemy> {
+    return this._enemies;
+  }
+
+  /**
+   * Get all active bullets
+   */
+  get bullets(): ReadonlyMap<string, Bullet> {
+    return this._bullets;
+  }
+
+  /**
+   * Get all active foods
+   */
+  get foods(): ReadonlyMap<string, Food> {
+    return this._foods;
+  }
+
+  /**
+   * Add enemy to collection
+   * @param enemy Enemy to add
+   */
+  addEnemy(enemy: Enemy): void {
+    this._enemies.set(enemy.id, enemy);
+  }
+
+  /**
+   * Remove enemy from collection
+   * @param enemyId Enemy ID to remove
+   */
+  removeEnemy(enemyId: string): void {
+    this._enemies.delete(enemyId);
+  }
+
+  /**
+   * Get active enemies as array (for iteration)
+   */
+  getActiveEnemies(): Enemy[] {
+    return Array.from(this._enemies.values()).filter((e) => e.active);
+  }
+
+  /**
+   * Add bullet to collection
+   * @param bullet Bullet to add
+   */
+  addBullet(bullet: Bullet): void {
+    this._bullets.set(bullet.id, bullet);
+  }
+
+  /**
+   * Remove bullet from collection
+   * @param bulletId Bullet ID to remove
+   */
+  removeBullet(bulletId: string): void {
+    this._bullets.delete(bulletId);
+  }
+
+  /**
+   * Get active bullets as array (for iteration)
+   */
+  getActiveBullets(): Bullet[] {
+    return Array.from(this._bullets.values()).filter((b) => b.active);
+  }
+
+  /**
+   * Add food to collection
+   * @param food Food to add
+   */
+  addFood(food: Food): void {
+    this._foods.set(food.id, food);
+  }
+
+  /**
+   * Remove food from collection
+   * @param foodId Food ID to remove
+   */
+  removeFood(foodId: string): void {
+    this._foods.delete(foodId);
+  }
+
+  /**
+   * Get active foods as array (for iteration)
+   */
+  getActiveFoods(): Food[] {
+    return Array.from(this._foods.values()).filter((f) => f.active);
+  }
+
+  /**
+   * Clear all enemies
+   */
+  clearEnemies(): void {
+    this._enemies.clear();
+  }
+
+  /**
+   * Clear all bullets
+   */
+  clearBullets(): void {
+    this._bullets.clear();
+  }
+
+  /**
+   * Clear all foods
+   */
+  clearFoods(): void {
+    this._foods.clear();
+  }
+
+  /**
+   * Clear all entities (enemies, bullets, foods)
+   */
+  clearAllEntities(): void {
+    this._enemies.clear();
+    this._bullets.clear();
+    this._foods.clear();
+  }
+
+  // ============================================
   // Reset for new game
   // ============================================
 
@@ -699,5 +833,6 @@ export class GameStateManager implements GameStateSnapshot {
     this._upgrades = createDefaultUpgradeState();
     this.resetBooths();
     this._enemyFlashEffects.clear();
+    this.clearAllEntities();
   }
 }

@@ -21,6 +21,7 @@ export const EventType = {
   PlayerDeath: "PlayerDeath",
   FoodStored: "FoodStored",
   FoodConsumed: "FoodConsumed",
+  FoodCollected: "FoodCollected",
   KillCounterConsumed: "KillCounterConsumed",
   BulletFired: "BulletFired",
   EnemyHit: "EnemyHit",
@@ -47,6 +48,11 @@ export interface EventData {
   [EventType.PlayerDeath]: Record<string, never>;
   [EventType.FoodStored]: { boothId: string; foodType: string };
   [EventType.FoodConsumed]: { boothId: string; amount: number };
+  [EventType.FoodCollected]: {
+    foodId: string;
+    foodType: string;
+    position: { x: number; y: number };
+  };
   [EventType.KillCounterConsumed]: { consumed: number; remaining: number };
   [EventType.BulletFired]: Record<string, never>;
   [EventType.EnemyHit]: Record<string, never>;

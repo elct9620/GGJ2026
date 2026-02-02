@@ -41,6 +41,8 @@ import { FoodRenderer } from "./renderers/food-renderer";
 export class GameScene {
   // Entities
   private player: Player;
+  // Legacy entity arrays (for System compatibility during Phase 4 migration)
+  // These arrays are kept in sync with GameState entity collections
   private enemies: Enemy[] = [];
   private bullets: Bullet[] = [];
   private foods: Food[] = [];
@@ -192,6 +194,7 @@ export class GameScene {
         bullet.setTracking(request.trackingTarget);
       }
       this.bullets.push(bullet);
+      this.gameState.addBullet(bullet); // Sync to GameState (Phase 4C)
       // Rendering handled by BulletRenderer.sync()
       return bullet;
     });
@@ -251,6 +254,7 @@ export class GameScene {
     const enemyType = EnemyType[type];
     const enemy = new Enemy(enemyType, new Vector(x, y), wave);
     this.enemies.push(enemy);
+    this.gameState.addEnemy(enemy); // Sync to GameState (Phase 4C)
     // Rendering handled by EnemyRenderer.sync()
   }
 
@@ -364,6 +368,7 @@ export class GameScene {
       if (!enemy.active) {
         // Rendering cleanup handled by EnemyRenderer.sync()
         this.enemies.splice(i, 1);
+        this.gameState.removeEnemy(enemy.id); // Sync to GameState (Phase 4C)
         continue;
       }
 
@@ -375,6 +380,7 @@ export class GameScene {
         enemy.active = false;
         // Rendering cleanup handled by EnemyRenderer.sync()
         this.enemies.splice(i, 1);
+        this.gameState.removeEnemy(enemy.id); // Sync to GameState (Phase 4C)
 
         // Publish EnemyReachedEnd event for Wave System (SPEC § 2.3.6)
         const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
@@ -409,6 +415,7 @@ export class GameScene {
       if (!bullet.active) {
         // Rendering cleanup handled by BulletRenderer.sync()
         this.bullets.splice(i, 1);
+        this.gameState.removeBullet(bullet.id); // Sync to GameState (Phase 4C)
         continue;
       }
 
@@ -464,21 +471,33 @@ export class GameScene {
    * Rendering cleanup handled by FoodRenderer.sync()
    */
   private checkFoodCollection(): void {
+    const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
+    const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+
     for (let i = this.foods.length - 1; i >= 0; i--) {
       const food = this.foods[i];
 
       if (!food.active) {
         // Rendering cleanup handled by FoodRenderer.sync()
         this.foods.splice(i, 1);
+        this.gameState.removeFood(food.id); // Sync to GameState (Phase 4C)
         continue;
       }
 
       // Auto-store food in booth (SPEC § 2.3.1)
-      const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
       boothSystem.storeFood(food.type);
+
+      // Publish FoodCollected event (Phase 4A: Event-driven communication)
+      eventQueue.publish(EventType.FoodCollected, {
+        foodId: food.id,
+        foodType: food.type,
+        position: { x: food.position.x, y: food.position.y },
+      });
+
       food.active = false;
       // Rendering cleanup handled by FoodRenderer.sync()
       this.foods.splice(i, 1);
+      this.gameState.removeFood(food.id); // Sync to GameState (Phase 4C)
     }
   }
 
@@ -507,6 +526,7 @@ export class GameScene {
   private spawnFood(type: FoodType, position: Vector): void {
     const food = new Food(type, position);
     this.foods.push(food);
+    this.gameState.addFood(food); // Sync to GameState (Phase 4C)
     // Rendering handled by FoodRenderer.sync()
   }
 

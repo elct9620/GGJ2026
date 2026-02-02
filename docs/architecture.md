@@ -222,10 +222,15 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 3. ✅ **Phase 3**：將 System 內部狀態移至 GameState
    - BoothSystem、BoxSystem、WaveSystem 已無狀態
    - CombatSystem 僅保留 shootCooldown（實作細節）
-4. ⏳ **Phase 4**：引入 Component 系統，增加 Entity 組合彈性（未來方向）
+4. ✅ **Phase 4**：Entity 生命週期分離
+   - ✅ FoodCollected 事件已新增（完善事件驅動）
+   - ✅ Entity 集合已移至 GameStateManager（enemies, bullets, foods）
+   - ✅ GameScene spawn/remove 時同步到 GameState
+   - ✅ 保留 legacy 陣列維持 System 相容性（漸進式遷移）
+5. ⏳ **Phase 5**：引入 Component 系統，增加 Entity 組合彈性（未來方向）
 
 ### 5.4 重構原則
 
 - **漸進式**：每次重構只改變一個面向
-- **測試保護**：重構前確保測試覆蓋（目前 92%+）
+- **測試保護**：重構前確保測試覆蓋（目前 95%+）
 - **行為不變**：重構不改變遊戲行為

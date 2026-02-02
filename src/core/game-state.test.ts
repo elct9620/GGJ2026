@@ -460,3 +460,178 @@ describe("createGameStats", () => {
     expect(stats1).toEqual(stats2);
   });
 });
+
+describe("GameStateManager Entity Management (Phase 4B)", () => {
+  let gameState: GameStateManager;
+
+  // Mock entities for testing
+  const createMockEnemy = (id: string, active = true) =>
+    ({ id, active }) as {
+      id: string;
+      active: boolean;
+    };
+
+  const createMockBullet = (id: string, active = true) =>
+    ({ id, active }) as {
+      id: string;
+      active: boolean;
+    };
+
+  const createMockFood = (id: string, active = true) =>
+    ({ id, active }) as {
+      id: string;
+      active: boolean;
+    };
+
+  beforeEach(() => {
+    gameState = new GameStateManager();
+  });
+
+  describe("Enemy management", () => {
+    it("應能新增敵人", () => {
+      const enemy = createMockEnemy("enemy-1");
+      gameState.addEnemy(enemy as never);
+
+      expect(gameState.enemies.size).toBe(1);
+      expect(gameState.enemies.has("enemy-1")).toBe(true);
+    });
+
+    it("應能移除敵人", () => {
+      const enemy = createMockEnemy("enemy-1");
+      gameState.addEnemy(enemy as never);
+      gameState.removeEnemy("enemy-1");
+
+      expect(gameState.enemies.size).toBe(0);
+    });
+
+    it("應能取得所有活躍敵人", () => {
+      const enemy1 = createMockEnemy("enemy-1", true);
+      const enemy2 = createMockEnemy("enemy-2", false);
+      const enemy3 = createMockEnemy("enemy-3", true);
+
+      gameState.addEnemy(enemy1 as never);
+      gameState.addEnemy(enemy2 as never);
+      gameState.addEnemy(enemy3 as never);
+
+      const activeEnemies = gameState.getActiveEnemies();
+
+      expect(activeEnemies.length).toBe(2);
+      expect(activeEnemies.map((e) => e.id)).toContain("enemy-1");
+      expect(activeEnemies.map((e) => e.id)).toContain("enemy-3");
+    });
+
+    it("應能清除所有敵人", () => {
+      gameState.addEnemy(createMockEnemy("enemy-1") as never);
+      gameState.addEnemy(createMockEnemy("enemy-2") as never);
+      gameState.clearEnemies();
+
+      expect(gameState.enemies.size).toBe(0);
+    });
+  });
+
+  describe("Bullet management", () => {
+    it("應能新增子彈", () => {
+      const bullet = createMockBullet("bullet-1");
+      gameState.addBullet(bullet as never);
+
+      expect(gameState.bullets.size).toBe(1);
+      expect(gameState.bullets.has("bullet-1")).toBe(true);
+    });
+
+    it("應能移除子彈", () => {
+      const bullet = createMockBullet("bullet-1");
+      gameState.addBullet(bullet as never);
+      gameState.removeBullet("bullet-1");
+
+      expect(gameState.bullets.size).toBe(0);
+    });
+
+    it("應能取得所有活躍子彈", () => {
+      const bullet1 = createMockBullet("bullet-1", true);
+      const bullet2 = createMockBullet("bullet-2", false);
+
+      gameState.addBullet(bullet1 as never);
+      gameState.addBullet(bullet2 as never);
+
+      const activeBullets = gameState.getActiveBullets();
+
+      expect(activeBullets.length).toBe(1);
+      expect(activeBullets[0].id).toBe("bullet-1");
+    });
+
+    it("應能清除所有子彈", () => {
+      gameState.addBullet(createMockBullet("bullet-1") as never);
+      gameState.addBullet(createMockBullet("bullet-2") as never);
+      gameState.clearBullets();
+
+      expect(gameState.bullets.size).toBe(0);
+    });
+  });
+
+  describe("Food management", () => {
+    it("應能新增食材", () => {
+      const food = createMockFood("food-1");
+      gameState.addFood(food as never);
+
+      expect(gameState.foods.size).toBe(1);
+      expect(gameState.foods.has("food-1")).toBe(true);
+    });
+
+    it("應能移除食材", () => {
+      const food = createMockFood("food-1");
+      gameState.addFood(food as never);
+      gameState.removeFood("food-1");
+
+      expect(gameState.foods.size).toBe(0);
+    });
+
+    it("應能取得所有活躍食材", () => {
+      const food1 = createMockFood("food-1", true);
+      const food2 = createMockFood("food-2", false);
+
+      gameState.addFood(food1 as never);
+      gameState.addFood(food2 as never);
+
+      const activeFoods = gameState.getActiveFoods();
+
+      expect(activeFoods.length).toBe(1);
+      expect(activeFoods[0].id).toBe("food-1");
+    });
+
+    it("應能清除所有食材", () => {
+      gameState.addFood(createMockFood("food-1") as never);
+      gameState.addFood(createMockFood("food-2") as never);
+      gameState.clearFoods();
+
+      expect(gameState.foods.size).toBe(0);
+    });
+  });
+
+  describe("clearAllEntities", () => {
+    it("應能清除所有實體", () => {
+      gameState.addEnemy(createMockEnemy("enemy-1") as never);
+      gameState.addBullet(createMockBullet("bullet-1") as never);
+      gameState.addFood(createMockFood("food-1") as never);
+
+      gameState.clearAllEntities();
+
+      expect(gameState.enemies.size).toBe(0);
+      expect(gameState.bullets.size).toBe(0);
+      expect(gameState.foods.size).toBe(0);
+    });
+  });
+
+  describe("reset", () => {
+    it("reset 應清除所有實體", () => {
+      gameState.addEnemy(createMockEnemy("enemy-1") as never);
+      gameState.addBullet(createMockBullet("bullet-1") as never);
+      gameState.addFood(createMockFood("food-1") as never);
+
+      gameState.reset();
+
+      expect(gameState.enemies.size).toBe(0);
+      expect(gameState.bullets.size).toBe(0);
+      expect(gameState.foods.size).toBe(0);
+    });
+  });
+});
