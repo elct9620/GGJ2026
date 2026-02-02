@@ -55,12 +55,20 @@ export class Enemy extends Entity {
     this.baseSpeed = props.speed;
 
     // HP scales with wave number
+    this._health = this.initializeHealth(type, wave);
+  }
+
+  /**
+   * Initialize health based on enemy type and wave
+   * SPEC § 2.6.2: HP scales with wave number
+   */
+  private initializeHealth(type: EnemyType, wave: number): Health {
     if (type === EnemyType.Ghost) {
-      this._health = Health.ghostForWave(wave);
+      return Health.ghostForWave(wave);
     } else if (isEliteType(type)) {
-      this._health = Health.eliteForWave(wave);
+      return Health.eliteForWave(wave);
     } else {
-      this._health = Health.bossForWave(wave);
+      return Health.bossForWave(wave);
     }
   }
 
@@ -176,12 +184,6 @@ export class Enemy extends Entity {
     this.knockbackVelocity = 0;
     this.knockbackDuration = 0;
 
-    if (type === EnemyType.Ghost) {
-      this._health = Health.ghostForWave(wave);
-    } else if (isEliteType(type)) {
-      this._health = Health.eliteForWave(wave);
-    } else {
-      this._health = Health.bossForWave(wave);
-    }
+    this._health = this.initializeHealth(type, wave);
   }
 }

@@ -21,12 +21,17 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * Apply universal hit effects: flash, knockback, screen shake, hit visual
    * All collision handlers should call this after applying damage
    * SPEC § 2.6.3: 通用視覺效果規則
+   * @param context Collision context
+   * @param enemy Optional enemy to apply effects to (defaults to context.enemy)
    */
-  protected applyUniversalHitEffects(context: CollisionContext): void {
-    this.applyFlashEffect(context);
-    this.applyKnockback(context);
+  protected applyUniversalHitEffects(
+    context: CollisionContext,
+    enemy: Enemy = context.enemy,
+  ): void {
+    this.applyFlashEffect(context, enemy);
+    this.applyKnockback(context, enemy);
     this.triggerScreenShake(context);
-    this.createHitEffect(context);
+    this.createHitEffect(context, enemy);
   }
 
   /**
@@ -34,10 +39,13 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * SPEC § 2.6.3: 閃白效果 100~300ms
    * Flash effect stored in GameState for EnemyRenderer to consume
    */
-  protected applyFlashEffect(context: CollisionContext): void {
+  protected applyFlashEffect(
+    context: CollisionContext,
+    enemy: Enemy = context.enemy,
+  ): void {
     const configKey = this.getConfigKey();
     const config = hitEffectData.getFlash(configKey);
-    context.gameState.setEnemyFlashEffect(context.enemy.id, {
+    context.gameState.setEnemyFlashEffect(enemy.id, {
       color: config.color,
       duration: config.duration,
     });
@@ -47,9 +55,12 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * Apply knockback effect to enemy
    * Universal: 15px rightward displacement over 80ms
    */
-  protected applyKnockback(context: CollisionContext): void {
+  protected applyKnockback(
+    context: CollisionContext,
+    enemy: Enemy = context.enemy,
+  ): void {
     const { distance, duration } = hitEffectData.knockback;
-    context.enemy.applyKnockback(distance, duration);
+    enemy.applyKnockback(distance, duration);
   }
 
   /**
@@ -68,11 +79,11 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
   /**
    * Create hit effect at enemy position
    */
-  protected createHitEffect(context: CollisionContext): void {
-    context.visualEffects?.createHitEffect(
-      context.enemy.position,
-      context.bullet.type,
-    );
+  protected createHitEffect(
+    context: CollisionContext,
+    enemy: Enemy = context.enemy,
+  ): void {
+    context.visualEffects?.createHitEffect(enemy.position, context.bullet.type);
   }
 
   /**
@@ -131,42 +142,5 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
       context.bullet.upgradeSnapshot?.killThresholdDivisor ??
       context.gameState.upgrades.killThresholdDivisor
     );
-  }
-
-  // ─────────────────────────────────────────────────────────────────
-  // Universal Hit Effects (for chain attacks)
-  // ─────────────────────────────────────────────────────────────────
-
-  /**
-   * Apply universal hit effects to a specific enemy
-   * Used by chain attacks where effects are applied to multiple enemies
-   * SPEC § 2.6.3: 通用視覺效果規則
-   */
-  protected applyUniversalHitEffectsToEnemy(
-    context: CollisionContext,
-    enemy: Enemy,
-  ): void {
-    const configKey = bulletData.getHitEffectConfigKey(this.bulletType);
-
-    // Flash effect stored in GameState for EnemyRenderer
-    const flashConfig = hitEffectData.getFlash(configKey);
-    context.gameState.setEnemyFlashEffect(enemy.id, {
-      color: flashConfig.color,
-      duration: flashConfig.duration,
-    });
-
-    // Knockback
-    const { distance, duration } = hitEffectData.knockback;
-    enemy.applyKnockback(distance, duration);
-
-    // Screen shake
-    const shakeConfig = hitEffectData.getScreenShake(configKey);
-    context.visualEffects?.triggerScreenShake(
-      shakeConfig.magnitude,
-      shakeConfig.duration,
-    );
-
-    // Hit effect
-    context.visualEffects?.createHitEffect(enemy.position, this.bulletType);
   }
 }

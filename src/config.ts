@@ -159,6 +159,21 @@ export const RECIPE_CONFIG = {
   },
 } as const;
 
+import type { EnemyCategory } from "./core/types";
+
+/**
+ * Get damage percent for enemy category from OysterOmelet config
+ * SPEC § 2.3.3: Boss 10%, Elite 50%, Ghost 70%
+ */
+export function getOysterOmeletDamagePercent(category: EnemyCategory): number {
+  const mapping: Record<EnemyCategory, number> = {
+    boss: RECIPE_CONFIG.oysterOmelet.bossDamagePercent,
+    elite: RECIPE_CONFIG.oysterOmelet.eliteDamagePercent,
+    ghost: RECIPE_CONFIG.oysterOmelet.ghostDamagePercent,
+  };
+  return mapping[category];
+}
+
 // =============================================================================
 // TYPE EXPORTS
 // =============================================================================

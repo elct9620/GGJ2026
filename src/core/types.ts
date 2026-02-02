@@ -37,6 +37,26 @@ export function isEliteType(type: EnemyType): boolean {
   );
 }
 
+/**
+ * Enemy category for damage/health calculations
+ * Maps specific EnemyType to broader category
+ */
+export type EnemyCategory = "boss" | "elite" | "ghost";
+
+/**
+ * Get enemy category from enemy type
+ * SPEC § 2.6.2: Boss, Elite (colored ghosts), Ghost (normal)
+ */
+export function getEnemyCategory(type: EnemyType): EnemyCategory {
+  if (type === EnemyType.Boss) {
+    return "boss";
+  } else if (isEliteType(type)) {
+    return "elite";
+  } else {
+    return "ghost";
+  }
+}
+
 // =============================================================================
 // Special Bullet Types
 // =============================================================================

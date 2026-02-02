@@ -6,8 +6,8 @@
 
 import type { CollisionContext } from "../collision-handler";
 import { BaseCollisionHandler } from "./base-collision-handler";
-import { SpecialBulletType, EnemyType, isEliteType } from "../../core/types";
-import { RECIPE_CONFIG } from "../../config";
+import { SpecialBulletType, getEnemyCategory } from "../../core/types";
+import { getOysterOmeletDamagePercent } from "../../config";
 import { Damage } from "../../values/damage";
 
 export class OysterOmeletteCollisionHandler extends BaseCollisionHandler {
@@ -26,20 +26,13 @@ export class OysterOmeletteCollisionHandler extends BaseCollisionHandler {
    * 快吃升級增加百分比傷害
    */
   private calculatePercentDamage(context: CollisionContext): Damage {
-    const { bossDamagePercent, eliteDamagePercent, ghostDamagePercent } =
-      RECIPE_CONFIG.oysterOmelet;
+    const category = getEnemyCategory(context.enemy.type);
+    const basePercent = getOysterOmeletDamagePercent(category);
 
     const damageBonus = this.getKillThresholdDivisor(context);
     const bonusPercent = damageBonus - 1; // Convert multiplier to bonus (1 = no bonus)
 
-    let percentage: number;
-    if (context.enemy.type === EnemyType.Boss) {
-      percentage = bossDamagePercent + bonusPercent;
-    } else if (isEliteType(context.enemy.type)) {
-      percentage = eliteDamagePercent + bonusPercent;
-    } else {
-      percentage = ghostDamagePercent + bonusPercent;
-    }
+    const percentage = basePercent + bonusPercent;
 
     return Damage.fromPercentage(context.enemy.health.current, percentage);
   }

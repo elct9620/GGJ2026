@@ -76,7 +76,7 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
       );
 
       // Apply universal hit effects (flash, knockback, screen shake, hit visual)
-      this.applyUniversalHitEffectsToEnemy(context, currentTarget);
+      this.applyUniversalHitEffects(context, currentTarget);
 
       hitEnemies.add(currentTarget.id);
 
