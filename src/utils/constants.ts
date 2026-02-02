@@ -17,6 +17,15 @@ export const LAYERS = {
 } as const;
 
 /**
+ * Z-index values for elements within the UI layer
+ * Used to control stacking order of HUD, screens, and overlays
+ */
+export const UI_ZINDEX = {
+  HUD: 0,
+  OVERLAY_SCREEN: 100, // StartScreen, GameOverScreen, UpgradeScreen
+} as const;
+
+/**
  * Layout constants based on ui_rough_pixelSpec.png
  * SPEC § 2.7.2 Main Scene Layout
  */

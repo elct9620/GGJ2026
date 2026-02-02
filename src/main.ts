@@ -12,6 +12,7 @@ import type { GameStats } from "./core/game-state";
 import { StartScreen } from "./screens/start-screen";
 import { GameOverScreen } from "./screens/game-over-screen";
 import { loadAssets } from "./core/assets";
+import { UI_ZINDEX } from "./utils/constants";
 
 async function main() {
   const appContainer = document.getElementById("app");
@@ -80,7 +81,11 @@ async function main() {
     startScreen.show();
   });
 
-  // Add screens to UI layer
+  // Add screens to UI layer with higher zIndex to display above HUD
+  // Enable sortable children for proper z-ordering
+  layers.ui.sortableChildren = true;
+  startScreen.getContainer().zIndex = UI_ZINDEX.OVERLAY_SCREEN;
+  gameOverScreen.getContainer().zIndex = UI_ZINDEX.OVERLAY_SCREEN;
   layers.ui.addChild(startScreen.getContainer());
   layers.ui.addChild(gameOverScreen.getContainer());
 

@@ -25,6 +25,7 @@ import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
 import { recipeData, FOOD_HUD_COLOR } from "./data";
 import { PLAYER_CONFIG, RECIPE_CONFIG } from "./config";
+import { UI_ZINDEX } from "./utils/constants";
 import { SpecialBulletType } from "./core/types";
 import { GameStateManager, type GameStats } from "./core/game-state";
 import { UpgradeScreen } from "./screens/upgrade-screen";
@@ -212,10 +213,12 @@ export class GameScene {
     this.uiLayer.addChild(this.hudRenderer.getBottomHUD());
 
     // Setup Upgrade Screen (SPEC § 2.3.4)
+    // Set higher zIndex to display above HUD
     this.upgradeScreen = new UpgradeScreen(
       this.onUpgradeSelect.bind(this),
       eventQueue,
     );
+    this.upgradeScreen.getContainer().zIndex = UI_ZINDEX.OVERLAY_SCREEN;
     this.uiLayer.addChild(this.upgradeScreen.getContainer());
 
     // Connect Wave System spawn callback (SPEC § 2.3.5)
@@ -779,6 +782,10 @@ export class GameScene {
       isReloading: false,
       reloadProgress: 0,
     });
+
+    // Update CombatSystem with new player reference
+    const combatSystem = this.systemManager.get<CombatSystem>("CombatSystem");
+    combatSystem.setPlayer(this.player);
 
     // Reset booth system
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
