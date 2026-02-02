@@ -12,11 +12,13 @@ import type { GameStats } from "../core/game-state";
 export class GameOverScreen {
   private container: Container;
   private onRestart: () => void;
+  private onQuit?: () => void;
   private statsText: Text | null = null;
   private isListening: boolean = false;
 
-  constructor(onRestart: () => void) {
+  constructor(onRestart: () => void, onQuit?: () => void) {
     this.onRestart = onRestart;
+    this.onQuit = onQuit;
     this.container = new Container();
     this.container.visible = false; // Initially hidden
     this.setupUI();
@@ -29,21 +31,27 @@ export class GameOverScreen {
     background.fill({ color: 0x000000, alpha: 0.85 });
     this.container.addChild(background);
 
-    // Game Over Title
+    // Layout calculation (CANVAS_HEIGHT = 1080, center = 540)
+    // Title: 2 lines × 72px ≈ 173px height
+    // Stats: 7 lines × 44px lineHeight ≈ 308px height
+    // Restart: 2 lines × 36px ≈ 86px height
+    // Quit: 2 lines × 28px ≈ 67px height
+
+    // Game Over Title (Y = 160, range: ~73 to ~247)
     const title = new Text({
       text: "遊戲結束\nGAME OVER",
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 64,
+        fontSize: 72,
         fill: 0xff0000,
         align: "center",
       },
     });
     title.anchor.set(0.5);
-    title.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 200);
+    title.position.set(CANVAS_WIDTH / 2, 160);
     this.container.addChild(title);
 
-    // Statistics (will be updated when shown)
+    // Statistics (Y = 480, range: ~326 to ~634)
     this.statsText = new Text({
       text: "",
       style: {
@@ -51,26 +59,40 @@ export class GameOverScreen {
         fontSize: 28,
         fill: 0xffffff,
         align: "center",
-        lineHeight: 45,
+        lineHeight: 44,
       },
     });
     this.statsText.anchor.set(0.5);
-    this.statsText.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    this.statsText.position.set(CANVAS_WIDTH / 2, 480);
     this.container.addChild(this.statsText);
 
-    // Restart instructions
+    // Restart instructions (Y = 780, range: ~737 to ~823)
     const restartText = new Text({
       text: "按 Space 重新開始\nPress Space to Restart",
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 32,
+        fontSize: 36,
         fill: 0x00ff00,
         align: "center",
       },
     });
     restartText.anchor.set(0.5);
-    restartText.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 150);
+    restartText.position.set(CANVAS_WIDTH / 2, 780);
     this.container.addChild(restartText);
+
+    // Quit instructions (Y = 920, range: ~886 to ~954)
+    const quitText = new Text({
+      text: "按 Escape 結束遊戲\nPress Escape to Quit",
+      style: {
+        fontFamily: GAME_FONT_FAMILY,
+        fontSize: 28,
+        fill: 0xaaaaaa,
+        align: "center",
+      },
+    });
+    quitText.anchor.set(0.5);
+    quitText.position.set(CANVAS_WIDTH / 2, 920);
+    this.container.addChild(quitText);
   }
 
   public getContainer(): Container {
@@ -110,6 +132,8 @@ export class GameOverScreen {
   private handleKeyPress = (event: KeyboardEvent): void => {
     if (event.code === "Space") {
       this.onRestart();
+    } else if (event.code === "Escape" && this.onQuit) {
+      this.onQuit();
     }
   };
 

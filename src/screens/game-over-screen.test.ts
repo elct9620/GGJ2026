@@ -5,10 +5,12 @@ import type { GameStats } from "../core/game-state";
 describe("GameOverScreen", () => {
   let gameOverScreen: GameOverScreen;
   let onRestartMock: () => void;
+  let onQuitMock: () => void;
 
   beforeEach(() => {
     onRestartMock = vi.fn();
-    gameOverScreen = new GameOverScreen(onRestartMock);
+    onQuitMock = vi.fn();
+    gameOverScreen = new GameOverScreen(onRestartMock, onQuitMock);
   });
 
   afterEach(() => {
@@ -90,6 +92,25 @@ describe("GameOverScreen", () => {
       window.dispatchEvent(event);
 
       expect(onRestartMock).not.toHaveBeenCalled();
+    });
+
+    it("should call onQuit when Escape is pressed while shown (GS-10)", () => {
+      gameOverScreen.show(mockStats);
+
+      const event = new KeyboardEvent("keydown", { code: "Escape" });
+      window.dispatchEvent(event);
+
+      expect(onQuitMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not call onQuit when Escape is pressed while hidden", () => {
+      gameOverScreen.show(mockStats);
+      gameOverScreen.hide();
+
+      const event = new KeyboardEvent("keydown", { code: "Escape" });
+      window.dispatchEvent(event);
+
+      expect(onQuitMock).not.toHaveBeenCalled();
     });
   });
 

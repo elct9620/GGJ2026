@@ -38,7 +38,7 @@ export class StartScreen {
       },
     });
     title.anchor.set(0.5);
-    title.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 150);
+    title.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 200);
     this.container.addChild(title);
 
     // Subtitle (Theme)
@@ -46,13 +46,13 @@ export class StartScreen {
       text: "Global Game Jam 2026 - 主題：「Mask」",
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 24,
+        fontSize: 28,
         fill: 0xaaaaaa,
         align: "center",
       },
     });
     subtitle.anchor.set(0.5);
-    subtitle.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 50);
+    subtitle.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 100);
     this.container.addChild(subtitle);
 
     // Instructions
@@ -60,21 +60,21 @@ export class StartScreen {
       text: "按 Space 開始遊戲\nPress Space to Start",
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 32,
+        fontSize: 36,
         fill: 0x00ff00,
         align: "center",
       },
     });
     instructions.anchor.set(0.5);
-    instructions.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 100);
+    instructions.position.set(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
     this.container.addChild(instructions);
 
-    // Controls hint
+    // Controls hint (SPEC § 2.4.2: 1-5 觸發特殊子彈)
     const controls = new Text({
-      text: "操作說明：WASD 移動 | Space 射擊 | 1/2/3 提取食材",
+      text: "操作說明：WASD 移動 | Space 射擊 | 1-5 觸發特殊子彈",
       style: {
         fontFamily: GAME_FONT_FAMILY,
-        fontSize: 20,
+        fontSize: 24,
         fill: 0xcccccc,
         align: "center",
       },

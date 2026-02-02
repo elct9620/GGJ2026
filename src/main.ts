@@ -77,12 +77,17 @@ async function main() {
     gameScene.startMusic();
   });
 
-  const gameOverScreen = new GameOverScreen(() => {
-    // Restart game callback
+  // Shared callback for returning to start screen
+  const returnToStartScreen = () => {
     currentState = ScreenState.START;
     gameOverScreen.hide();
     startScreen.show();
-  });
+  };
+
+  const gameOverScreen = new GameOverScreen(
+    returnToStartScreen, // onRestart
+    returnToStartScreen, // onQuit (same behavior for web game)
+  );
 
   // Add screens to UI layer with higher zIndex to display above HUD
   // Enable sortable children for proper z-ordering
@@ -120,7 +125,7 @@ async function main() {
   console.log("Controls:");
   console.log("  WASD - Move player");
   console.log("  Space - Shoot");
-  console.log("  1/2/3 - Retrieve food from booths");
+  console.log("  1-5 - Trigger special bullets");
 }
 
 main().catch((error) => {
