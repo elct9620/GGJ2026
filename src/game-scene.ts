@@ -32,6 +32,7 @@ import { BoothRenderer } from "./renderers/booth-renderer";
 import { BulletRenderer } from "./renderers/bullet-renderer";
 import { PlayerRenderer } from "./renderers/player-renderer";
 import { EnemyRenderer } from "./renderers/enemy-renderer";
+import { FoodRenderer } from "./renderers/food-renderer";
 
 /**
  * Main game scene managing all game entities and systems
@@ -71,6 +72,7 @@ export class GameScene {
   private bulletRenderer: BulletRenderer;
   private playerRenderer: PlayerRenderer;
   private enemyRenderer: EnemyRenderer;
+  private foodRenderer: FoodRenderer;
   private hudRenderer: HUDRenderer;
 
   constructor(
@@ -99,6 +101,7 @@ export class GameScene {
     this.bulletRenderer = new BulletRenderer();
     this.playerRenderer = new PlayerRenderer();
     this.enemyRenderer = new EnemyRenderer();
+    this.foodRenderer = new FoodRenderer();
     this.hudRenderer = new HUDRenderer();
 
     // Initialize SystemManager and register all systems
@@ -215,6 +218,9 @@ export class GameScene {
     // Setup bullet renderer container (on top of effects)
     this.bulletsContainer.addChild(this.bulletRenderer.getContainer());
 
+    // Setup food renderer container
+    this.foodsContainer.addChild(this.foodRenderer.getContainer());
+
     // Setup HUD (using HUDRenderer)
     this.uiLayer.addChild(this.hudRenderer.getTopHUD());
     this.uiLayer.addChild(this.hudRenderer.getBottomHUD());
@@ -280,6 +286,7 @@ export class GameScene {
     this.updateBullets(deltaTime);
     this.updateHUD();
     this.syncBoothRenderer(); // Sync booth visuals with state
+    this.syncFoodRenderer(); // Sync food visuals with state
     this.checkFoodCollection(); // Auto-collect dropped food
     this.checkGameOver(); // Check game over condition
     this.applyScreenShake(); // Apply screen shake effect (SPEC § 2.6.3)
@@ -290,6 +297,19 @@ export class GameScene {
    */
   private syncBoothRenderer(): void {
     this.boothRenderer.sync(this.gameState.booths);
+  }
+
+  /**
+   * Sync food renderer with current food state
+   */
+  private syncFoodRenderer(): void {
+    const foodStates = this.foods.map((food) => ({
+      id: food.id,
+      position: food.position,
+      type: food.type,
+      active: food.active,
+    }));
+    this.foodRenderer.sync(foodStates);
   }
 
   /**
@@ -444,13 +464,14 @@ export class GameScene {
   /**
    * Check and collect dropped food (auto-collect)
    * SPEC § 2.3.1: Food is automatically stored in booth
+   * Rendering cleanup handled by FoodRenderer.sync()
    */
   private checkFoodCollection(): void {
     for (let i = this.foods.length - 1; i >= 0; i--) {
       const food = this.foods[i];
 
       if (!food.active) {
-        this.foodsContainer.removeChild(food.sprite);
+        // Rendering cleanup handled by FoodRenderer.sync()
         this.foods.splice(i, 1);
         continue;
       }
@@ -459,7 +480,7 @@ export class GameScene {
       const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
       boothSystem.storeFood(food.type);
       food.active = false;
-      this.foodsContainer.removeChild(food.sprite);
+      // Rendering cleanup handled by FoodRenderer.sync()
       this.foods.splice(i, 1);
     }
   }
@@ -489,7 +510,7 @@ export class GameScene {
   private spawnFood(type: FoodType, position: Vector): void {
     const food = new Food(type, position);
     this.foods.push(food);
-    this.foodsContainer.addChild(food.sprite);
+    // Rendering handled by FoodRenderer.sync()
   }
 
   /**
@@ -710,11 +731,9 @@ export class GameScene {
     // Bullets are rendered via BulletRenderer - sync with empty array to clear
     this.bullets = [];
     this.bulletRenderer.sync(this.bullets);
-    this.foods.forEach((food) => {
-      this.foodsContainer.removeChild(food.sprite);
-    });
-
+    // Foods are rendered via FoodRenderer - sync with empty array to clear
     this.foods = [];
+    this.foodRenderer.sync([]);
 
     // Reset player
     this.player = new Player(new Vector(960, 540));

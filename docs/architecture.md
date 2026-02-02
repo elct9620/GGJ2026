@@ -204,7 +204,7 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 | 面向     | 目前實作                      | 目標架構               | 狀態    |
 | -------- | ----------------------------- | ---------------------- | ------- |
 | 狀態管理 | 集中於 GameStateManager       | 集中於 GameState       | ✅ 完成 |
-| 渲染同步 | 5 個 Renderer 類別已完成分離  | 獨立 RenderSystem 同步 | ✅ 完成 |
+| 渲染同步 | 6 個 Renderer 類別已完成分離  | 獨立 RenderSystem 同步 | ✅ 完成 |
 | Entity   | 純資料容器（無 Pixi.js 依賴） | 純資料容器             | ✅ 完成 |
 | 事件流   | 高度事件驅動（14 種事件）     | 完全事件驅動           | ✅ 接近 |
 
@@ -217,22 +217,14 @@ Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
    - ✅ BulletRenderer 已分離（子彈渲染獨立）
    - ✅ PlayerRenderer 已分離（玩家渲染獨立，Buff 外觀透過 GameState）
    - ✅ EnemyRenderer 已分離（敵人渲染獨立，閃白效果透過 GameState）
+   - ✅ FoodRenderer 已分離（食材渲染獨立）
    - ✅ SpriteEntity 已移除（Entity 為純資料容器）
 3. ✅ **Phase 3**：將 System 內部狀態移至 GameState
    - BoothSystem、BoxSystem、WaveSystem 已無狀態
    - CombatSystem 僅保留 shootCooldown（實作細節）
 4. ⏳ **Phase 4**：引入 Component 系統，增加 Entity 組合彈性（未來方向）
 
-### 5.4 已知改進點（優先級低）
-
-以下項目已識別但不影響功能運作：
-
-1. **Food Entity 仍混合資料與 Sprite**
-   - 現況：Food 使用 SpriteEntity 模式
-   - 理想：建立 FoodRenderer 完成分離
-   - 原因：Food 生命週期簡單，優先級較低
-
-### 5.5 重構原則
+### 5.4 重構原則
 
 - **漸進式**：每次重構只改變一個面向
 - **測試保護**：重構前確保測試覆蓋（目前 92%+）
