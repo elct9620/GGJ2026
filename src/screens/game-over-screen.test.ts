@@ -37,13 +37,13 @@ describe("GameOverScreen", () => {
     };
 
     it("should show container when show() is called", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
       const container = gameOverScreen.getContainer();
       expect(container.visible).toBe(true);
     });
 
     it("should hide container when hide() is called", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
       gameOverScreen.hide();
       const container = gameOverScreen.getContainer();
       expect(container.visible).toBe(false);
@@ -54,7 +54,7 @@ describe("GameOverScreen", () => {
       // Visual verification would be done manually, but we can verify
       // that the method is called without errors
       expect(() => {
-        gameOverScreen.show(mockStats);
+        gameOverScreen.showWithStats(mockStats);
       }).not.toThrow();
     });
   });
@@ -67,7 +67,7 @@ describe("GameOverScreen", () => {
     };
 
     it("should call onRestart when Space is pressed while shown (GS-09)", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
 
       const event = new KeyboardEvent("keydown", { code: "Space" });
       window.dispatchEvent(event);
@@ -76,7 +76,7 @@ describe("GameOverScreen", () => {
     });
 
     it("should not call onRestart when other keys are pressed", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
 
       const event = new KeyboardEvent("keydown", { code: "KeyA" });
       window.dispatchEvent(event);
@@ -85,7 +85,7 @@ describe("GameOverScreen", () => {
     });
 
     it("should not call onRestart when Space is pressed while hidden", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
       gameOverScreen.hide();
 
       const event = new KeyboardEvent("keydown", { code: "Space" });
@@ -95,7 +95,7 @@ describe("GameOverScreen", () => {
     });
 
     it("should call onQuit when Escape is pressed while shown (GS-10)", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
 
       const event = new KeyboardEvent("keydown", { code: "Escape" });
       window.dispatchEvent(event);
@@ -104,7 +104,7 @@ describe("GameOverScreen", () => {
     });
 
     it("should not call onQuit when Escape is pressed while hidden", () => {
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
       gameOverScreen.hide();
 
       const event = new KeyboardEvent("keydown", { code: "Escape" });
@@ -122,7 +122,7 @@ describe("GameOverScreen", () => {
         specialBulletsUsed: 3,
       };
 
-      gameOverScreen.show(mockStats);
+      gameOverScreen.showWithStats(mockStats);
       gameOverScreen.destroy();
 
       const event = new KeyboardEvent("keydown", { code: "Space" });

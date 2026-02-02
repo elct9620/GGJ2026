@@ -51,6 +51,16 @@ export class BoothSystem extends InjectableSystem {
   }
 
   /**
+   * Publish FoodConsumed event (unified event publishing)
+   */
+  private publishFoodConsumed(boothId: BoothId, amount: number): void {
+    this.publishEvent(EventType.FoodConsumed, {
+      boothId: String(boothId),
+      amount,
+    });
+  }
+
+  /**
    * Store food in appropriate booth
    * Returns true if successful, false if booth is full
    */
@@ -76,10 +86,7 @@ export class BoothSystem extends InjectableSystem {
 
     const success = this.gameState.consumeFood(boothId, 1);
     if (success) {
-      this.publishEvent(EventType.FoodConsumed, {
-        boothId: String(boothId),
-        amount: 1,
-      });
+      this.publishFoodConsumed(boothId, 1);
       return booth.foodType;
     }
     return null;
@@ -93,10 +100,7 @@ export class BoothSystem extends InjectableSystem {
   public consumeFood(boothId: BoothId, amount: number): boolean {
     const success = this.gameState.consumeFood(boothId, amount);
     if (success) {
-      this.publishEvent(EventType.FoodConsumed, {
-        boothId: String(boothId),
-        amount,
-      });
+      this.publishFoodConsumed(boothId, amount);
     }
     return success;
   }
@@ -108,10 +112,7 @@ export class BoothSystem extends InjectableSystem {
   public stealFood(boothId: BoothId): boolean {
     const success = this.gameState.stealFood(boothId);
     if (success) {
-      this.publishEvent(EventType.FoodConsumed, {
-        boothId: String(boothId),
-        amount: 1,
-      });
+      this.publishFoodConsumed(boothId, 1);
     }
     return success;
   }

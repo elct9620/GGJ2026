@@ -1,7 +1,8 @@
-import { Container, Text, Graphics } from "pixi.js";
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
+import { Text } from "pixi.js";
+import { CANVAS_WIDTH } from "../utils/constants";
 import { GAME_FONT_FAMILY } from "../core/assets";
 import type { GameStats } from "../core/game-state";
+import { BaseScreen } from "./base-screen";
 
 /**
  * Game Over Screen
@@ -9,26 +10,21 @@ import type { GameStats } from "../core/game-state";
  *
  * Displays game statistics and options to restart or quit
  */
-export class GameOverScreen {
-  private container: Container;
+export class GameOverScreen extends BaseScreen {
   private onRestart: () => void;
   private onQuit?: () => void;
   private statsText: Text | null = null;
-  private isListening: boolean = false;
 
   constructor(onRestart: () => void, onQuit?: () => void) {
+    super();
     this.onRestart = onRestart;
     this.onQuit = onQuit;
-    this.container = new Container();
-    this.container.visible = false; // Initially hidden
     this.setupUI();
   }
 
   private setupUI(): void {
     // Background overlay
-    const background = new Graphics();
-    background.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    background.fill({ color: 0x000000, alpha: 0.85 });
+    const background = this.createBackground(0x000000, 0.85);
     this.container.addChild(background);
 
     // Layout calculation (CANVAS_HEIGHT = 1080, center = 540)
@@ -95,19 +91,12 @@ export class GameOverScreen {
     this.container.addChild(quitText);
   }
 
-  public getContainer(): Container {
-    return this.container;
-  }
-
-  public show(stats: GameStats): void {
+  /**
+   * Show screen with game statistics
+   */
+  public showWithStats(stats: GameStats): void {
     this.updateStats(stats);
-    this.container.visible = true;
-    this.startListening();
-  }
-
-  public hide(): void {
-    this.container.visible = false;
-    this.stopListening();
+    this.show();
   }
 
   /**
@@ -129,30 +118,11 @@ export class GameOverScreen {
     }
   }
 
-  private handleKeyPress = (event: KeyboardEvent): void => {
+  protected override handleKeyPress(event: KeyboardEvent): void {
     if (event.code === "Space") {
       this.onRestart();
     } else if (event.code === "Escape" && this.onQuit) {
       this.onQuit();
     }
-  };
-
-  private startListening(): void {
-    if (!this.isListening) {
-      window.addEventListener("keydown", this.handleKeyPress);
-      this.isListening = true;
-    }
-  }
-
-  private stopListening(): void {
-    if (this.isListening) {
-      window.removeEventListener("keydown", this.handleKeyPress);
-      this.isListening = false;
-    }
-  }
-
-  public destroy(): void {
-    this.stopListening();
-    this.container.destroy({ children: true });
   }
 }

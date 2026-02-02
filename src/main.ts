@@ -66,7 +66,7 @@ async function main() {
         (stats: GameStats) => {
           // Game over callback
           currentState = ScreenState.GAME_OVER;
-          gameOverScreen.show(stats);
+          gameOverScreen.showWithStats(stats);
         },
       );
     } else {

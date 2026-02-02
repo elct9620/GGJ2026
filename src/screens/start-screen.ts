@@ -1,6 +1,7 @@
-import { Container, Text, Graphics } from "pixi.js";
+import { Text } from "pixi.js";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../utils/constants";
 import { GAME_FONT_FAMILY } from "../core/assets";
+import { BaseScreen } from "./base-screen";
 
 /**
  * Start Screen
@@ -8,23 +9,18 @@ import { GAME_FONT_FAMILY } from "../core/assets";
  *
  * Displays game title and instructions to start the game
  */
-export class StartScreen {
-  private container: Container;
+export class StartScreen extends BaseScreen {
   private onStart: () => void;
-  private isListening: boolean = false;
 
   constructor(onStart: () => void) {
+    super();
     this.onStart = onStart;
-    this.container = new Container();
-    this.container.visible = false; // Initially hidden
     this.setupUI();
   }
 
   private setupUI(): void {
     // Background overlay
-    const background = new Graphics();
-    background.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    background.fill({ color: 0x1a1a1a, alpha: 0.95 });
+    const background = this.createBackground(0x1a1a1a, 0.95);
     this.container.addChild(background);
 
     // Game Title
@@ -84,42 +80,9 @@ export class StartScreen {
     this.container.addChild(controls);
   }
 
-  public getContainer(): Container {
-    return this.container;
-  }
-
-  public show(): void {
-    this.container.visible = true;
-    this.startListening();
-  }
-
-  public hide(): void {
-    this.container.visible = false;
-    this.stopListening();
-  }
-
-  private handleKeyPress = (event: KeyboardEvent): void => {
+  protected override handleKeyPress(event: KeyboardEvent): void {
     if (event.code === "Space") {
       this.onStart();
     }
-  };
-
-  private startListening(): void {
-    if (!this.isListening) {
-      window.addEventListener("keydown", this.handleKeyPress);
-      this.isListening = true;
-    }
-  }
-
-  private stopListening(): void {
-    if (this.isListening) {
-      window.removeEventListener("keydown", this.handleKeyPress);
-      this.isListening = false;
-    }
-  }
-
-  public destroy(): void {
-    this.stopListening();
-    this.container.destroy({ children: true });
   }
 }
