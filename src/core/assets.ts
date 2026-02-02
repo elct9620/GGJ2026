@@ -66,8 +66,8 @@ export const AssetKeys = {
   monster: "monster",
   ghost: "ghost", // mob01 - 餓鬼
   redGhost: "redGhost", // mob02 - 紅餓鬼
-  greenGhost: "greenGhost", // mob03 - 綠餓鬼
-  blueGhost: "blueGhost", // mob04 - 藍餓鬼
+  greenGhost: "greenGhost", // mob04 - 綠餓鬼
+  blueGhost: "blueGhost", // mob03 - 藍餓鬼
   boss: "boss", // mob05 - 餓死鬼
   boss2: "boss2", // mob06 - 預留
   upgradeBase: "upgradeBase",
@@ -110,8 +110,8 @@ const ASSET_MANIFEST: Record<AssetKey, string> = {
   [AssetKeys.monster]: monster0,
   [AssetKeys.ghost]: mob01,
   [AssetKeys.redGhost]: mob02,
-  [AssetKeys.greenGhost]: mob03,
-  [AssetKeys.blueGhost]: mob04,
+  [AssetKeys.greenGhost]: mob04, // Green ghost uses mob04 (green colored)
+  [AssetKeys.blueGhost]: mob03, // Blue ghost uses mob03 (blue colored)
   [AssetKeys.boss]: mob05,
   [AssetKeys.boss2]: mob06,
   [AssetKeys.upgradeBase]: upgradeBase,
