@@ -132,19 +132,12 @@ export class BulletVisualEffects {
     const config = this.getConfigForType(bulletType);
     if (!config) return;
 
-    const hitEffect = new Graphics();
-    const color = config.hitColor || 0xffffff;
-    // 命中效果大小與子彈大小相同
+    const color = config.hitColor ?? 0xffffff;
     const bulletSize = this.getBulletSize(bulletType);
     const radius = bulletSize / 2;
+    const duration = config.hitDuration ?? 0.15;
 
-    // Simple pop effect - expanding circle that fades
-    hitEffect.circle(0, 0, radius);
-    hitEffect.fill({ color, alpha: 0.8 });
-    hitEffect.position.set(position.x, position.y);
-
-    this.container.addChild(hitEffect);
-    this.addTemporaryEffect(hitEffect, config.hitDuration || 0.15);
+    this.createCircleEffect(position, radius, color, 0.8, duration);
   }
 
   /**
@@ -155,15 +148,12 @@ export class BulletVisualEffects {
     const config = bulletData.getVisualEffectConfig(
       SpecialBulletType.StinkyTofu,
     );
-    const pierceCloud = new Graphics();
 
-    // Draw wavy green gas cloud
-    pierceCloud.circle(0, 0, config.pierceRadius ?? 48);
-    pierceCloud.fill({ color: config.pierceColor ?? 0x27ae60, alpha: 0.6 });
-    pierceCloud.position.set(position.x, position.y);
+    const radius = config.pierceRadius ?? 48;
+    const color = config.pierceColor ?? 0x27ae60;
+    const duration = config.pierceDuration ?? 0.3;
 
-    this.container.addChild(pierceCloud);
-    this.addTemporaryEffect(pierceCloud, config.pierceDuration ?? 0.3);
+    this.createCircleEffect(position, radius, color, 0.6, duration);
   }
 
   /**
@@ -196,15 +186,12 @@ export class BulletVisualEffects {
     const config = bulletData.getVisualEffectConfig(
       SpecialBulletType.OysterOmelette,
     );
-    const explosion = new Graphics();
 
-    // Draw expanding circle explosion
-    explosion.circle(0, 0, config.explosionRadius ?? 128);
-    explosion.fill({ color: config.explosionColor ?? 0xff4444, alpha: 0.7 });
-    explosion.position.set(position.x, position.y);
+    const radius = config.explosionRadius ?? 128;
+    const color = config.explosionColor ?? 0xff4444;
+    const duration = config.explosionDuration ?? 0.4;
 
-    this.container.addChild(explosion);
-    this.addTemporaryEffect(explosion, config.explosionDuration ?? 0.4);
+    this.createCircleEffect(position, radius, color, 0.7, duration);
   }
 
   /**
@@ -240,6 +227,26 @@ export class BulletVisualEffects {
       lifetime: 0,
       maxLifetime: duration,
     });
+  }
+
+  /**
+   * Factory method for creating circular effects
+   * Extracts common pattern from hit/pierce/explosion effects
+   */
+  private createCircleEffect(
+    position: Vector,
+    radius: number,
+    color: number,
+    alpha: number,
+    duration: number,
+  ): void {
+    const effect = new Graphics();
+    effect.circle(0, 0, radius);
+    effect.fill({ color, alpha });
+    effect.position.set(position.x, position.y);
+
+    this.container.addChild(effect);
+    this.addTemporaryEffect(effect, duration);
   }
 
   /**

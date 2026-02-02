@@ -705,7 +705,7 @@ export class GameScene {
 
     if (options.length > 0) {
       this.isPaused = true;
-      this.upgradeScreen.show([...options]);
+      this.upgradeScreen.showWithOptions([...options]);
     } else {
       // No options available, continue to next wave
       const waveSystem = this.systemManager.get<WaveSystem>("WaveSystem");

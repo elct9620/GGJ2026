@@ -4,6 +4,14 @@ import { GAME_FONT_FAMILY } from "../core/assets";
 import type { UpgradeOption } from "../systems/upgrade";
 import type { EventQueue } from "../systems/event-queue";
 import { EventType } from "../systems/event-queue";
+import { BaseScreen } from "./base-screen";
+
+/** Card style configuration */
+interface CardStyle {
+  bg: number;
+  border: number;
+  borderWidth: number;
+}
 
 /**
  * Upgrade Selection Screen
@@ -12,8 +20,19 @@ import { EventType } from "../systems/event-queue";
  * Displays upgrade options between waves
  * Players select by clicking on upgrade cards
  */
-export class UpgradeScreen {
-  private container: Container;
+export class UpgradeScreen extends BaseScreen {
+  // Card dimension constants
+  private static readonly CARD_WIDTH = 400;
+  private static readonly CARD_HEIGHT = 200;
+  private static readonly CARD_BORDER_RADIUS = 16;
+  private static readonly CARD_GAP = 100;
+
+  // Card style presets
+  private static readonly CARD_STYLES: Record<"normal" | "hover", CardStyle> = {
+    normal: { bg: 0x2a2a2a, border: 0xffd700, borderWidth: 3 },
+    hover: { bg: 0x3a3a3a, border: 0xffff00, borderWidth: 4 },
+  };
+
   private onSelect: (upgradeId: string) => void;
   private optionsContainer: Container;
   private currentOptions: UpgradeOption[] = [];
@@ -21,19 +40,16 @@ export class UpgradeScreen {
   private eventQueue: EventQueue | null;
 
   constructor(onSelect: (upgradeId: string) => void, eventQueue?: EventQueue) {
+    super();
     this.onSelect = onSelect;
-    this.eventQueue = eventQueue || null;
-    this.container = new Container();
+    this.eventQueue = eventQueue ?? null;
     this.optionsContainer = new Container();
-    this.container.visible = false;
     this.setupUI();
   }
 
   private setupUI(): void {
-    // Background overlay
-    const background = new Graphics();
-    background.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    background.fill({ color: 0x000000, alpha: 0.85 });
+    // Background overlay (using BaseScreen helper)
+    const background = this.createBackground(0x000000, 0.85);
     this.container.addChild(background);
 
     // Title
@@ -68,19 +84,15 @@ export class UpgradeScreen {
     this.container.addChild(this.optionsContainer);
   }
 
-  public getContainer(): Container {
-    return this.container;
-  }
-
-  public show(options: UpgradeOption[]): void {
+  public showWithOptions(options: UpgradeOption[]): void {
     this.currentOptions = options;
     this.updateOptions();
-    this.container.visible = true;
+    super.show();
   }
 
-  public hide(): void {
-    this.container.visible = false;
+  public override hide(): void {
     this.cleanupCards();
+    super.hide();
   }
 
   private cleanupCards(): void {
@@ -96,26 +108,38 @@ export class UpgradeScreen {
     this.cleanupCards();
     this.optionsContainer.removeChildren();
 
-    const optionWidth = 400;
-    const optionHeight = 200;
-    const gap = 100;
+    const { CARD_WIDTH, CARD_HEIGHT, CARD_GAP } = UpgradeScreen;
     const totalWidth =
-      this.currentOptions.length * optionWidth +
-      (this.currentOptions.length - 1) * gap;
+      this.currentOptions.length * CARD_WIDTH +
+      (this.currentOptions.length - 1) * CARD_GAP;
     const startX = (CANVAS_WIDTH - totalWidth) / 2;
 
     this.currentOptions.forEach((option, index) => {
-      const optionContainer = this.createOptionCard(option, index);
+      const optionContainer = this.createOptionCard(option);
       optionContainer.position.set(
-        startX + index * (optionWidth + gap),
-        CANVAS_HEIGHT / 2 - optionHeight / 2,
+        startX + index * (CARD_WIDTH + CARD_GAP),
+        CANVAS_HEIGHT / 2 - CARD_HEIGHT / 2,
       );
       this.optionsContainer.addChild(optionContainer);
       this.optionCards.push(optionContainer);
     });
   }
 
-  private createOptionCard(option: UpgradeOption, _index: number): Container {
+  /**
+   * Draw card background with specified style
+   */
+  private drawCardBackground(bg: Graphics, style: "normal" | "hover"): void {
+    const { CARD_WIDTH, CARD_HEIGHT, CARD_BORDER_RADIUS, CARD_STYLES } =
+      UpgradeScreen;
+    const { bg: bgColor, border, borderWidth } = CARD_STYLES[style];
+
+    bg.clear();
+    bg.roundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, CARD_BORDER_RADIUS);
+    bg.fill({ color: bgColor });
+    bg.stroke({ color: border, width: borderWidth });
+  }
+
+  private createOptionCard(option: UpgradeOption): Container {
     const card = new Container();
 
     // Make card interactive for click events
@@ -124,9 +148,7 @@ export class UpgradeScreen {
 
     // Card background
     const bg = new Graphics();
-    bg.roundRect(0, 0, 400, 200, 16);
-    bg.fill({ color: 0x2a2a2a });
-    bg.stroke({ color: 0xffd700, width: 3 });
+    this.drawCardBackground(bg, "normal");
     card.addChild(bg);
 
     // Option name (SPEC § 2.3.4: 顯示升級效果)
@@ -178,24 +200,18 @@ export class UpgradeScreen {
 
     // Hover effects
     card.on("pointerover", () => {
-      bg.clear();
-      bg.roundRect(0, 0, 400, 200, 16);
-      bg.fill({ color: 0x3a3a3a });
-      bg.stroke({ color: 0xffff00, width: 4 });
+      this.drawCardBackground(bg, "hover");
     });
 
     card.on("pointerout", () => {
-      bg.clear();
-      bg.roundRect(0, 0, 400, 200, 16);
-      bg.fill({ color: 0x2a2a2a });
-      bg.stroke({ color: 0xffd700, width: 3 });
+      this.drawCardBackground(bg, "normal");
     });
 
     return card;
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     this.cleanupCards();
-    this.container.destroy({ children: true });
+    super.destroy();
   }
 }

@@ -41,14 +41,14 @@ describe("UpgradeScreen", () => {
     });
   });
 
-  describe("show()", () => {
+  describe("showWithOptions()", () => {
     it("makes container visible", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       expect(upgradeScreen.getContainer().visible).toBe(true);
     });
 
     it("displays upgrade options (SPEC § 2.3.4: UP-09)", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       // Container should have children (options)
       const container = upgradeScreen.getContainer();
       expect(container.children.length).toBeGreaterThan(0);
@@ -57,7 +57,7 @@ describe("UpgradeScreen", () => {
 
   describe("hide()", () => {
     it("hides container", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       upgradeScreen.hide();
       expect(upgradeScreen.getContainer().visible).toBe(false);
     });
@@ -65,7 +65,7 @@ describe("UpgradeScreen", () => {
 
   describe("Click Selection (SPEC § 2.3.4)", () => {
     it("calls onSelect when card is clicked", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       // Get the options container (4th child: bg, title, instructions, optionsContainer)
       const container = upgradeScreen.getContainer();
       const optionsContainer = container.children[3];
@@ -82,7 +82,7 @@ describe("UpgradeScreen", () => {
     });
 
     it("calls onSelect with correct id for second option", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       const container = upgradeScreen.getContainer();
       const optionsContainer = container.children[3];
 
@@ -100,7 +100,7 @@ describe("UpgradeScreen", () => {
 
   describe("destroy()", () => {
     it("cleans up cards and destroys container", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       upgradeScreen.destroy();
       // Should not throw
       expect(true).toBe(true);
@@ -109,7 +109,7 @@ describe("UpgradeScreen", () => {
 
   describe("SPEC § 2.3.4 Compliance", () => {
     it("displays 2 upgrade options (UP-09)", () => {
-      upgradeScreen.show(mockOptions);
+      upgradeScreen.showWithOptions(mockOptions);
       const container = upgradeScreen.getContainer();
       const optionsContainer = container.children[3];
       expect(optionsContainer.children.length).toBe(2);
