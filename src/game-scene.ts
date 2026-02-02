@@ -339,10 +339,25 @@ export class GameScene {
   private updatePlayer(deltaTime: number): void {
     this.player.update(deltaTime);
 
-    // Sync player rendering
+    // Calculate reload progress (0-1)
+    const reloadProgress = this.player.isReloading
+      ? 1 - this.player.reloadTimer / this.player.reloadTime
+      : 0;
+
+    // Sync player rendering with floating info (SPEC § 2.7.4)
     this.playerRenderer.sync({
       position: this.player.position,
       activeBuff: this.gameState.combat.currentBuff,
+      health: {
+        current: this.player.health.current,
+        max: this.player.health.max,
+      },
+      ammo: {
+        current: this.player.ammo.current,
+        max: this.player.ammo.max,
+      },
+      isReloading: this.player.isReloading,
+      reloadProgress,
     });
   }
 
@@ -753,6 +768,16 @@ export class GameScene {
     this.playerRenderer.sync({
       position: this.player.position,
       activeBuff: SpecialBulletType.None,
+      health: {
+        current: this.player.health.current,
+        max: this.player.health.max,
+      },
+      ammo: {
+        current: this.player.ammo.current,
+        max: this.player.ammo.max,
+      },
+      isReloading: false,
+      reloadProgress: 0,
     });
 
     // Reset booth system
