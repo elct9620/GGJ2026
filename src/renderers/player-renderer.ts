@@ -43,7 +43,7 @@ const FLOATING_INFO = {
   // Ammo progress bar
   AMMO_BAR_WIDTH: 80,
   AMMO_BAR_HEIGHT: 8,
-  AMMO_BAR_OFFSET_Y: 140, // Distance below direction hint center
+  AMMO_BAR_OFFSET_FROM_HEALTH: 24, // Distance below health icons
   AMMO_BAR_BG_COLOR: 0x333333,
   AMMO_BAR_FILL_COLOR: 0xf1c40f,
   AMMO_BAR_RELOAD_COLOR: 0x3498db,
@@ -87,10 +87,12 @@ export class PlayerRenderer {
     this.ammoBarContainer.addChild(this.ammoBarBackground);
     this.ammoBarContainer.addChild(this.ammoBarFill);
 
-    // Position ammo bar below direction hint
+    // Position ammo bar below health icons (SPEC § 2.7.4)
     this.ammoBarContainer.position.set(
-      this.dirHintSprite.position.x + 50, // Center of dirHint (100px width / 2)
-      FLOATING_INFO.AMMO_BAR_OFFSET_Y,
+      0, // Centered below player (aligned with healthContainer)
+      FLOATING_INFO.HEART_OFFSET_Y +
+        FLOATING_INFO.HEART_SIZE +
+        FLOATING_INFO.AMMO_BAR_OFFSET_FROM_HEALTH,
     );
 
     this.container.addChild(this.playerSprite);
