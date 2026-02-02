@@ -13,6 +13,7 @@ import {
 } from "../core/types";
 import { type AssetKey } from "../core/assets";
 import bulletJson from "./bullets.json";
+import { RECIPE_CONFIG } from "../config";
 
 /**
  * JSON representation of bullet properties (asset keys as strings)
@@ -105,6 +106,18 @@ export class BulletData {
    */
   getDirHintAssetForBuff(type: SpecialBulletType): AssetKey {
     return this.data.get(type).dirHintAsset;
+  }
+
+  /**
+   * Get pierce count for bullet type
+   * Returns total enemies this bullet can hit (default 1 = single hit)
+   * SPEC § 2.3.3: 臭豆腐可以貫穿 1 個敵人（命中 2 個）
+   */
+  getPierceCount(type: SpecialBulletType): number {
+    if (type === SpecialBulletType.StinkyTofu) {
+      return RECIPE_CONFIG.stinkyTofu.pierceCount + 1; // pierce + initial hit
+    }
+    return 1; // default: single hit
   }
 }
 

@@ -1,4 +1,4 @@
-import { FoodType, BoothId } from "../core/types";
+import { FoodType, BoothId, getBoothIdForFood } from "../core/types";
 import { SystemPriority } from "../core/systems/system.interface";
 import { InjectableSystem } from "../core/systems/injectable";
 import { EventType } from "./event-queue";
@@ -77,7 +77,7 @@ export class BoothSystem extends InjectableSystem {
   public storeFood(foodType: FoodType): boolean {
     const success = this.gameState.storeFood(foodType);
     if (success) {
-      const boothId = this.getBoothIdForFood(foodType);
+      const boothId = getBoothIdForFood(foodType);
       this.publishFoodStored(boothId, foodType);
     }
     return success;
@@ -142,19 +142,5 @@ export class BoothSystem extends InjectableSystem {
    */
   public getTotalFoodCount(): number {
     return this.gameState.getBoothTotalFoodCount();
-  }
-
-  /**
-   * Get booth ID for a food type
-   */
-  private getBoothIdForFood(foodType: FoodType): BoothId {
-    switch (foodType) {
-      case FoodType.Tofu:
-        return BoothId.Tofu;
-      case FoodType.Pearl:
-        return BoothId.Pearl;
-      case FoodType.BloodCake:
-        return BoothId.BloodCake;
-    }
   }
 }

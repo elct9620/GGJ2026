@@ -177,4 +177,41 @@ describe("Bullet", () => {
       expect(bullet.type).toBe(SpecialBulletType.StinkyTofu);
     });
   });
+
+  describe("maxPierceCount", () => {
+    test("returns 1 for normal bullet", () => {
+      const bullet = new Bullet(
+        new Vector(100, 200),
+        new Vector(1, 0),
+        SpecialBulletType.None,
+      );
+
+      expect(bullet.maxPierceCount).toBe(1);
+    });
+
+    test("returns 2 for StinkyTofu bullet (SPEC § 2.3.3)", () => {
+      const bullet = new Bullet(
+        new Vector(100, 200),
+        new Vector(1, 0),
+        SpecialBulletType.StinkyTofu,
+      );
+
+      // pierce 1 enemy + initial hit = 2 total
+      expect(bullet.maxPierceCount).toBe(2);
+    });
+
+    test("returns 1 for other special bullets", () => {
+      const types = [
+        SpecialBulletType.NightMarket,
+        SpecialBulletType.BubbleTea,
+        SpecialBulletType.BloodCake,
+        SpecialBulletType.OysterOmelette,
+      ];
+
+      for (const type of types) {
+        const bullet = new Bullet(new Vector(100, 200), new Vector(1, 0), type);
+        expect(bullet.maxPierceCount).toBe(1);
+      }
+    });
+  });
 });

@@ -2,7 +2,7 @@
  * Stinky Tofu Collision Handler
  * SPEC § 2.3.3: 臭豆腐 - 貫穿效果
  * Damage: 2 + stinkyTofuDamageBonus (加辣升級)
- * Pierces 1 enemy (hits up to pierceCount + 1 enemies)
+ * Pierce count is determined by Bullet.maxPierceCount (data-driven)
  */
 
 import type { CollisionContext } from "../collision-handler";
@@ -21,13 +21,5 @@ export class StinkyTofuCollisionHandler extends BaseCollisionHandler {
     context.applyDamageAndPublishDeath(context.enemy, damage);
     context.visualEffects?.createPierceEffect(context.enemy.position);
     this.applyUniversalHitEffects(context);
-  }
-
-  /**
-   * Get the total number of enemies this bullet can hit
-   * pierceCount = 1 means hit first + pierce through 1 more = 2 total hits
-   */
-  getTotalHits(): number {
-    return RECIPE_CONFIG.stinkyTofu.pierceCount + 1;
   }
 }

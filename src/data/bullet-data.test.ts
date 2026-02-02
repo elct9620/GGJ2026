@@ -157,6 +157,26 @@ describe("BulletData", () => {
     });
   });
 
+  describe("getPierceCount", () => {
+    it("should return 1 for normal bullet (single hit)", () => {
+      expect(bulletData.getPierceCount(SpecialBulletType.None)).toBe(1);
+    });
+
+    it("should return 2 for StinkyTofu bullet (pierce 1 + initial hit)", () => {
+      // SPEC § 2.3.3: 臭豆腐可以貫穿 1 個敵人（命中 2 個）
+      expect(bulletData.getPierceCount(SpecialBulletType.StinkyTofu)).toBe(2);
+    });
+
+    it("should return 1 for other special bullets", () => {
+      expect(bulletData.getPierceCount(SpecialBulletType.NightMarket)).toBe(1);
+      expect(bulletData.getPierceCount(SpecialBulletType.BubbleTea)).toBe(1);
+      expect(bulletData.getPierceCount(SpecialBulletType.BloodCake)).toBe(1);
+      expect(bulletData.getPierceCount(SpecialBulletType.OysterOmelette)).toBe(
+        1,
+      );
+    });
+  });
+
   describe("custom instance", () => {
     it("should allow creating instance with custom JSON", () => {
       const customJson = {

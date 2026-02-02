@@ -50,6 +50,14 @@ export class Bullet extends Entity {
   }
 
   /**
+   * 最大貫穿數（含首次命中）
+   * SPEC § 2.3.3: 臭豆腐可以貫穿 1 個敵人（命中 2 個）
+   */
+  public get maxPierceCount(): number {
+    return bulletData.getPierceCount(this.bulletType);
+  }
+
+  /**
    * Damage Value Object
    */
   public get damage(): Damage {

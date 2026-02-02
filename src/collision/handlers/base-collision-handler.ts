@@ -8,6 +8,7 @@ import type { CollisionHandler, CollisionContext } from "../collision-handler";
 import type { SpecialBulletType, HitEffectConfigKey } from "../../core/types";
 import type { Enemy } from "../../entities/enemy";
 import { hitEffectData, bulletData } from "../../data";
+import type { BulletUpgradeSnapshot } from "../../values/bullet-upgrade-snapshot";
 
 /**
  * Abstract base class for collision handlers
@@ -101,14 +102,24 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
   // ─────────────────────────────────────────────────────────────────
 
   /**
+   * Get upgrade value with snapshot-first pattern
+   * Uses BulletUpgradeSnapshot keys (subset of UpgradeState)
+   */
+  protected getUpgradeValue<K extends keyof BulletUpgradeSnapshot>(
+    context: CollisionContext,
+    key: K,
+  ): BulletUpgradeSnapshot[K] {
+    return (
+      context.bullet.upgradeSnapshot?.[key] ?? context.gameState.upgrades[key]
+    );
+  }
+
+  /**
    * Get stinky tofu damage bonus (加辣升級)
    * SPEC § 2.3.3: 臭豆腐傷害加成
    */
   protected getStinkyTofuDamageBonus(context: CollisionContext): number {
-    return (
-      context.bullet.upgradeSnapshot?.stinkyTofuDamageBonus ??
-      context.gameState.upgrades.stinkyTofuDamageBonus
-    );
+    return this.getUpgradeValue(context, "stinkyTofuDamageBonus");
   }
 
   /**
@@ -116,10 +127,7 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * SPEC § 2.3.3: 連鎖目標數乘數
    */
   protected getNightMarketChainMultiplier(context: CollisionContext): number {
-    return (
-      context.bullet.upgradeSnapshot?.nightMarketChainMultiplier ??
-      context.gameState.upgrades.nightMarketChainMultiplier
-    );
+    return this.getUpgradeValue(context, "nightMarketChainMultiplier");
   }
 
   /**
@@ -127,10 +135,7 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * SPEC § 2.3.3: 連鎖傷害衰減減少
    */
   protected getNightMarketDecayReduction(context: CollisionContext): number {
-    return (
-      context.bullet.upgradeSnapshot?.nightMarketDecayReduction ??
-      context.gameState.upgrades.nightMarketDecayReduction
-    );
+    return this.getUpgradeValue(context, "nightMarketDecayReduction");
   }
 
   /**
@@ -138,9 +143,6 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    * SPEC § 2.3.3: 蚵仔煎百分比傷害加成
    */
   protected getKillThresholdDivisor(context: CollisionContext): number {
-    return (
-      context.bullet.upgradeSnapshot?.killThresholdDivisor ??
-      context.gameState.upgrades.killThresholdDivisor
-    );
+    return this.getUpgradeValue(context, "killThresholdDivisor");
   }
 }

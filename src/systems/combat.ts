@@ -23,7 +23,6 @@ import {
   type CollisionHandler,
   CollisionHandlerRegistry,
   createCollisionHandlerRegistry,
-  StinkyTofuCollisionHandler,
 } from "../collision";
 import type { BulletUpgradeSnapshot } from "../values/bullet-upgrade-snapshot";
 
@@ -403,11 +402,8 @@ export class CombatSystem extends InjectableSystem {
     bullet: Bullet,
     handler: CollisionHandler,
   ): void {
-    // Determine max pierce count based on handler type
-    const maxPierceCount =
-      handler instanceof StinkyTofuCollisionHandler
-        ? handler.getTotalHits()
-        : 1;
+    // Get max pierce count from bullet (Strategy Pattern - no instanceof check)
+    const maxPierceCount = bullet.maxPierceCount;
 
     const enemies = this.gameState.getActiveEnemies();
     let pierceCount = 0;
