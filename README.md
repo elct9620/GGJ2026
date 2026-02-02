@@ -4,6 +4,7 @@
 [![Theme: Mask](https://img.shields.io/badge/Theme-Mask-purple)](https://globalgamejam.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Pixi.js](https://img.shields.io/badge/Pixi.js-8.x-ff69b4)](https://pixijs.com/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/elct9620/GGJ2026)
 
 > Global Game Jam 2026 作品，主題為「Mask」
 
