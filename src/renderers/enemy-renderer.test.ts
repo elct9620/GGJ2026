@@ -34,7 +34,7 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       expect(renderer.getContainer().children.length).toBe(1);
     });
@@ -50,7 +50,7 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       const container = renderer.getContainer().children[0];
       expect(container.position.x).toBe(500);
@@ -58,7 +58,7 @@ describe("EnemyRenderer", () => {
 
       // Update position
       enemies[0].position = { x: 600, y: 400 };
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       expect(container.position.x).toBe(600);
       expect(container.position.y).toBe(400);
@@ -75,12 +75,12 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
       expect(renderer.getContainer().children.length).toBe(1);
 
       // Mark enemy as inactive
       enemies[0].active = false;
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       expect(renderer.getContainer().children.length).toBe(0);
     });
@@ -110,13 +110,13 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       expect(renderer.getContainer().children.length).toBe(3);
     });
 
     it("應處理空陣列", () => {
-      renderer.sync([], new Map(), 0);
+      renderer.syncWithEffects([], new Map(), 0);
 
       expect(renderer.getContainer().children.length).toBe(0);
     });
@@ -139,10 +139,10 @@ describe("EnemyRenderer", () => {
       ]);
 
       // Apply flash
-      renderer.sync(enemies, flashEffects, 0);
+      renderer.syncWithEffects(enemies, flashEffects, 0);
 
       // Advance time past flash duration
-      renderer.sync(enemies, new Map(), 0.15);
+      renderer.syncWithEffects(enemies, new Map(), 0.15);
 
       // No throw means success
       expect(true).toBe(true);
@@ -172,13 +172,17 @@ describe("EnemyRenderer", () => {
       ]);
 
       // First sync should return consumed IDs
-      const consumed = renderer.sync(enemies, flashEffects, 0);
+      const consumed = renderer.syncWithEffects(enemies, flashEffects, 0);
       expect(consumed).toContain("1");
       expect(consumed).toContain("2");
       expect(consumed.length).toBe(2);
 
       // Second sync with same effects should not consume again (flash is in progress)
-      const secondConsumed = renderer.sync(enemies, flashEffects, 0.05);
+      const secondConsumed = renderer.syncWithEffects(
+        enemies,
+        flashEffects,
+        0.05,
+      );
       expect(secondConsumed.length).toBe(0);
     });
 
@@ -198,15 +202,15 @@ describe("EnemyRenderer", () => {
       ]);
 
       // First sync - consume effect
-      renderer.sync(enemies, flashEffects, 0);
+      renderer.syncWithEffects(enemies, flashEffects, 0);
 
       // Flash ends
-      renderer.sync(enemies, new Map(), 0.15);
+      renderer.syncWithEffects(enemies, new Map(), 0.15);
 
       // If the effect is still in flashEffects map (not cleared), it would re-trigger
       // But since we return consumed IDs, caller should clear them
       // This test verifies that after flash ends, a new effect CAN be applied
-      const newConsumed = renderer.sync(enemies, flashEffects, 0);
+      const newConsumed = renderer.syncWithEffects(enemies, flashEffects, 0);
       expect(newConsumed).toContain("1");
     });
   });
@@ -229,7 +233,7 @@ describe("EnemyRenderer", () => {
         active: true,
       }));
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       expect(renderer.getContainer().children.length).toBe(enemyTypes.length);
     });
@@ -247,7 +251,7 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       // Check container exists
       expect(renderer.getContainer().children.length).toBe(1);
@@ -264,11 +268,11 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       // Update health
       enemies[0].health = { current: 5, max: 10 };
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
 
       // No throw means success
       expect(true).toBe(true);
@@ -287,7 +291,7 @@ describe("EnemyRenderer", () => {
         },
       ];
 
-      renderer.sync(enemies, new Map(), 0);
+      renderer.syncWithEffects(enemies, new Map(), 0);
       expect(() => renderer.destroy()).not.toThrow();
     });
 

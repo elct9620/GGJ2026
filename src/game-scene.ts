@@ -386,7 +386,7 @@ export class GameScene {
       health: { current: enemy.health.current, max: enemy.health.max },
       active: enemy.active,
     }));
-    const consumedFlashEffects = this.enemyRenderer.sync(
+    const consumedFlashEffects = this.enemyRenderer.syncWithEffects(
       enemyStates,
       this.gameState.enemyFlashEffects,
       deltaTime,
@@ -743,7 +743,7 @@ export class GameScene {
     this.gameState.reset();
 
     // Clear renderers to sync with empty state
-    this.enemyRenderer.sync([], new Map(), 0);
+    this.enemyRenderer.syncWithEffects([], new Map(), 0);
     this.bulletRenderer.sync([]);
     this.foodRenderer.sync([]);
 

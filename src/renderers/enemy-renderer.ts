@@ -11,17 +11,15 @@ import { getTexture } from "../core/assets";
 import type { FlashEffect } from "../core/game-state";
 import { EnemyType } from "../core/types";
 import { enemyData } from "../data";
+import { BaseRenderer, type VisualState } from "./base-renderer";
 
 /**
  * Enemy state required for rendering
  * Pure data interface - no Pixi.js dependencies
  */
-export interface EnemyVisualState {
-  id: string;
-  position: { x: number; y: number };
+export interface EnemyVisualState extends VisualState {
   type: EnemyType;
   health: { current: number; max: number };
-  active: boolean;
 }
 
 /**
@@ -37,49 +35,44 @@ interface EnemyVisuals {
 
 /**
  * Enemy Renderer - Pure rendering logic for enemies
- * Separates Pixi.js rendering from enemy entity logic
+ * Extends BaseRenderer with additional flash effect handling
  */
-export class EnemyRenderer {
-  private container: Container;
+export class EnemyRenderer extends BaseRenderer<EnemyVisualState, Container> {
   private enemyVisuals: Map<string, EnemyVisuals> = new Map();
-
-  constructor() {
-    this.container = new Container();
-  }
 
   /**
    * Sync visual state with enemy data
-   * Creates, updates, or removes enemy visuals based on current state
+   * Extended from BaseRenderer to handle flash effects
    * @param enemies Array of enemy states to render
    * @param flashEffects Map of flash effects from GameStateManager
    * @param deltaTime Delta time for animation updates
-   * @returns Array of enemy IDs whose flash effects were consumed (should be cleared from GameState)
+   * @returns Array of enemy IDs whose flash effects were consumed
    */
-  sync(
+  syncWithEffects(
     enemies: ReadonlyArray<EnemyVisualState>,
     flashEffects: ReadonlyMap<string, FlashEffect>,
     deltaTime: number,
   ): string[] {
     const consumedFlashEffects: string[] = [];
-    // Track which enemies are still active
-    const activeEnemyIds = new Set<string>();
+    const activeIds = new Set<string>();
 
     for (const enemy of enemies) {
       if (!enemy.active) continue;
 
-      activeEnemyIds.add(enemy.id);
+      activeIds.add(enemy.id);
 
+      let container = this.visuals.get(enemy.id);
       let visuals = this.enemyVisuals.get(enemy.id);
 
-      if (!visuals) {
-        // Create new visuals for this enemy
-        visuals = this.createEnemyVisuals(enemy.type);
-        this.enemyVisuals.set(enemy.id, visuals);
-        this.container.addChild(visuals.container);
+      if (!container || !visuals) {
+        container = this.createVisual(enemy);
+        visuals = this.enemyVisuals.get(enemy.id)!;
+        this.visuals.set(enemy.id, container);
+        this.container.addChild(container);
       }
 
       // Update position
-      visuals.container.position.set(enemy.position.x, enemy.position.y);
+      container.position.set(enemy.position.x, enemy.position.y);
 
       // Update health bar if applicable
       if (visuals.healthBar && enemyData.shouldShowHealthBar(enemy.type)) {
@@ -94,10 +87,8 @@ export class EnemyRenderer {
       // Handle flash effect
       const flashEffect = flashEffects.get(enemy.id);
       if (flashEffect && visuals.flashDuration <= 0) {
-        // Start new flash effect
         visuals.sprite.tint = flashEffect.color;
         visuals.flashDuration = flashEffect.duration;
-        // Mark this effect as consumed so it can be cleared from GameState
         consumedFlashEffects.push(enemy.id);
       }
 
@@ -105,7 +96,6 @@ export class EnemyRenderer {
       if (visuals.flashDuration > 0) {
         visuals.flashDuration -= deltaTime;
         if (visuals.flashDuration <= 0) {
-          // Reset tint when flash ends
           visuals.sprite.tint = visuals.originalTint;
           visuals.flashDuration = 0;
         }
@@ -113,10 +103,11 @@ export class EnemyRenderer {
     }
 
     // Remove visuals for inactive enemies
-    for (const [id, visuals] of this.enemyVisuals) {
-      if (!activeEnemyIds.has(id)) {
-        this.container.removeChild(visuals.container);
-        visuals.container.destroy({ children: true });
+    for (const [id, container] of this.visuals) {
+      if (!activeIds.has(id)) {
+        this.container.removeChild(container);
+        this.destroyVisual(container);
+        this.visuals.delete(id);
         this.enemyVisuals.delete(id);
       }
     }
@@ -127,11 +118,11 @@ export class EnemyRenderer {
   /**
    * Create visual elements for an enemy
    */
-  private createEnemyVisuals(type: EnemyType): EnemyVisuals {
+  protected createVisual(enemy: EnemyVisualState): Container {
     const container = new Container();
 
     // Create sprite
-    const props = enemyData.get(type);
+    const props = enemyData.get(enemy.type);
     const sprite = new Sprite(getTexture(props.assetKey));
     sprite.width = props.size;
     sprite.height = props.size;
@@ -140,18 +131,28 @@ export class EnemyRenderer {
 
     // Create health bar if needed
     let healthBar: Graphics | null = null;
-    if (enemyData.shouldShowHealthBar(type)) {
+    if (enemyData.shouldShowHealthBar(enemy.type)) {
       healthBar = new Graphics();
       container.addChild(healthBar);
     }
 
-    return {
+    // Store extended visuals data
+    this.enemyVisuals.set(enemy.id, {
       container,
       sprite,
       healthBar,
       originalTint: 0xffffff,
       flashDuration: 0,
-    };
+    });
+
+    return container;
+  }
+
+  /**
+   * Destroy visual and clean up extended data
+   */
+  protected destroyVisual(container: Container): void {
+    container.destroy({ children: true });
   }
 
   /**
@@ -182,20 +183,10 @@ export class EnemyRenderer {
   }
 
   /**
-   * Get the container for scene integration
-   */
-  getContainer(): Container {
-    return this.container;
-  }
-
-  /**
    * Clean up renderer resources
    */
   destroy(): void {
-    for (const visuals of this.enemyVisuals.values()) {
-      visuals.container.destroy({ children: true });
-    }
+    super.destroy();
     this.enemyVisuals.clear();
-    this.container.destroy({ children: true });
   }
 }

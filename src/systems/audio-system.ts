@@ -109,18 +109,22 @@ export class AudioSystem extends InjectableSystem {
   }
 
   /**
+   * 事件與音效的對應表
+   */
+  private static readonly EVENT_SOUND_MAP: ReadonlyMap<EventType, SoundId> =
+    new Map([
+      [EventType.BulletFired, SoundId.PlayerShoot],
+      [EventType.EnemyHit, SoundId.EnemyHit],
+      [EventType.ButtonClicked, SoundId.ButtonClick],
+    ]);
+
+  /**
    * 訂閱遊戲事件
    */
   private subscribeToEvents(): void {
-    this.eventQueue.subscribe(
-      EventType.BulletFired,
-      this.onBulletFired.bind(this),
-    );
-    this.eventQueue.subscribe(EventType.EnemyHit, this.onEnemyHit.bind(this));
-    this.eventQueue.subscribe(
-      EventType.ButtonClicked,
-      this.onButtonClicked.bind(this),
-    );
+    for (const [eventType, soundId] of AudioSystem.EVENT_SOUND_MAP) {
+      this.eventQueue.subscribe(eventType, () => this.playSound(soundId));
+    }
   }
 
   /**
@@ -237,26 +241,5 @@ export class AudioSystem extends InjectableSystem {
     this.currentlyPlaying.forEach((audio) => {
       audio.volume = this._volume;
     });
-  }
-
-  /**
-   * 事件處理：子彈發射
-   */
-  private onBulletFired(): void {
-    this.playSound(SoundId.PlayerShoot);
-  }
-
-  /**
-   * 事件處理：敵人被擊中
-   */
-  private onEnemyHit(): void {
-    this.playSound(SoundId.EnemyHit);
-  }
-
-  /**
-   * 事件處理：按鈕點擊
-   */
-  private onButtonClicked(): void {
-    this.playSound(SoundId.ButtonClick);
   }
 }
