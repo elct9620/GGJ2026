@@ -20,6 +20,7 @@ import { WaveSystem } from "./systems/wave";
 import { UpgradeSystem } from "./systems/upgrade";
 import { BulletVisualEffectsSystem } from "./systems/bullet-visual-effects";
 import { AudioSystem } from "./systems/audio-system";
+import { MusicSystem } from "./systems/music-system";
 import { EventQueue, EventType } from "./systems/event-queue";
 import { SystemManager } from "./core/systems/system-manager";
 import { Vector } from "./values/vector";
@@ -115,6 +116,7 @@ export class GameScene {
     const upgradeSystem = new UpgradeSystem();
     const bulletVisualEffects = new BulletVisualEffectsSystem();
     const audioSystem = new AudioSystem(); // SPEC § 2.3.9: Audio System
+    const musicSystem = new MusicSystem(); // Background music system
 
     this.systemManager.register(eventQueue);
     this.systemManager.register(inputSystem);
@@ -127,6 +129,7 @@ export class GameScene {
     this.systemManager.register(boxSystem);
     this.systemManager.register(bulletVisualEffects);
     this.systemManager.register(audioSystem);
+    this.systemManager.register(musicSystem);
 
     // Provide dependencies for InjectableSystem instances (before initialize)
     this.systemManager.provideDependency("EventQueue", eventQueue);
@@ -143,6 +146,7 @@ export class GameScene {
     );
     this.systemManager.provideDependency("GameState", this.gameState);
     this.systemManager.provideDependency("AudioSystem", audioSystem);
+    this.systemManager.provideDependency("MusicSystem", musicSystem);
 
     this.systemManager.initialize();
 
@@ -753,6 +757,15 @@ export class GameScene {
   }
 
   /**
+   * Start background music
+   * Must be called after user interaction (browser autoplay policy)
+   */
+  public startMusic(): void {
+    const musicSystem = this.systemManager.get<MusicSystem>("MusicSystem");
+    musicSystem.start();
+  }
+
+  /**
    * Reset game scene for restart
    * Clears all entities and resets to wave 1
    */
@@ -799,6 +812,10 @@ export class GameScene {
     const upgradeSystem =
       this.systemManager.get<UpgradeSystem>("UpgradeSystem");
     upgradeSystem.reset();
+
+    // Reset music system
+    const musicSystem = this.systemManager.get<MusicSystem>("MusicSystem");
+    musicSystem.reset();
 
     // Hide upgrade screen if visible
     this.upgradeScreen.hide();

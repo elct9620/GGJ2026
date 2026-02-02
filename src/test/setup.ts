@@ -201,3 +201,79 @@ HTMLCanvasElement.prototype.getContext = function (
   }
   return (originalGetContext as any).call(this, contextId, ...args);
 } as any;
+
+// Mock AudioContext for Music System testing
+class MockGainNode {
+  gain = {
+    value: 1,
+    setValueAtTime: () => {},
+    linearRampToValueAtTime: () => {},
+    exponentialRampToValueAtTime: () => {},
+  };
+  connect = () => {};
+  disconnect = () => {};
+}
+
+class MockOscillatorNode {
+  type: OscillatorType = "sine";
+  frequency = {
+    value: 440,
+    setValueAtTime: () => {},
+    exponentialRampToValueAtTime: () => {},
+  };
+  connect = () => {};
+  disconnect = () => {};
+  start = () => {};
+  stop = () => {};
+}
+
+class MockBiquadFilterNode {
+  type: BiquadFilterType = "lowpass";
+  frequency = { value: 1000 };
+  connect = () => {};
+  disconnect = () => {};
+}
+
+class MockAudioBufferSourceNode {
+  buffer = null;
+  connect = () => {};
+  disconnect = () => {};
+  start = () => {};
+  stop = () => {};
+}
+
+class MockAudioBuffer {
+  numberOfChannels;
+  length;
+  sampleRate;
+
+  constructor(numberOfChannels: number, length: number, sampleRate: number) {
+    this.numberOfChannels = numberOfChannels;
+    this.length = length;
+    this.sampleRate = sampleRate;
+  }
+  getChannelData = () => new Float32Array(this.length);
+}
+
+class MockAudioContext {
+  state: AudioContextState = "running";
+  currentTime = 0;
+  sampleRate = 44100;
+  destination = {} as AudioDestinationNode;
+
+  createGain = () => new MockGainNode() as unknown as GainNode;
+  createOscillator = () =>
+    new MockOscillatorNode() as unknown as OscillatorNode;
+  createBiquadFilter = () =>
+    new MockBiquadFilterNode() as unknown as BiquadFilterNode;
+  createBufferSource = () =>
+    new MockAudioBufferSourceNode() as unknown as AudioBufferSourceNode;
+  createBuffer = (channels: number, length: number, sampleRate: number) =>
+    new MockAudioBuffer(channels, length, sampleRate) as unknown as AudioBuffer;
+  resume = () => Promise.resolve();
+  close = () => Promise.resolve();
+}
+
+// Assign mock to window
+(globalThis as unknown as { AudioContext: typeof AudioContext }).AudioContext =
+  MockAudioContext as unknown as typeof AudioContext;

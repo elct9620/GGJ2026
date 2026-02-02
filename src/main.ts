@@ -72,6 +72,9 @@ async function main() {
     } else {
       gameScene.reset();
     }
+
+    // Start background music (after user interaction)
+    gameScene.startMusic();
   });
 
   const gameOverScreen = new GameOverScreen(() => {
