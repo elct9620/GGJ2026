@@ -1,4 +1,4 @@
-# Game Specification: Night Market Defense
+# Game Specification: Bite Back! The Booth Defense
 
 # 1. Intent Layer
 

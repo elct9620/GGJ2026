@@ -29,7 +29,7 @@ export class StartScreen {
 
     // Game Title
     const title = new Text({
-      text: "夜市防衛戰\nNight Market Defense",
+      text: "反擊吧！攤位防衛戰\nBite Back! The Booth Defense",
       style: {
         fontFamily: GAME_FONT_FAMILY,
         fontSize: 72,

@@ -1,6 +1,6 @@
 # Game Architecture Guide
 
-本文件描述 Night Market Defense 的架構設計原則。
+本文件描述 Bite Back! The Booth Defense 的架構設計原則。
 
 ## 1. Overview
 

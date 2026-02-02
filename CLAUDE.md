@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Project Overview
 
-**Night Market Defense** - Global Game Jam 2026 參賽作品，主題為「Mask」。這是一款橫向塔防遊戲，玩家在台灣夜市攤位區防守，透過射擊餓鬼、收集食材、合成特殊子彈來生存。
+**Bite Back! The Booth Defense（反擊吧！攤位防衛戰）** - Global Game Jam 2026 參賽作品，主題為「Mask」。這是一款橫向塔防遊戲，玩家在台灣夜市攤位區防守，透過射擊餓鬼、收集食材、合成特殊子彈來生存。
 
 ## Technology Stack
 
