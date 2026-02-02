@@ -107,9 +107,9 @@ export class HUDRenderer {
     this.scoreText.anchor.set(1, 0.5);
     this.topHUD.addChild(this.scoreText);
 
-    // Row 2: "餓鬼人潮:1/3" - 33px font, vertically centered in 56px container
+    // Row 2: "餓鬼人潮: 第 1 波" - 33px font, vertically centered in 56px container
     this.waveText = this.createText(
-      "餓鬼人潮: 1/1",
+      "餓鬼人潮: 第 1 波",
       CANVAS_WIDTH / 2,
       row2CenterY,
       LAYOUT.TOP_HUD.FONT_SIZE_SMALL,
@@ -371,7 +371,7 @@ export class HUDRenderer {
    */
   sync(data: HUDData): void {
     // Update top HUD
-    this.waveText.text = `餓鬼人潮: ${data.wave}/${data.totalEnemies}`;
+    this.waveText.text = `餓鬼人潮: 第 ${data.wave} 波`;
     this.enemyCountText.text = `剩餘敵人: ${data.enemyCount}`;
     this.scoreText.text = `分數: ${data.score}`;
 
