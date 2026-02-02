@@ -6,6 +6,7 @@
 
 import type { CollisionHandler, CollisionContext } from "../collision-handler";
 import type { SpecialBulletType, HitEffectConfigKey } from "../../core/types";
+import type { Enemy } from "../../entities/enemy";
 import { hitEffectData, bulletData } from "../../data";
 
 /**
@@ -80,5 +81,92 @@ export abstract class BaseCollisionHandler implements CollisionHandler {
    */
   private getConfigKey(): HitEffectConfigKey {
     return bulletData.getHitEffectConfigKey(this.bulletType);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Upgrade Value Accessors
+  // Snapshot-first pattern: use bullet's upgrade snapshot if available,
+  // otherwise fallback to centralized GameState
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Get stinky tofu damage bonus (加辣升級)
+   * SPEC § 2.3.3: 臭豆腐傷害加成
+   */
+  protected getStinkyTofuDamageBonus(context: CollisionContext): number {
+    return (
+      context.bullet.upgradeSnapshot?.stinkyTofuDamageBonus ??
+      context.gameState.upgrades.stinkyTofuDamageBonus
+    );
+  }
+
+  /**
+   * Get night market chain multiplier (總匯吃到飽升級)
+   * SPEC § 2.3.3: 連鎖目標數乘數
+   */
+  protected getNightMarketChainMultiplier(context: CollisionContext): number {
+    return (
+      context.bullet.upgradeSnapshot?.nightMarketChainMultiplier ??
+      context.gameState.upgrades.nightMarketChainMultiplier
+    );
+  }
+
+  /**
+   * Get night market decay reduction (總匯吃到飽升級)
+   * SPEC § 2.3.3: 連鎖傷害衰減減少
+   */
+  protected getNightMarketDecayReduction(context: CollisionContext): number {
+    return (
+      context.bullet.upgradeSnapshot?.nightMarketDecayReduction ??
+      context.gameState.upgrades.nightMarketDecayReduction
+    );
+  }
+
+  /**
+   * Get kill threshold divisor (快吃升級)
+   * SPEC § 2.3.3: 蚵仔煎百分比傷害加成
+   */
+  protected getKillThresholdDivisor(context: CollisionContext): number {
+    return (
+      context.bullet.upgradeSnapshot?.killThresholdDivisor ??
+      context.gameState.upgrades.killThresholdDivisor
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Universal Hit Effects (for chain attacks)
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Apply universal hit effects to a specific enemy
+   * Used by chain attacks where effects are applied to multiple enemies
+   * SPEC § 2.6.3: 通用視覺效果規則
+   */
+  protected applyUniversalHitEffectsToEnemy(
+    context: CollisionContext,
+    enemy: Enemy,
+  ): void {
+    const configKey = bulletData.getHitEffectConfigKey(this.bulletType);
+
+    // Flash effect stored in GameState for EnemyRenderer
+    const flashConfig = hitEffectData.getFlash(configKey);
+    context.gameState.setEnemyFlashEffect(enemy.id, {
+      color: flashConfig.color,
+      duration: flashConfig.duration,
+    });
+
+    // Knockback
+    const { distance, duration } = hitEffectData.knockback;
+    enemy.applyKnockback(distance, duration);
+
+    // Screen shake
+    const shakeConfig = hitEffectData.getScreenShake(configKey);
+    context.visualEffects?.triggerScreenShake(
+      shakeConfig.magnitude,
+      shakeConfig.duration,
+    );
+
+    // Hit effect
+    context.visualEffects?.createHitEffect(enemy.position, this.bulletType);
   }
 }

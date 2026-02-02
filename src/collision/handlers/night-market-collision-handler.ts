@@ -9,7 +9,6 @@ import type { CollisionContext } from "../collision-handler";
 import { BaseCollisionHandler } from "./base-collision-handler";
 import { SpecialBulletType } from "../../core/types";
 import { RECIPE_CONFIG } from "../../config";
-import { hitEffectData } from "../../data";
 import type { Enemy } from "../../entities/enemy";
 
 export class NightMarketCollisionHandler extends BaseCollisionHandler {
@@ -22,13 +21,8 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
     const baseChainTargets = RECIPE_CONFIG.nightMarket.chainTargets;
     const baseDecay = RECIPE_CONFIG.nightMarket.chainDamageDecay;
 
-    // Use snapshot if available, fallback to centralized GameState
-    const chainMultiplier =
-      context.bullet.upgradeSnapshot?.nightMarketChainMultiplier ??
-      context.gameState.upgrades.nightMarketChainMultiplier;
-    const decayReduction =
-      context.bullet.upgradeSnapshot?.nightMarketDecayReduction ??
-      context.gameState.upgrades.nightMarketDecayReduction;
+    const chainMultiplier = this.getNightMarketChainMultiplier(context);
+    const decayReduction = this.getNightMarketDecayReduction(context);
 
     const chainTargets = Math.floor(baseChainTargets * chainMultiplier);
     const damageDecay = Math.max(0, baseDecay - decayReduction);
@@ -66,11 +60,6 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
     let previousTarget: Enemy | null = null;
     let currentDamage = baseDamage;
 
-    // Get flash config for chain hits
-    const flashConfig = hitEffectData.getFlash("nightMarket");
-    const knockbackConfig = hitEffectData.knockback;
-    const shakeConfig = hitEffectData.getScreenShake("nightMarket");
-
     for (let i = 0; i < maxTargets && currentTarget !== null; i++) {
       // Create chain lightning effect from previous to current target
       if (previousTarget && context.visualEffects) {
@@ -86,24 +75,8 @@ export class NightMarketCollisionHandler extends BaseCollisionHandler {
         Math.round(currentDamage),
       );
 
-      // Apply universal hit effects for each chain target
-      // Flash effect stored in GameState for EnemyRenderer
-      context.gameState.setEnemyFlashEffect(currentTarget.id, {
-        color: flashConfig.color,
-        duration: flashConfig.duration,
-      });
-      currentTarget.applyKnockback(
-        knockbackConfig.distance,
-        knockbackConfig.duration,
-      );
-      context.visualEffects?.triggerScreenShake(
-        shakeConfig.magnitude,
-        shakeConfig.duration,
-      );
-      context.visualEffects?.createHitEffect(
-        currentTarget.position,
-        SpecialBulletType.NightMarket,
-      );
+      // Apply universal hit effects (flash, knockback, screen shake, hit visual)
+      this.applyUniversalHitEffectsToEnemy(context, currentTarget);
 
       hitEnemies.add(currentTarget.id);
 

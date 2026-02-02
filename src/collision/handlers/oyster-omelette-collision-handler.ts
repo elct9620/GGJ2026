@@ -29,10 +29,7 @@ export class OysterOmeletteCollisionHandler extends BaseCollisionHandler {
     const { bossDamagePercent, eliteDamagePercent, ghostDamagePercent } =
       RECIPE_CONFIG.oysterOmelet;
 
-    // Use snapshot if available, fallback to centralized GameState
-    const damageBonus =
-      context.bullet.upgradeSnapshot?.killThresholdDivisor ??
-      context.gameState.upgrades.killThresholdDivisor;
+    const damageBonus = this.getKillThresholdDivisor(context);
     const bonusPercent = damageBonus - 1; // Convert multiplier to bonus (1 = no bonus)
 
     let percentage: number;
