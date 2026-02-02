@@ -1,6 +1,6 @@
 # Game Architecture Guide
 
-本文件描述 Night Market Defense 的**目標架構方向**，作為未來重構的指引。
+本文件描述 Night Market Defense 的架構設計原則。
 
 ## 1. Overview
 
@@ -188,49 +188,20 @@ Entity 更新 → RenderSystem 同步 → 更新 Sprite 位置/狀態
 Entity 停用 → RenderSystem 偵測 → 銷毀 Sprite
 ```
 
-## 5. Current vs Target
+## 5. Implementation Guidelines
 
-### 5.1 目前實作摘要
+### 5.1 System 設計準則
 
-目前架構已達到高度符合無狀態原則（96.5% 遵循度）：
+- **無狀態優先**：System 應盡量無狀態，狀態集中於 GameStateManager
+- **實作細節例外**：如 shootCooldown 等純實作細節可保留於 System 內
+- **依賴注入**：使用 InjectableSystem 基底類別管理依賴
 
-- **EventQueue**：已實作 publish/subscribe 模式，14 種事件類型支援系統通訊
-- **GameStateManager**：集中管理所有遊戲狀態（combat、wave、upgrades、kills）
-- **Systems**：大部分已無狀態，僅持有必要的實作細節（如 shootCooldown）
-- **BoothRenderer**：已分離，Booth 渲染邏輯獨立於 BoothSystem
+### 5.2 Renderer 設計準則
 
-### 5.2 目標架構差異
+- **純同步職責**：Renderer 僅負責 Entity 狀態到 Sprite 的同步
+- **獨立容器**：每個 Renderer 管理自己的 Container
+- **ID 對應**：使用 Entity ID 對應 Sprite，確保正確清理
 
-| 面向     | 目前實作                      | 目標架構               | 狀態    |
-| -------- | ----------------------------- | ---------------------- | ------- |
-| 狀態管理 | 集中於 GameStateManager       | 集中於 GameState       | ✅ 完成 |
-| 渲染同步 | 6 個 Renderer 類別已完成分離  | 獨立 RenderSystem 同步 | ✅ 完成 |
-| Entity   | 純資料容器（無 Pixi.js 依賴） | 純資料容器             | ✅ 完成 |
-| 事件流   | 高度事件驅動（14 種事件）     | 完全事件驅動           | ✅ 接近 |
+### 5.3 未來方向
 
-### 5.3 重構進度
-
-1. ✅ **Phase 1**：抽取 GameState，集中狀態管理
-2. ✅ **Phase 2**：分離 RenderSystem，統一 Entity-Sprite 同步
-   - ✅ BoothRenderer 已分離
-   - ✅ HUDRenderer 已分離（原 HUDSystem 重構為純渲染器）
-   - ✅ BulletRenderer 已分離（子彈渲染獨立）
-   - ✅ PlayerRenderer 已分離（玩家渲染獨立，Buff 外觀透過 GameState）
-   - ✅ EnemyRenderer 已分離（敵人渲染獨立，閃白效果透過 GameState）
-   - ✅ FoodRenderer 已分離（食材渲染獨立）
-   - ✅ SpriteEntity 已移除（Entity 為純資料容器）
-3. ✅ **Phase 3**：將 System 內部狀態移至 GameState
-   - BoothSystem、BoxSystem、WaveSystem 已無狀態
-   - CombatSystem 僅保留 shootCooldown（實作細節）
-4. ✅ **Phase 4**：Entity 生命週期分離
-   - ✅ FoodCollected 事件已新增（完善事件驅動）
-   - ✅ Entity 集合已移至 GameStateManager（enemies, bullets, foods）
-   - ✅ GameScene spawn/remove 時同步到 GameState
-   - ✅ 保留 legacy 陣列維持 System 相容性（漸進式遷移）
-5. ⏳ **Phase 5**：引入 Component 系統，增加 Entity 組合彈性（未來方向）
-
-### 5.4 重構原則
-
-- **漸進式**：每次重構只改變一個面向
-- **測試保護**：重構前確保測試覆蓋（目前 95%+）
-- **行為不變**：重構不改變遊戲行為
+- **Component 系統**：引入 Component 系統增加 Entity 組合彈性

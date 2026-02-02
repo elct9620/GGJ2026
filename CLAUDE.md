@@ -129,10 +129,11 @@ This project uses a **three-layer specification framework** (Intent → Design �
 
 本專案採用 **ECS-like 事件驅動架構**，將 Input、Logic、Render 三層分離：
 
-- **docs/architecture.md**: 目標架構指引，描述理想的三層分離設計
-- **目前狀態**: 事件驅動已實作，渲染分離為未來重構方向
+- **事件驅動**：系統間透過 EventQueue 鬆耦合通訊
+- **無狀態系統**：System 讀取 GameStateManager，狀態集中管理
+- **渲染分離**：Entity 為純資料容器，Renderer 負責視覺同步
 
-詳細架構設計與重構計劃參見 [docs/architecture.md](docs/architecture.md)。
+詳細架構設計參見 [docs/architecture.md](docs/architecture.md)。
 
 ### Pixi.js Scene Structure
 
