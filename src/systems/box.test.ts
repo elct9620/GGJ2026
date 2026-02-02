@@ -27,7 +27,6 @@ describe("BoxSystem", () => {
   let boothSystem: BoothSystem;
   let eventQueue: EventQueue;
   let gameState: GameStateManager;
-  let enemies: Enemy[];
 
   beforeEach(() => {
     boxSystem = new BoxSystem();
@@ -35,13 +34,12 @@ describe("BoxSystem", () => {
     eventQueue = new EventQueue();
     gameState = new GameStateManager();
     gameState.initializeBooths();
-    enemies = [];
 
     // Setup dependencies using injection API
     boxSystem.inject("EventQueue", eventQueue);
     boxSystem.inject("BoothSystem", boothSystem);
+    boxSystem.inject("GameState", gameState);
     boxSystem.validateDependencies();
-    boxSystem.setEnemies(enemies);
 
     // Connect BoothSystem to EventQueue and GameState
     boothSystem.inject("EventQueue", eventQueue);
@@ -138,7 +136,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -158,7 +156,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -177,7 +175,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 200, pearlBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -193,7 +191,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -209,20 +207,20 @@ describe("BoxSystem", () => {
 
       // Spawn 3 enemies at Pearl booth position (middle booth after swap)
       const pearlBoothY = POOL_START_Y + 256 + 256 / 2;
-      enemies.push(
+      gameState.addEnemy(
         new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY)),
       );
-      enemies.push(
+      gameState.addEnemy(
         new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY + 5)),
       );
-      enemies.push(
+      gameState.addEnemy(
         new Enemy(EnemyType.Ghost, new Vector(BOX_X + 6, pearlBoothY - 5)),
       );
 
       boxSystem.update();
 
       // Only 1 enemy should be deactivated per frame
-      const activeEnemies = enemies.filter((e) => e.active);
+      const activeEnemies = gameState.getActiveEnemies();
       expect(activeEnemies.length).toBe(2);
       // SPEC § 2.3.7: 1 food consumed per collision from Pearl booth
       expect(boothSystem.getFoodCount(2)).toBe(4); // Pearl is Booth 2
@@ -237,7 +235,7 @@ describe("BoxSystem", () => {
         new Vector(BOX_X + 6, pearlBoothY),
       );
       enemy.active = false;
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -258,7 +256,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, tofuBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -280,7 +278,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, bloodCakeBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -301,7 +299,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, tofuBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 
@@ -378,7 +376,7 @@ describe("BoxSystem", () => {
         EnemyType.Ghost,
         new Vector(BOX_X + 6, pearlBoothY),
       );
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       boxSystem.update();
 

@@ -7,28 +7,37 @@
 
 import type { Container } from "pixi.js";
 import { BulletVisualEffects } from "../effects/bullet-visual-effects";
-import type { System } from "../core/systems/system.interface";
+import { InjectableSystem } from "../core/systems/injectable";
 import { SystemPriority } from "../core/systems/system.interface";
-import type { Bullet } from "../entities/bullet";
 import type { Vector } from "../values/vector";
 import type { SpecialBulletType } from "../core/types";
+import type { GameStateManager } from "../core/game-state";
+import { DependencyKeys } from "../core/systems/dependency-keys";
 
 /**
  * Bullet Visual Effects System
  * Manages visual feedback for bullets throughout their lifecycle
  */
-export class BulletVisualEffectsSystem implements System {
+export class BulletVisualEffectsSystem extends InjectableSystem {
   public readonly name = "BulletVisualEffectsSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
   private effects: BulletVisualEffects;
-  private bullets: Bullet[] = [];
 
   // Track which bullets we've created trails for this frame
   private bulletTrailsThisFrame = new Set<string>();
 
   constructor() {
+    super();
     this.effects = new BulletVisualEffects();
+    this.declareDependency(DependencyKeys.GameState);
+  }
+
+  /**
+   * Get GameStateManager dependency
+   */
+  private get gameState(): GameStateManager {
+    return this.getDependency<GameStateManager>(DependencyKeys.GameState);
   }
 
   /**
@@ -36,13 +45,6 @@ export class BulletVisualEffectsSystem implements System {
    */
   public getContainer(): Container {
     return this.effects.getContainer();
-  }
-
-  /**
-   * Set bullet array reference
-   */
-  public setBullets(bullets: Bullet[]): void {
-    this.bullets = bullets;
   }
 
   /**
@@ -65,7 +67,8 @@ export class BulletVisualEffectsSystem implements System {
     this.updateScreenShake(deltaTime);
 
     // Create trails for all active bullets
-    for (const bullet of this.bullets) {
+    const bullets = this.gameState.getActiveBullets();
+    for (const bullet of bullets) {
       if (!bullet.active) {
         // Clean up trails when bullet becomes inactive
         this.effects.clearBulletTrails(bullet.id);

@@ -11,10 +11,10 @@ import { SystemPriority } from "../core/systems/system.interface";
 import type { EventQueue } from "./event-queue";
 import { EventType } from "./event-queue";
 import type { BoothSystem } from "./booth";
-import type { Enemy } from "../entities/enemy";
 import { BoothId } from "../core/types";
 import { LAYOUT } from "../utils/constants";
 import { DependencyKeys } from "../core/systems/dependency-keys";
+import type { GameStateManager } from "../core/game-state";
 
 /**
  * Booth Pool dimensions (matches DropItemPool sprite size)
@@ -38,9 +38,6 @@ export class BoxSystem extends InjectableSystem {
   public readonly name = "BoxSystem";
   public readonly priority = SystemPriority.DEFAULT;
 
-  // Enemies reference (for collision detection)
-  private enemies: Enemy[] = [];
-
   // Booth Pool collision area (SPEC § 2.7.2)
   // Area: x=340 to x=468, y=136 to y=904
   private readonly poolX = LAYOUT.BASELINE_X;
@@ -55,6 +52,14 @@ export class BoxSystem extends InjectableSystem {
     super();
     this.declareDependency(DependencyKeys.EventQueue);
     this.declareDependency(DependencyKeys.BoothSystem);
+    this.declareDependency(DependencyKeys.GameState);
+  }
+
+  /**
+   * Get GameStateManager dependency
+   */
+  private get gameState(): GameStateManager {
+    return this.getDependency<GameStateManager>(DependencyKeys.GameState);
   }
 
   /**
@@ -102,7 +107,8 @@ export class BoxSystem extends InjectableSystem {
     if (!this.isBoxActive()) return;
 
     // Check enemy collisions with each booth's box (SPEC § 2.3.7)
-    for (const enemy of this.enemies) {
+    const enemies = this.gameState.getActiveEnemies();
+    for (const enemy of enemies) {
       if (!enemy.active) continue;
 
       const enemyX = enemy.position.x;
@@ -145,15 +151,7 @@ export class BoxSystem extends InjectableSystem {
    * Cleanup resources
    */
   public destroy(): void {
-    this.enemies = [];
     this.boothYPositions.clear();
-  }
-
-  /**
-   * Set enemies reference for collision detection (not injectable - entity reference)
-   */
-  public setEnemies(enemies: Enemy[]): void {
-    this.enemies = enemies;
   }
 
   /**

@@ -65,10 +65,8 @@ export class CombatSystem extends InjectableSystem {
   public readonly name = "CombatSystem";
   public readonly priority = SystemPriority.COMBAT;
 
-  // References to game entities (not injectable - set via setters)
+  // Player reference (singleton - not managed by GameState)
   private player: Player | null = null;
-  private bullets: Bullet[] = [];
-  private enemies: Enemy[] = [];
 
   // Bullet spawner callback (set by GameScene)
   private bulletSpawner: BulletSpawner | null = null;
@@ -138,29 +136,13 @@ export class CombatSystem extends InjectableSystem {
    */
   public destroy(): void {
     this.player = null;
-    this.bullets = [];
-    this.enemies = [];
   }
 
   /**
-   * Set player reference (not injectable - entity reference)
+   * Set player reference (singleton - not managed by GameState)
    */
   public setPlayer(player: Player): void {
     this.player = player;
-  }
-
-  /**
-   * Set bullet array reference (not injectable - entity reference)
-   */
-  public setBullets(bullets: Bullet[]): void {
-    this.bullets = bullets;
-  }
-
-  /**
-   * Set enemy array reference (not injectable - entity reference)
-   */
-  public setEnemies(enemies: Enemy[]): void {
-    this.enemies = enemies;
   }
 
   /**
@@ -398,7 +380,9 @@ export class CombatSystem extends InjectableSystem {
    * Uses Strategy Pattern via CollisionHandlerRegistry
    */
   private checkCollisions(): void {
-    for (const bullet of this.bullets) {
+    const bullets = this.gameState.getActiveBullets();
+
+    for (const bullet of bullets) {
       if (!bullet.active) continue;
 
       // Get handler based on bullet type, not current buff
@@ -425,8 +409,9 @@ export class CombatSystem extends InjectableSystem {
         ? handler.getTotalHits()
         : 1;
 
+    const enemies = this.gameState.getActiveEnemies();
     let pierceCount = 0;
-    for (const enemy of this.enemies) {
+    for (const enemy of enemies) {
       if (!enemy.active) continue;
 
       if (this.checkBulletEnemyCollision(bullet, enemy)) {
@@ -453,7 +438,7 @@ export class CombatSystem extends InjectableSystem {
     return {
       bullet,
       enemy,
-      enemies: this.enemies,
+      enemies: this.gameState.getActiveEnemies(),
       visualEffects: this.visualEffects,
       eventQueue: this.eventQueue,
       gameState: this.gameState,
@@ -480,7 +465,8 @@ export class CombatSystem extends InjectableSystem {
         ? position
         : new Vector(position.x, position.y);
 
-    for (const enemy of this.enemies) {
+    const enemies = this.gameState.getActiveEnemies();
+    for (const enemy of enemies) {
       if (!enemy.active) continue;
       if (excludeIds && excludeIds.has(enemy.id)) continue;
 

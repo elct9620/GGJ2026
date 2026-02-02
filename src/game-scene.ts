@@ -41,11 +41,6 @@ import { FoodRenderer } from "./renderers/food-renderer";
 export class GameScene {
   // Entities
   private player: Player;
-  // Legacy entity arrays (for System compatibility during Phase 4 migration)
-  // These arrays are kept in sync with GameState entity collections
-  private enemies: Enemy[] = [];
-  private bullets: Bullet[] = [];
-  private foods: Food[] = [];
 
   // Systems
   private systemManager: SystemManager;
@@ -173,10 +168,8 @@ export class GameScene {
     // Rendering handled by PlayerRenderer.sync()
     this.playerContainer.addChild(this.playerRenderer.getContainer());
 
-    // Connect Combat System with game entities (entity references - not injectable)
+    // Connect Combat System with player reference (singleton - not managed by GameState)
     combatSystem.setPlayer(this.player);
-    combatSystem.setBullets(this.bullets);
-    combatSystem.setEnemies(this.enemies);
     combatSystem.subscribeToEvents(); // Subscribe after dependencies injected
 
     // Setup bullet spawner callback (follows same pattern as WaveSystem.setSpawnCallback)
@@ -193,17 +186,10 @@ export class GameScene {
       if (request.isTracking && request.trackingTarget) {
         bullet.setTracking(request.trackingTarget);
       }
-      this.bullets.push(bullet);
-      this.gameState.addBullet(bullet); // Sync to GameState (Phase 4C)
+      this.gameState.addBullet(bullet);
       // Rendering handled by BulletRenderer.sync()
       return bullet;
     });
-
-    // Connect Box System with enemies (entity reference - not injectable)
-    boxSystem.setEnemies(this.enemies);
-
-    // Connect Bullet Visual Effects System with bullets (SPEC § 2.6.3)
-    bulletVisualEffects.setBullets(this.bullets);
 
     // Setup booth visualization (using BoothRenderer)
     this.boothContainer.addChild(this.boothRenderer.getContainer());
@@ -253,8 +239,7 @@ export class GameScene {
   ): void {
     const enemyType = EnemyType[type];
     const enemy = new Enemy(enemyType, new Vector(x, y), wave);
-    this.enemies.push(enemy);
-    this.gameState.addEnemy(enemy); // Sync to GameState (Phase 4C)
+    this.gameState.addEnemy(enemy);
     // Rendering handled by EnemyRenderer.sync()
   }
 
@@ -304,7 +289,7 @@ export class GameScene {
    * Sync food renderer with current food state
    */
   private syncFoodRenderer(): void {
-    const foodStates = this.foods.map((food) => ({
+    const foodStates = this.gameState.getActiveFoods().map((food) => ({
       id: food.id,
       position: food.position,
       type: food.type,
@@ -362,13 +347,13 @@ export class GameScene {
   }
 
   private updateEnemies(deltaTime: number): void {
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const enemy = this.enemies[i];
+    const enemiesToRemove: string[] = [];
+    const enemies = this.gameState.getActiveEnemies();
 
+    for (const enemy of enemies) {
       if (!enemy.active) {
         // Rendering cleanup handled by EnemyRenderer.sync()
-        this.enemies.splice(i, 1);
-        this.gameState.removeEnemy(enemy.id); // Sync to GameState (Phase 4C)
+        enemiesToRemove.push(enemy.id);
         continue;
       }
 
@@ -379,8 +364,7 @@ export class GameScene {
         this.player.takeDamage(1);
         enemy.active = false;
         // Rendering cleanup handled by EnemyRenderer.sync()
-        this.enemies.splice(i, 1);
-        this.gameState.removeEnemy(enemy.id); // Sync to GameState (Phase 4C)
+        enemiesToRemove.push(enemy.id);
 
         // Publish EnemyReachedEnd event for Wave System (SPEC § 2.3.6)
         const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
@@ -388,8 +372,14 @@ export class GameScene {
       }
     }
 
+    // Remove collected enemies from GameState (collect-then-remove pattern)
+    for (const id of enemiesToRemove) {
+      this.gameState.removeEnemy(id);
+    }
+
     // Sync enemy rendering
-    const enemyStates = this.enemies.map((enemy) => ({
+    const activeEnemies = this.gameState.getActiveEnemies();
+    const enemyStates = activeEnemies.map((enemy) => ({
       id: enemy.id,
       position: enemy.position,
       type: enemy.type,
@@ -409,13 +399,13 @@ export class GameScene {
   }
 
   private updateBullets(deltaTime: number): void {
-    for (let i = this.bullets.length - 1; i >= 0; i--) {
-      const bullet = this.bullets[i];
+    const bulletsToRemove: string[] = [];
+    const bullets = this.gameState.getActiveBullets();
 
+    for (const bullet of bullets) {
       if (!bullet.active) {
         // Rendering cleanup handled by BulletRenderer.sync()
-        this.bullets.splice(i, 1);
-        this.gameState.removeBullet(bullet.id); // Sync to GameState (Phase 4C)
+        bulletsToRemove.push(bullet.id);
         continue;
       }
 
@@ -428,8 +418,13 @@ export class GameScene {
       bullet.update(deltaTime);
     }
 
+    // Remove collected bullets from GameState (collect-then-remove pattern)
+    for (const id of bulletsToRemove) {
+      this.gameState.removeBullet(id);
+    }
+
     // Sync bullet rendering
-    this.bulletRenderer.sync(this.bullets);
+    this.bulletRenderer.sync(this.gameState.getActiveBullets());
   }
 
   /**
@@ -447,7 +442,8 @@ export class GameScene {
     let closest: Enemy | null = null;
     let closestDistance: number = trackingRange;
 
-    for (const enemy of this.enemies) {
+    const enemies = this.gameState.getActiveEnemies();
+    for (const enemy of enemies) {
       if (!enemy.active) continue;
 
       const distance = enemy.position.distance(bullet.position);
@@ -473,14 +469,13 @@ export class GameScene {
   private checkFoodCollection(): void {
     const eventQueue = this.systemManager.get<EventQueue>("EventQueue");
     const boothSystem = this.systemManager.get<BoothSystem>("BoothSystem");
+    const foodsToRemove: string[] = [];
+    const foods = this.gameState.getActiveFoods();
 
-    for (let i = this.foods.length - 1; i >= 0; i--) {
-      const food = this.foods[i];
-
+    for (const food of foods) {
       if (!food.active) {
         // Rendering cleanup handled by FoodRenderer.sync()
-        this.foods.splice(i, 1);
-        this.gameState.removeFood(food.id); // Sync to GameState (Phase 4C)
+        foodsToRemove.push(food.id);
         continue;
       }
 
@@ -496,8 +491,12 @@ export class GameScene {
 
       food.active = false;
       // Rendering cleanup handled by FoodRenderer.sync()
-      this.foods.splice(i, 1);
-      this.gameState.removeFood(food.id); // Sync to GameState (Phase 4C)
+      foodsToRemove.push(food.id);
+    }
+
+    // Remove collected foods from GameState (collect-then-remove pattern)
+    for (const id of foodsToRemove) {
+      this.gameState.removeFood(id);
     }
   }
 
@@ -510,7 +509,7 @@ export class GameScene {
     position: { x: number; y: number };
   }): void {
     // Find the enemy that died
-    const enemy = this.enemies.find((e) => e.id === data.enemyId);
+    const enemy = this.gameState.enemies.get(data.enemyId);
     if (!enemy) return;
 
     // Drop food at enemy position (only Elite enemies drop food per SPEC § 2.6.2)
@@ -525,8 +524,7 @@ export class GameScene {
 
   private spawnFood(type: FoodType, position: Vector): void {
     const food = new Food(type, position);
-    this.foods.push(food);
-    this.gameState.addFood(food); // Sync to GameState (Phase 4C)
+    this.gameState.addFood(food);
     // Rendering handled by FoodRenderer.sync()
   }
 
@@ -544,7 +542,7 @@ export class GameScene {
     this.hudRenderer.sync({
       wave: this.gameState.wave.currentWave,
       totalEnemies: this.gameState.wave.currentWave * 2,
-      enemyCount: this.enemies.length,
+      enemyCount: this.gameState.getActiveEnemies().length,
       score: this.gameState.stats.enemiesDefeated * 10,
       recipes,
     });
@@ -741,15 +739,12 @@ export class GameScene {
    * Clears all entities and resets to wave 1
    */
   public reset(): void {
-    // Clear all entities
-    // Enemies are rendered via EnemyRenderer - sync with empty array to clear
-    this.enemies = [];
+    // Reset game state first (includes clearing all entities)
+    this.gameState.reset();
+
+    // Clear renderers to sync with empty state
     this.enemyRenderer.sync([], new Map(), 0);
-    // Bullets are rendered via BulletRenderer - sync with empty array to clear
-    this.bullets = [];
-    this.bulletRenderer.sync(this.bullets);
-    // Foods are rendered via FoodRenderer - sync with empty array to clear
-    this.foods = [];
+    this.bulletRenderer.sync([]);
     this.foodRenderer.sync([]);
 
     // Reset player
@@ -778,8 +773,8 @@ export class GameScene {
     this.isPaused = false;
     this.pendingWaveNumber = 0;
 
-    // Reset game state (includes statistics, kills, wave, combat)
-    this.gameState.reset();
+    // Reinitialize booths in GameState
+    this.gameState.initializeBooths();
 
     // Start wave 1
     waveSystem.startWave(1);

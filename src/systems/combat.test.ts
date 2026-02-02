@@ -16,16 +16,12 @@ import { SpecialBulletType, EnemyType } from "../core/types";
 describe("CombatSystem", () => {
   let combatSystem: CombatSystem;
   let player: Player;
-  let bullets: Bullet[];
-  let enemies: Enemy[];
   let eventQueue: EventQueue;
   let gameState: GameStateManager;
 
   beforeEach(() => {
     combatSystem = new CombatSystem();
     player = new Player(new Vector(960, 540));
-    bullets = [];
-    enemies = [];
     eventQueue = new EventQueue();
     gameState = new GameStateManager();
 
@@ -34,8 +30,6 @@ describe("CombatSystem", () => {
     combatSystem.inject("GameState", gameState);
     combatSystem.initialize();
     combatSystem.setPlayer(player);
-    combatSystem.setBullets(bullets);
-    combatSystem.setEnemies(enemies);
     combatSystem.subscribeToEvents();
   });
 
@@ -64,10 +58,10 @@ describe("CombatSystem", () => {
 
     it("CS-03: 子彈擊中餓鬼（1 HP）→ 餓鬼死亡", () => {
       const enemy = new Enemy(EnemyType.Ghost, new Vector(500, 540));
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       const bullet = new Bullet(new Vector(490, 540), new Vector(1, 0));
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       // Mock event subscription
       let enemyDeathEventFired = false;
@@ -85,11 +79,11 @@ describe("CombatSystem", () => {
     it("CS-04: 子彈擊中 Boss（10 HP）→ Boss 生命 9 HP", () => {
       // SPEC § 2.6.2: Boss Wave 5 基礎血量 = 10
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
-      enemies.push(boss);
+      gameState.addEnemy(boss);
       expect(boss.health.current).toBe(10);
 
       const bullet = new Bullet(new Vector(490, 540), new Vector(1, 0));
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -113,7 +107,7 @@ describe("CombatSystem", () => {
 
     it("CS-06: 子彈飛出畫面右邊界 → 子彈消失", () => {
       const bullet = new Bullet(new Vector(1900, 540), new Vector(1, 0));
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       bullet.update(0.1); // Move right
 
@@ -122,7 +116,7 @@ describe("CombatSystem", () => {
 
     it("CS-07: 子彈未擊中任何敵人 → 子彈繼續飛行", () => {
       const bullet = new Bullet(new Vector(500, 540), new Vector(1, 0));
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -217,7 +211,8 @@ describe("CombatSystem", () => {
       // Enemy collision box is 256×256, so 600px apart ensures no overlap
       const enemy1 = new Enemy(EnemyType.Ghost, new Vector(500, 540));
       const enemy2 = new Enemy(EnemyType.Ghost, new Vector(1100, 540));
-      enemies.push(enemy1, enemy2);
+      gameState.addEnemy(enemy1);
+      gameState.addEnemy(enemy2);
 
       // Create StinkyTofu bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -225,7 +220,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.StinkyTofu,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -252,7 +247,7 @@ describe("CombatSystem", () => {
       // Create enemy with more HP to survive (Elite has 2 HP, BloodCake damage is 2)
       // SPEC § 2.3.5: Boss 首次出現在 Wave 5
       const enemy = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
       const initialSpeed = enemy.speed;
 
       // Create BloodCake bullet (collision handler based on bullet type)
@@ -261,7 +256,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.BloodCake,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -279,7 +274,9 @@ describe("CombatSystem", () => {
       const enemy1 = new Enemy(EnemyType.Ghost, new Vector(500, 540));
       const enemy2 = new Enemy(EnemyType.Ghost, new Vector(700, 540));
       const enemy3 = new Enemy(EnemyType.Ghost, new Vector(900, 540));
-      enemies.push(enemy1, enemy2, enemy3);
+      gameState.addEnemy(enemy1);
+      gameState.addEnemy(enemy2);
+      gameState.addEnemy(enemy3);
 
       // Create NightMarket bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -287,7 +284,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.NightMarket,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -306,7 +303,8 @@ describe("CombatSystem", () => {
       // Create elite enemies to test damage decay (Elite has 2 HP)
       const enemy1 = new Enemy(EnemyType.RedGhost, new Vector(500, 540));
       const enemy2 = new Enemy(EnemyType.RedGhost, new Vector(700, 540));
-      enemies.push(enemy1, enemy2);
+      gameState.addEnemy(enemy1);
+      gameState.addEnemy(enemy2);
 
       // Create NightMarket bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -314,7 +312,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.NightMarket,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -332,7 +330,7 @@ describe("CombatSystem", () => {
 
       // SPEC § 2.6.2: Boss Wave 5 has 10 HP
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
-      enemies.push(boss);
+      gameState.addEnemy(boss);
 
       // Create OysterOmelette bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -340,7 +338,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.OysterOmelette,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -354,7 +352,7 @@ describe("CombatSystem", () => {
 
       // Elite has 2 HP
       const elite = new Enemy(EnemyType.RedGhost, new Vector(500, 540));
-      enemies.push(elite);
+      gameState.addEnemy(elite);
 
       // Create OysterOmelette bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -362,7 +360,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.OysterOmelette,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -375,7 +373,7 @@ describe("CombatSystem", () => {
 
       // Ghost has 1 HP
       const ghost = new Enemy(EnemyType.Ghost, new Vector(500, 540));
-      enemies.push(ghost);
+      gameState.addEnemy(ghost);
 
       // Create OysterOmelette bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -383,7 +381,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.OysterOmelette,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -397,7 +395,7 @@ describe("CombatSystem", () => {
       // Wave 5 Boss has 10 HP, damage it to 6 HP first
       const boss = new Enemy(EnemyType.Boss, new Vector(500, 540), 5);
       boss.takeDamage(4); // 10 - 4 = 6 HP (injured boss)
-      enemies.push(boss);
+      gameState.addEnemy(boss);
 
       // Create OysterOmelette bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -405,7 +403,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.OysterOmelette,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -420,7 +418,7 @@ describe("CombatSystem", () => {
       // Elite with 4 HP (Wave 5), damage it to 3 HP first
       const elite = new Enemy(EnemyType.RedGhost, new Vector(500, 540), 5);
       elite.takeDamage(1); // 4 - 1 = 3 HP (injured elite)
-      enemies.push(elite);
+      gameState.addEnemy(elite);
 
       // Create OysterOmelette bullet (collision handler based on bullet type)
       const bullet = new Bullet(
@@ -428,7 +426,7 @@ describe("CombatSystem", () => {
         new Vector(1, 0),
         SpecialBulletType.OysterOmelette,
       );
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -511,10 +509,10 @@ describe("CombatSystem", () => {
       });
 
       const enemy = new Enemy(EnemyType.Ghost, new Vector(500, 540));
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       const bullet = new Bullet(new Vector(490, 540), new Vector(1, 0));
-      bullets.push(bullet);
+      gameState.addBullet(bullet);
 
       combatSystem.update(0.016);
 
@@ -643,7 +641,7 @@ describe("CombatSystem", () => {
 
       // Add an enemy to track (within tracking range)
       const enemy = new Enemy(EnemyType.Ghost, new Vector(800, 540));
-      enemies.push(enemy);
+      gameState.addEnemy(enemy);
 
       // Activate BloodCake buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
@@ -665,7 +663,7 @@ describe("CombatSystem", () => {
       // Add an enemy far beyond tracking range (600px per SPEC § 2.6.3.5)
       // Enemy at x=1600 is 640px away, beyond 600px range
       const farEnemy = new Enemy(EnemyType.Ghost, new Vector(1600, 540));
-      enemies.push(farEnemy);
+      gameState.addEnemy(farEnemy);
 
       // Activate BloodCake buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
@@ -687,8 +685,8 @@ describe("CombatSystem", () => {
       // Add enemies at different distances
       const farEnemy = new Enemy(EnemyType.Ghost, new Vector(1500, 540)); // Beyond range
       const nearEnemy = new Enemy(EnemyType.Ghost, new Vector(700, 540)); // Within range
-      enemies.push(farEnemy);
-      enemies.push(nearEnemy);
+      gameState.addEnemy(farEnemy);
+      gameState.addEnemy(nearEnemy);
 
       // Activate BloodCake buff
       eventQueue.publish(EventType.SynthesisTriggered, { recipeId: "4" });
