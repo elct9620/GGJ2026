@@ -47,12 +47,15 @@ export type HUDColorType = 0 | 1 | 2 | 3;
 
 /**
  * FoodType to HUD color mapping
- * Pearl=blue(2), Tofu=green(3), BloodCake=red(1)
+ * Matches DropItemPool colors from booth-renderer.ts:
+ * - Tofu = Red (skillTip1) → matches DropItemPool_0
+ * - Pearl = Green (skillTip3) → matches DropItemPool_2
+ * - BloodCake = Blue (skillTip2) → matches DropItemPool_1
  */
 export const FOOD_HUD_COLOR: Record<FoodType, HUDColorType> = {
-  Pearl: 2,
-  Tofu: 3,
-  BloodCake: 1,
+  Tofu: 1, // Red
+  Pearl: 3, // Green
+  BloodCake: 2, // Blue
 };
 
 /**

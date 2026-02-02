@@ -124,9 +124,13 @@ describe("RecipeData", () => {
 
   describe("FOOD_HUD_COLOR", () => {
     it("should have correct color mappings", () => {
-      expect(FOOD_HUD_COLOR.Pearl).toBe(2); // blue
-      expect(FOOD_HUD_COLOR.Tofu).toBe(3); // green
-      expect(FOOD_HUD_COLOR.BloodCake).toBe(1); // red
+      // Colors match DropItemPool (booth-renderer.ts):
+      // - Tofu = Red (DropItemPool_0) → skillTip1
+      // - Pearl = Green (DropItemPool_2) → skillTip3
+      // - BloodCake = Blue (DropItemPool_1) → skillTip2
+      expect(FOOD_HUD_COLOR.Tofu).toBe(1); // red
+      expect(FOOD_HUD_COLOR.Pearl).toBe(3); // green
+      expect(FOOD_HUD_COLOR.BloodCake).toBe(2); // blue
     });
   });
 
