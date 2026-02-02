@@ -216,6 +216,16 @@ interface System {
     - 不重疊播放（每個音效 ID 同時只播放一個實例）
     - 訂閱 BulletFired, EnemyHit, ButtonClicked 事件
 
+12. **Music System**: 背景音樂合成系統 (WebAudio API)
+    - 使用 OscillatorNode 即時合成音樂（無外部音檔）
+    - 支援多聲道（主旋律、低音、和弦、打擊）
+    - 訂閱 ScreenChange 事件切換音樂
+
+**Screens** (`src/screens/`):
+- `StartScreen`: 開始畫面，顯示標題和控制說明
+- `GameOverScreen`: 結算畫面，顯示存活回合數和擊殺數
+- `UpgradeScreen`: 回合間升級選擇畫面
+
 **Entities** (`src/entities/`):
 - All extend `Entity` base class (id generation, active state)
 - `Player`, `Enemy` (Ghost/Boss), `Bullet`, `Food`
@@ -381,7 +391,7 @@ eventQueue.subscribe(EventType.EnemyDeath, (data) => {
 1. **Always read SPEC.md** before implementing features - it contains complete system behaviors, constraints, and error scenarios
 2. **Write tests before code** - test cases are pre-defined in `docs/testing.md`
 3. **Use strict TypeScript** - all compiler warnings must be resolved
-4. **Booth ID mapping**: 1-indexed (1=Pearl, 2=Tofu, 3=BloodCake) - not 0-indexed
+4. **Booth ID mapping**: 1-indexed (1=Tofu, 2=Pearl, 3=BloodCake) - not 0-indexed
 5. **Event-driven architecture**: Systems communicate via EventQueue, avoid direct coupling
 6. **Consult SPEC.md for game values** (damage, speed, cooldowns) - do not hardcode arbitrary numbers
 7. **Use conventional commits** - follow user's commit message style
