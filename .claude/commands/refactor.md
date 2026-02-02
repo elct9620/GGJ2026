@@ -13,7 +13,7 @@ The `<execute>ARGUMENTS</execute>` will execute the main procedure.
 The principles is ordered by priority, ensure follow project's convention not force applying these principles.
 
 | Type                | Condition                                                                                                                            |
-|---------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Long method / class | > 100 lines, consider breaking down using design patterns or review violation of single responsibility principle                     |
 | Duplicated code     | Only merge if in same domain, otherwise consider abstraction                                                                         |
 | Over engineering    | Reduce method, class, or module complexity if logic is simple enough, e.g. only 3 branch use switch case instead of strategy pattern |
