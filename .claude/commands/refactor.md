@@ -18,7 +18,7 @@ Use meaningful and consistent names for variables, functions, and classes.
 
 ## 2. Keep Simple
 
-No duplicate or unnecessary complexity. Aim for simplicity in design and implementation.
+No duplicate or unnecessary complexity. Aim for simplicity and strightforwardness in design and implementation.
 
 ## 3. SOLID
 
@@ -27,6 +27,20 @@ Adhere to SOLID principles for object-oriented design.
 ## 4. Design Patterns
 
 Identity and utilize appropriate design patterns where applicable.
+
+# Anti Patterns
+
+## 1. Design for Testability
+
+Never create a accessor/mutator methods for the sole purpose of testing. Public mehods should cover all test scenarios otherwise violate cohesion principle.
+
+## 2. Leave Code Smells
+
+Review relevant code to avoid code smells such as feature envy, dead code, and other anti-patterns.
+
+## 3. Backward Compatibility
+
+Avoid leaving backward compatibility when refactoring didn't break existing functionality.
 
 # Definition
 
